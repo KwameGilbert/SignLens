@@ -26,6 +26,7 @@ class SignLanguageDetector:
         fps_counter = FPSCounter()
 
         # Initialize camera
+        self.logger.info("Initializing camera...")
         cap = cv2.VideoCapture(self.config['camera']['index'])
         self.logger.info(f"Using camera index: {self.config['camera']['index']}")
         # Set camera resolution if specified
@@ -64,7 +65,8 @@ class SignLanguageDetector:
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-
+        
+        self.logger.info("Closing camera and releasing resources...")
         detector.close()
         cap.release()
         cv2.destroyAllWindows()
