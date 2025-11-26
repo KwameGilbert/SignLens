@@ -33,3 +33,9 @@ class UIOverlay:
                 (0, 200, 255),
                 2
             )
+
+    def update_config(self, config):
+        self.config = config
+        self.show_fps = config['ui'].get('show_fps', True)
+        self.show_status = config['ui'].get('show_status', True)
+        self.show_prediction = config['ui'].get('show_prediction', False)

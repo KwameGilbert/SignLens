@@ -30,6 +30,9 @@ class ConfigLoader:
         if not os.path.exists(config_path):
             raise FileNotFoundError(f"Config file not found at: {config_path}")
 
+        cls._config_path = config_path
+        cls._last_mtime = os.path.getmtime(config_path)
+
         with open(config_path, 'r') as file:
             cls._config = yaml.safe_load(file)
         
@@ -42,3 +45,31 @@ class ConfigLoader:
             # Try to load with default path
             return cls.load_config()
         return cls._config
+
+    @classmethod
+    def check_for_updates(cls):
+        """
+        Check if the configuration file has been modified.
+        Returns True if modified, False otherwise.
+        """
+        if cls._config is None or not hasattr(cls, '_config_path'):
+            return False
+        
+        try:
+            current_mtime = os.path.getmtime(cls._config_path)
+            if current_mtime > cls._last_mtime:
+                return True
+        except OSError:
+            pass
+        
+        return False
+
+    @classmethod
+    def reload_config(cls):
+        """
+        Force reload the configuration from the file.
+        """
+        if hasattr(cls, '_config_path'):
+            return cls.load_config(cls._config_path)
+        return cls.load_config()
+

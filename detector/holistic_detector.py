@@ -13,8 +13,23 @@ class HolisticDetector:
             min_tracking_confidence=config['mediapipe']['tracking_confidence']
             )
 
+    def update_config(self, config):
+        """
+        Update the detector configuration.
+        Re-initializes the model if confidence thresholds change.
+        """
+        new_det_conf = config['mediapipe']['detection_confidence']
+        new_track_conf = config['mediapipe']['tracking_confidence']
+        
+        # Re-initialize the model with new parameters
+        self.model.close()
+        self.model = self.mp_holistic.Holistic(
+            min_detection_confidence=new_det_conf,
+            min_tracking_confidence=new_track_conf
+        )
+
     def detect(self, image):
-    # DETECT LANDMARKS
+        # DETECT LANDMARKS
         rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         rgb_image.flags.writeable = False
         results = self.model.process(rgb_image)

@@ -21,9 +21,13 @@ class SignLanguageDetector:
         self.logger.info(f"Version: {self.config['app']['version']}")
         self.logger.info(f"Loading {self.config['app']['name']}...")
        
-       # Initialize detectors
+        # Initialize detectors
+        self.logger.info("Loading Mediapipe Model...")
         detector = HolisticDetector(self.config)
+        self.logger.info("Holistic Model Loaded...")
+        self.logger.info("Loading FPS Counter...")
         fps_counter = FPSCounter()
+        self.logger.info("FPS Counter Loaded...")
 
         # Initialize camera
         self.logger.info("Initializing camera...")
@@ -65,6 +69,32 @@ class SignLanguageDetector:
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+
+            # Check for config updates
+            if ConfigLoader.check_for_updates():
+                self.logger.info("Configuration change detected. Reloading...")
+                self.config = ConfigLoader.reload_config()
+                
+                # Update components
+                ui.update_config(self.config)
+                detector.update_config(self.config)
+                
+                # Update logger level
+                log_level = self.config.get('logging', {}).get('level', 'INFO').upper()
+                self.logger.setLevel(log_level)
+                for handler in self.logger.handlers:
+                    handler.setLevel(log_level)
+                
+                # Update camera resolution if changed
+                new_width = self.config['camera'].get('width')
+                new_height = self.config['camera'].get('height')
+                current_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+                current_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+                
+                if new_width and new_height and (new_width != current_width or new_height != current_height):
+                    self.logger.info(f"Updating camera resolution to {new_width}x{new_height}")
+                    cap.set(cv2.CAP_PROP_FRAME_WIDTH, new_width)
+                    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, new_height)
         
         self.logger.info("Closing camera and releasing resources...")
         detector.close()
