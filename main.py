@@ -2,9 +2,9 @@ import cv2
 import os
 
 from detector.holistic_detector import HolisticDetector
+from detector.keypoints import extract_keypoints
 from ui.overlay import UIOverlay
 from utils.fps_counter import FPSCounter
-from utils.keypoints import extract_keypoints
 from utils.logger import setup_logger
 from config.loader import ConfigLoader
 
