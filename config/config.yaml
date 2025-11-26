@@ -1,5 +1,5 @@
 app:
-  name: "Sign Language Detector"
+  name: "SignLens"
   version: "1.0"
 
 camera:

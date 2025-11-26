@@ -1,4 +1,4 @@
-# Sign Language Detector
+# SignLens
 
 A real-time Sign Language Detection application built with Python, OpenCV, and MediaPipe. This project uses the MediaPipe Holistic model to detect face, pose, and hand landmarks, extracting keypoints for sign language recognition.
 
