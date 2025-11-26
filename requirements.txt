@@ -3,4 +3,6 @@ opencv-python
 scikit-learn
 matplotlib
 pyyaml
+rich
+
 

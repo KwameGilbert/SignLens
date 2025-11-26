@@ -19,3 +19,19 @@ ui:
 logging:
   level: "INFO"
   file: "logs/app.log"
+
+dataset:
+  output_dir: "dataset"
+  interface: "cli" # 'cli' or 'gui'
+  sequence_lengths:
+    static_default: 30
+    dynamic_default: 45
+  recording:
+    countdown: 3
+    auto_frames: 30
+  classes:
+    - "hello"
+    - "thanks"
+    - "iloveyou"
+    - "yes"
+    - "no"
