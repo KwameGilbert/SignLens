@@ -21,7 +21,7 @@ class SignLanguageDetector:
         self.logger.info(f"Version: {self.config['app']['version']}")
         self.logger.info(f"Loading {self.config['app']['name']}...")
        
-       # Initialize detectors
+        # Initialize detectors
         detector = HolisticDetector(self.config)
         fps_counter = FPSCounter()
 
