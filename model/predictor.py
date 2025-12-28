@@ -5,9 +5,10 @@ Loads the trained model and performs real-time inference.
 import os
 import json
 import numpy as np
-
 try:
-    from tensorflow.keras.models import load_model
+    import tensorflow as tf
+    from tensorflow import keras
+    load_model = keras.models.load_model
 except ImportError:
     print("TensorFlow not installed. Run: pip install tensorflow")
     raise

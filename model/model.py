@@ -1,17 +1,16 @@
-"""
-LSTM Model for Sign Language Recognition
-"""
-import numpy as np
+import tensorflow as tf
+from tensorflow import keras
 
-# TensorFlow/Keras imports
-try:
-    from tensorflow.keras.models import Sequential
-    from tensorflow.keras.layers import LSTM, Dense, Dropout, BatchNormalization
-    from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
-    from tensorflow.keras.optimizers import Adam
-except ImportError:
-    print("TensorFlow not installed. Run: pip install tensorflow")
-    raise
+# Define shortcuts for readability
+Sequential = keras.models.Sequential
+LSTM = keras.layers.LSTM
+Dense = keras.layers.Dense
+Dropout = keras.layers.Dropout
+BatchNormalization = keras.layers.BatchNormalization
+EarlyStopping = keras.callbacks.EarlyStopping
+ModelCheckpoint = keras.callbacks.ModelCheckpoint
+ReduceLROnPlateau = keras.callbacks.ReduceLROnPlateau
+Adam = keras.optimizers.Adam
 
 
 def build_model(input_shape, num_classes):
