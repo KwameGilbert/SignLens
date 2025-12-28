@@ -1,5 +1,4 @@
-# Core ML/CV
-mediapipe=0.
+mediapipe==0.10.5
 opencv-python
 numpy
 
