@@ -44,11 +44,17 @@ def main():
         print("No configuration selected. Exiting.")
         return
 
-    # Start Recorder
+    # Start Recorder based on source selection
     print(f"Starting Recorder with config: {recorder_config}")
     
-    # Currently only LiveRecorder is hooked up to the menu
-    recorder = LiveRecorder(config, recorder_config)
+    recorder_source = recorder_config.get('recorder_source', 'live')
+    
+    if recorder_source == "video":
+        from tools.video_recorder import VideoRecorder
+        recorder = VideoRecorder(config, recorder_config)
+    else:
+        recorder = LiveRecorder(config, recorder_config)
+    
     recorder.run()
 
 if __name__ == "__main__":

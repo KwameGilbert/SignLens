@@ -1,8 +1,17 @@
+# Core ML/CV
 mediapipe
 opencv-python
-scikit-learn
-matplotlib
+numpy
+
+# Configuration
 pyyaml
+
+# UI/CLI
 rich
+
+# ML Training
+tensorflow
+scikit-learn
+
 
 

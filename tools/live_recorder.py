@@ -93,7 +93,17 @@ class LiveRecorder:
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
     def run(self):
-        cap = cv2.VideoCapture(self.config['camera']['index'])
+        # Initialize camera 
+        try:
+            cap = cv2.VideoCapture(self.config['camera']['index'])
+            if not cap.isOpened():
+                print(f"ERROR: Could not open camera at index {self.config['camera']['index']}")
+                print("Please check your camera connection and config settings.")
+                return
+        except Exception as e:
+            print(f"ERROR: Camera initialization failed: {e}")
+            return
+            
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.config['camera']['width'])
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.config['camera']['height'])
 
@@ -131,12 +141,11 @@ class LiveRecorder:
                     self.state = "COUNTDOWN"
                     self.countdown_start = time.time()
                 
-                # For static gestures in keyboard mode, we might want to cap it too?
-                # Or just let user press S. Let's respect seq_len if provided.
+                # Auto-stop in keyboard mode when buffer is full
                 if self.mode == "keyboard" and len(self.sequence_buffer) >= self.seq_len:
-                     # Visual indicator that buffer is full?
-                     cv2.putText(image, "FULL", (int(image.shape[1]/2) - 30, int(image.shape[0]/2) + 80),
-                                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                    self.save_sequence()
+                    self.state = "IDLE"
+                    print(f"Auto-saved: buffer reached {self.seq_len} frames")
 
             # Draw UI
             class_name = self.classes[self.current_class_idx]

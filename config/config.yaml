@@ -14,7 +14,7 @@ mediapipe:
 ui:
   show_fps: true
   show_status: true
-  show_prediction: false
+  show_prediction: true
 
 logging:
   level: "INFO"

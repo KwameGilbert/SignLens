@@ -8,6 +8,14 @@ from utils.fps_counter import FPSCounter
 from utils.logger import setup_logger
 from config.loader import ConfigLoader
 
+# Try to import predictor (may not exist if model not trained)
+try:
+    from model.predictor import SignPredictor
+    PREDICTOR_AVAILABLE = True
+except ImportError:
+    PREDICTOR_AVAILABLE = False
+
+
 class SignLanguageDetector:
     def __init__(self):
         # Load config once
@@ -15,6 +23,30 @@ class SignLanguageDetector:
         
         # Setup logger with config
         self.logger = setup_logger(self.config)
+        
+        # Initialize predictor if model exists
+        self.predictor = None
+        self._init_predictor()
+    
+    def _init_predictor(self):
+        """Try to load the trained model for predictions."""
+        if not PREDICTOR_AVAILABLE:
+            self.logger.warning("Predictor module not available")
+            return
+            
+        model_path = "model/signlens.keras"
+        metadata_path = "model/metadata.json"
+        
+        if os.path.exists(model_path) and os.path.exists(metadata_path):
+            try:
+                self.predictor = SignPredictor(model_path, metadata_path)
+                self.logger.info(f"Loaded model with classes: {self.predictor.classes}")
+            except Exception as e:
+                self.logger.warning(f"Failed to load predictor: {e}")
+                self.predictor = None
+        else:
+            self.logger.info("No trained model found. Running in detection-only mode.")
+            self.logger.info("Train a model with: python -m model.train")
 
     def main(self):
         self.logger.info(f"Starting {self.config['app']['name']}")
@@ -29,9 +61,22 @@ class SignLanguageDetector:
         fps_counter = FPSCounter()
         self.logger.info("FPS Counter Loaded...")
 
-        # Initialize camera
+        # Initialize camera with error handling
         self.logger.info("Initializing camera...")
-        cap = cv2.VideoCapture(self.config['camera']['index'])
+        try:
+            cap = cv2.VideoCapture(self.config['camera']['index'])
+            if not cap.isOpened():
+                self.logger.error(f"Failed to open camera at index {self.config['camera']['index']}")
+                print("ERROR: Could not open camera. Please check:")
+                print("  1. Camera is connected")
+                print("  2. Camera is not in use by another application")
+                print("  3. Camera index in config.yaml is correct")
+                return
+        except Exception as e:
+            self.logger.error(f"Camera initialization failed: {e}")
+            print(f"ERROR: Camera initialization failed: {e}")
+            return
+            
         self.logger.info(f"Using camera index: {self.config['camera']['index']}")
         # Set camera resolution if specified
         if 'width' in self.config['camera'] and 'height' in self.config['camera']:
@@ -41,6 +86,10 @@ class SignLanguageDetector:
 
         # Initialize UI
         ui = UIOverlay(self.config)
+        
+        # Prediction state
+        last_prediction = None
+        last_confidence = 0.0
 
         while cap.isOpened():
             ret, frame = cap.read()
@@ -55,6 +104,21 @@ class SignLanguageDetector:
 
             # Extract keypoints
             keypoints = extract_keypoints(results)
+            
+            # Make prediction if model is loaded
+            if self.predictor is not None:
+                self.predictor.add_frame(keypoints)
+                
+                if self.predictor.can_predict():
+                    pred_class, confidence = self.predictor.predict_with_threshold(threshold=0.6)
+                    
+                    if pred_class is not None:
+                        last_prediction = pred_class
+                        last_confidence = confidence
+                
+                # Draw prediction on screen
+                if last_prediction is not None:
+                    ui.draw_prediction(image, last_prediction, last_confidence)
 
             # Update FPS counter
             fps_counter.update()
@@ -62,10 +126,16 @@ class SignLanguageDetector:
 
             # Draw UI overlays
             ui.draw_fps(image, fps)
-            ui.draw_status(image, "Holistic Detection Active")
+            
+            # Update status based on mode
+            if self.predictor is not None:
+                status = "Recognition Active"
+            else:
+                status = "Detection Only (No Model)"
+            ui.draw_status(image, status)
 
             # Display the resulting frame
-            cv2.imshow('Holistic Detector', image)
+            cv2.imshow('SignLens', image)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break

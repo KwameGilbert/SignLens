@@ -72,14 +72,34 @@ class RecorderMenu:
         else:
             seq_len = default_len
 
+        # 5. Recorder Source
+        console.print("\n[bold yellow]Step 5: Recording Source[/bold yellow]")
+        console.print("1. [green]Live Webcam[/green] (Record from camera)")
+        console.print("2. [green]Video Files[/green] (Process existing videos)")
+        
+        source_choice = IntPrompt.ask("Selection", choices=["1", "2"], default=1)
+        recorder_source = "live" if source_choice == 1 else "video"
+        
+        # If video source, ask for directory
+        video_source_dir = None
+        if recorder_source == "video":
+            video_source_dir = Prompt.ask("Enter path to video directory", default="raw_videos")
+            if not os.path.exists(video_source_dir):
+                console.print(f"[bold red]Warning: Directory '{video_source_dir}' does not exist![/bold red]")
+
         # Summary
         console.print("\n[bold green]Configuration Ready![/bold green]")
+        console.print(f"Source: [cyan]{recorder_source}[/cyan]")
         console.print(f"Mode: [cyan]{selected_mode}[/cyan]")
         console.print(f"Classes: [cyan]{classes}[/cyan]")
         console.print(f"Type: [cyan]{gesture_type}[/cyan]")
         console.print(f"Length: [cyan]{seq_len}[/cyan]")
+        if video_source_dir:
+            console.print(f"Video Dir: [cyan]{video_source_dir}[/cyan]")
         
         return {
+            "recorder_source": recorder_source,
+            "video_source_dir": video_source_dir,
             "mode": selected_mode,
             "classes": classes,
             "gesture_type": gesture_type,
