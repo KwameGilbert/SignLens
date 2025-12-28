@@ -1,5 +1,5 @@
 # Core ML/CV
-mediapipe
+mediapipe=0.
 opencv-python
 numpy
 
@@ -10,7 +10,7 @@ pyyaml
 rich
 
 # ML Training
-tensorflow
+tensorflow==2.13.0
 scikit-learn
 
 
