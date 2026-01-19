@@ -1,21 +1,7 @@
-# ML Training
-# ML Training
-tensorflow==2.13.0
-protobuf==3.20.3
-scikit-learn
-
-
-# Core ML/CV
-mediapipe==0.10.5
-opencv-python
+tensorflow
 numpy
-
-# Configuration
-pyyaml
-
-# UI/CLI
-rich
-
-
-
-
+pandas
+nltk
+opencv-python
+torch
+uvicorn
