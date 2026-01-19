@@ -15,44 +15,27 @@ Adam = keras.optimizers.Adam
 
 def build_model(input_shape, num_classes):
     """
-    Build an LSTM model for sequence classification.
-    
-    Args:
-        input_shape: Tuple of (sequence_length, num_features)
-                     e.g., (30, 1662) for 30 frames of 1662 keypoint values
-        num_classes: Number of sign classes to predict
-    
-    Returns:
-        Compiled Keras model
+    Build a Simple LSTM Model for small datasets.
     """
-    model = Sequential([
-        # First LSTM layer
-        LSTM(64, return_sequences=True, activation='relu', input_shape=input_shape),
-        BatchNormalization(),
-        Dropout(0.3),
-        
-        # Second LSTM layer
-        LSTM(128, return_sequences=True, activation='relu'),
-        BatchNormalization(),
-        Dropout(0.3),
-        
-        # Third LSTM layer
-        LSTM(64, return_sequences=False, activation='relu'),
-        BatchNormalization(),
-        Dropout(0.3),
-        
-        # Dense layers
-        Dense(64, activation='relu'),
-        Dropout(0.3),
-        
-        Dense(32, activation='relu'),
-        
-        # Output layer
-        Dense(num_classes, activation='softmax')
-    ])
+    model = Sequential()
+    
+    # Single LSTM Layer is enough for simple static signs
+    model.add(LSTM(64, return_sequences=False, activation='relu', input_shape=input_shape))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.4))
+    
+    # Dense Classification Layers
+    model.add(Dense(32, activation='relu'))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.4))
+    
+    model.add(Dense(num_classes, activation='softmax'))
+    
+    # Lower learning rate for stability
+    optimizer = Adam(learning_rate=0.0005, clipnorm=1.0)
     
     model.compile(
-        optimizer=Adam(learning_rate=0.001),
+        optimizer=optimizer,
         loss='sparse_categorical_crossentropy',
         metrics=['accuracy']
     )
@@ -60,7 +43,7 @@ def build_model(input_shape, num_classes):
     return model
 
 
-def get_callbacks(model_path="model/signlens.keras"):
+def get_callbacks(model_path="model/signlens.h5"):
     """
     Get training callbacks for early stopping, checkpointing, and learning rate reduction.
     """
@@ -78,7 +61,8 @@ def get_callbacks(model_path="model/signlens.keras"):
             filepath=model_path,
             monitor='val_accuracy',
             save_best_only=True,
-            verbose=1
+            verbose=1,
+            save_weights_only=False
         ),
         
         # Reduce learning rate when stuck

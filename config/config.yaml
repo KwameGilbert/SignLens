@@ -30,8 +30,6 @@ dataset:
     countdown: 3
     auto_frames: 30
   classes:
-    - "hello"
-    - "thanks"
-    - "iloveyou"
-    - "yes"
-    - "no"
+    - "A"
+    - "B"
+    - "C"

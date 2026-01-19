@@ -34,7 +34,7 @@ class SignLanguageDetector:
             self.logger.warning("Predictor module not available")
             return
             
-        model_path = "model/signlens.keras"
+        model_path = "model/signlens.h5"
         metadata_path = "model/metadata.json"
         
         if os.path.exists(model_path) and os.path.exists(metadata_path):

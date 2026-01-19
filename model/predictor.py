@@ -15,7 +15,7 @@ except ImportError:
 
 
 class SignPredictor:
-    def __init__(self, model_path="model/signlens.keras", metadata_path="model/metadata.json"):
+    def __init__(self, model_path="model/signlens.h5", metadata_path="model/metadata.json"):
         """
         Initialize the predictor with a trained model.
         

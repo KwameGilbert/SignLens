@@ -63,7 +63,7 @@ def train(dataset_path="dataset", sequence_length=30, epochs=100, batch_size=32)
     model_dir = os.path.join(project_root, "model")
     os.makedirs(model_dir, exist_ok=True)
     
-    model_path = os.path.join(model_dir, "signlens.keras")
+    model_path = os.path.join(model_dir, "signlens.h5")
     callbacks = get_callbacks(model_path)
     
     history = model.fit(
