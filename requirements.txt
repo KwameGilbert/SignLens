@@ -5,3 +5,5 @@ nltk
 opencv-python
 torch
 uvicorn
+matplotlib
+mediapipe==0.10.35
