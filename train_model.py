@@ -2,7 +2,7 @@ import numpy as np
 import os
 
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.callbacks import TensorBoard
+from tensorflow.keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 import matplotlib.pyplot as plt
 from model import get_model
 
@@ -60,6 +60,69 @@ def plot_history(history):
     plt.tight_layout()
     plt.show()
 
+def plot_confusion_matrix_manual(y_true, y_pred, classes):
+    """
+    Computes and plots confusion matrix using pure NumPy/Matplotlib.
+    """
+    # 1. Compute Confusion Matrix
+    num_classes = len(classes)
+    cm = np.zeros((num_classes, num_classes), dtype=int)
+    
+    y_true_indices = np.argmax(y_true, axis=1)
+    y_pred_indices = np.argmax(y_pred, axis=1)
+    
+    for t, p in zip(y_true_indices, y_pred_indices):
+        cm[t][p] += 1
+
+    # 2. Plot
+    fig, ax = plt.subplots(figsize=(8, 8))
+    cax = ax.matshow(cm, cmap=plt.cm.Blues)
+    fig.colorbar(cax)
+    
+    # Labels
+    ax.set_xticks(np.arange(num_classes))
+    ax.set_yticks(np.arange(num_classes))
+    ax.set_xticklabels(classes, rotation=45)
+    ax.set_yticklabels(classes)
+    
+    # Text Annotations
+    for i in range(num_classes):
+        for j in range(num_classes):
+            ax.text(j, i, str(cm[i, j]), ha='center', va='center', color='black')
+            
+    plt.title('Confusion Matrix')
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    plt.show()
+
+def augment_data(X, y):
+    """
+    Augments data by adding random noise (jitter) and scaling.
+    Doubles the dataset size.
+    """
+    print("Augmenting data...")
+    augmented_X = []
+    augmented_y = []
+    
+    for x_seq, y_label in zip(X, y):
+        # 1. Original (Keep it)
+        augmented_X.append(x_seq)
+        augmented_y.append(y_label)
+        
+        # 2. Jitter (Add random noise)
+        noise = np.random.normal(0, 0.05, x_seq.shape)
+        jittered_x = x_seq + noise
+        augmented_X.append(jittered_x)
+        augmented_y.append(y_label)
+        
+        # 3. Scaling (Zoom in/out slightly)
+        scale = np.random.uniform(0.9, 1.1)
+        scaled_x = x_seq * scale
+        augmented_X.append(scaled_x)
+        augmented_y.append(y_label)
+
+    return np.array(augmented_X), np.array(augmented_y)
+
 def main():
     # 1. Load Data
     X, y, actions = load_data()
@@ -67,6 +130,9 @@ def main():
     if len(X) == 0:
         print("No data found! Please run collect_data.py first.")
         return
+
+    # 1.5 Augment Data
+    X, y = augment_data(X, y)
 
     print(f"Data shape: {X.shape}")
     print(f"Labels shape: {y.shape}")
@@ -94,17 +160,30 @@ def main():
     
     # 4. Train
     print("Starting training...")
+    
+    # Callbacks
     log_dir = os.path.join('Logs')
     tb_callback = TensorBoard(log_dir=log_dir)
     
-    history = model.fit(X_train, y_train, epochs=200, callbacks=[tb_callback], validation_data=(X_test, y_test))
+    early_stopping = EarlyStopping(monitor='val_loss', patience=10, mode='min', restore_best_weights=True)
+    checkpoint = ModelCheckpoint('sign_language_model.h5', monitor='val_categorical_accuracy', mode='max', save_best_only=True, verbose=1)
+    lr_scheduler = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1)
     
-    # 5. Save Model
-    model.save('sign_language_model.h5')
-    print("Model saved as 'sign_language_model.h5'")
+    callbacks = [tb_callback, early_stopping, checkpoint, lr_scheduler]
+    
+    history = model.fit(X_train, y_train, epochs=2000, callbacks=callbacks, validation_data=(X_test, y_test))
+    
+    # No need to save manually at end, checkpoint does it.
+    # But for safety we can keep it or rely on checkpoint. 
+    # Checkpoint is better.
     
     # 6. Plot Results
     plot_history(history)
+    
+    # 7. Plot Confusion Matrix
+    print("Generating Confusion Matrix...")
+    y_pred = model.predict(X_test)
+    plot_confusion_matrix_manual(y_test, y_pred, actions)
 
 if __name__ == '__main__':
     main()
