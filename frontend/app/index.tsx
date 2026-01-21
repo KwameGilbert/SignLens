@@ -30,7 +30,7 @@ export default function SplashScreen() {
       />
 
       {/* Overlay Content */}
-      <View className="flex-1 justify-center items-center bg-black/30">
+      <View className="flex-1 justify-center items-center bg-black/50">
         <View className="items-center px-4 w-full max-w-md">
             <Text className="text-white text-4xl font-bold mb-2 text-center">SignLens</Text>
             <Text className="text-white/80 text-lg text-center">
