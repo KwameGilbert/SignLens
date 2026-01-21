@@ -85,6 +85,7 @@ def main():
     sentence = []
     predictions = []
     threshold = 0.5
+    frame_num = 0
 
     # 4. Start Inference
     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
@@ -94,6 +95,8 @@ def main():
             ret, frame = cap.read()
             if not ret:
                 break
+                
+            frame_num += 1
 
             # Make detections
             image, results = mediapipe_detection(frame, holistic)
@@ -106,7 +109,8 @@ def main():
             sequence.append(keypoints)
             sequence = sequence[-SEQUENCE_LENGTH:] # Keep only last 30 frames
             
-            if len(sequence) == SEQUENCE_LENGTH:
+            # Only predict every 5 frames (to stabilize and save CPU)
+            if len(sequence) == SEQUENCE_LENGTH and frame_num % 5 == 0:
                 res = model.predict(np.expand_dims(sequence, axis=0))[0]
                 print(actions[np.argmax(res)])
                 predictions.append(np.argmax(res))
@@ -124,9 +128,6 @@ def main():
                 if len(sentence) > 1: 
                     sentence = sentence[-1:]
 
-                # Viz probabilities
-                # image = prob_viz(res, actions, image, colors)
-            
             cv2.rectangle(image, (0,0), (640, 40), (245, 117, 16), -1)
             
             # Display logic

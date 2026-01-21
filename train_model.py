@@ -171,7 +171,7 @@ def main():
     
     callbacks = [tb_callback, early_stopping, checkpoint, lr_scheduler]
     
-    history = model.fit(X_train, y_train, epochs=2000, callbacks=callbacks, validation_data=(X_test, y_test))
+    history = model.fit(X_train, y_train, epochs=200, callbacks=callbacks, validation_data=(X_test, y_test))
     
     # No need to save manually at end, checkpoint does it.
     # But for safety we can keep it or rely on checkpoint. 
