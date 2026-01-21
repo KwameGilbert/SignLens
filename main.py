@@ -133,7 +133,7 @@ def main():
             # Display logic
             display_text = ' '.join(sentence)
             if display_text == 'Neutral':
-                display_text = ''
+                display_text = 'No sign detected'
                 
             cv2.putText(image, display_text, (3,30), 
                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
