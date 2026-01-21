@@ -3,15 +3,19 @@ import numpy as np
 import os
 import mediapipe as mp
 import time
+import shutil
 
 # --- Configuration ---
 DATA_PATH = os.path.join('dataset')
 SEQUENCE_LENGTH = 30  # Frames per sequence
-NO_SEQUENCES = 90     # Number of sequences to collect
+NO_SEQUENCES = 30     # Number of sequences to collect
 
 # --- MediaPipe Setup ---
 mp_holistic = mp.solutions.holistic
 mp_drawing = mp.solutions.drawing_utils
+
+print("All imports successful!")
+
 
 def mediapipe_detection(image, model):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -55,6 +59,10 @@ def extract_keypoints(results):
     return np.concatenate([pose, face, lh, rh])
 
 def main():
+    print("=" * 50)
+    print("SignLens Data Collection Tool")
+    print("=" * 50)
+    
     # 1. Ask for the action (sign) to record
     action = input("Enter the name of the sign you want to collect (e.g., 'A'): ").strip()
     if not action:
@@ -63,7 +71,9 @@ def main():
 
     # 2. Create directory for the action
     action_path = os.path.join(DATA_PATH, action)
-    os.makedirs(action_path, exist_ok=True)
+    if os.path.exists(action_path):
+        shutil.rmtree(action_path)
+    os.makedirs(action_path)
     print(f"Saving data to: {action_path}")
     print(f"Please prepare to record {NO_SEQUENCES} sequences of {SEQUENCE_LENGTH} frames each.")
 
@@ -130,4 +140,12 @@ def main():
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    main()
+    try:
+        print("Script started successfully!")
+        main()
+    except Exception as e:
+        print(f"ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        input("Press Enter to exit...")
+
