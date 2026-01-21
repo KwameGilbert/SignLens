@@ -116,7 +116,7 @@ def main():
                 predictions.append(np.argmax(res))
                 
                 # Visualization logic
-                if np.unique(predictions[-5:])[0] == np.argmax(res): 
+                if np.unique(predictions[-2:])[0] == np.argmax(res): 
                     if res[np.argmax(res)] > threshold: 
                         
                         if len(sentence) > 0: 
