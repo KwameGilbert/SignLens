@@ -1,21 +1,19 @@
-# ML Training
-# ML Training
-tensorflow==2.13.0
-protobuf==3.20.3
-scikit-learn
+# SignLens Dependencies
 
+# ML Training
+tensorflow>=2.13.0
+protobuf>=3.20.3
+#scikit-learn>=1.3.0
 
 # Core ML/CV
-mediapipe==0.10.5
-opencv-python
-numpy
+mediapipe>=0.10.5
+opencv-python>=4.8.0
+numpy>=1.24.0
+matplotlib>=3.7.0
 
 # Configuration
-pyyaml
+pyyaml>=6.0
 
-# UI/CLI
-rich
-
-
-
+# UI/CLI (for enhanced terminal output)
+rich>=13.0.0
 

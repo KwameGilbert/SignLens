@@ -1,28 +1,30 @@
+# SignLens Configuration
+
 app:
   name: "SignLens"
-  version: "1.0"
+  version: "1.0.0"
 
+# Camera Settings
 camera:
-  index: 0
-  width: 1920
-  height: 1080
+  index: 0 # Default webcam (0 = default, 1 = external, etc.)
+  width: 640 # Resolution width
+  height: 480 # Resolution height
 
+# MediaPipe Settings
 mediapipe:
-  detection_confidence: 0.5
-  tracking_confidence: 0.5
+  min_detection_confidence: 0.5
+  min_tracking_confidence: 0.5
 
-ui:
-  show_fps: true
-  show_status: true
-  show_prediction: true
+# Data Collection Settings (used by model training)
+data_collection:
+  data_path: "dataset"
+  sequence_length: 30 # Frames per sequence
+  num_sequences: 30 # Number of sequences to collect per sign
 
-logging:
-  level: "INFO"
-  file: "logs/app.log"
-
+# Dataset Recorder Settings (used by record.py)
 dataset:
   output_dir: "dataset"
-  interface: "cli" # 'cli' or 'gui'
+  interface: "gui" # 'cli' or 'gui'
   sequence_lengths:
     static_default: 30
     dynamic_default: 45
@@ -33,3 +35,36 @@ dataset:
     - "A"
     - "B"
     - "C"
+    - "Neutral"
+
+# Training Settings
+training:
+  epochs: 200
+  test_size: 0.2 # 20% for testing
+  batch_size: 32
+  model_path: "model/signlens.h5"
+  log_dir: "Logs"
+
+# Inference Settings
+inference:
+  prediction_threshold: 0.5
+  prediction_interval: 5 # Predict every N frames
+  stability_buffer: 2 # Number of matching predictions required
+
+# UI Settings
+ui:
+  show_fps: true
+  show_status: true
+  show_landmarks: true
+  show_prediction: true
+  window_name: "SignLens"
+  colors:
+    primary: [245, 117, 16]
+    secondary: [117, 245, 16]
+    tertiary: [16, 117, 245]
+
+# Logging Settings
+logging:
+  level: "INFO" # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  file: "logs/signlens.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

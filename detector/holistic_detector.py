@@ -9,17 +9,17 @@ class HolisticDetector:
         self.mp_drawing = mp.solutions.drawing_utils
         
         self.model = self.mp_holistic.Holistic(
-            min_detection_confidence=config['mediapipe']['detection_confidence'],
-            min_tracking_confidence=config['mediapipe']['tracking_confidence']
-            )
+            min_detection_confidence=config['mediapipe']['min_detection_confidence'],
+            min_tracking_confidence=config['mediapipe']['min_tracking_confidence']
+        )
 
     def update_config(self, config):
         """
         Update the detector configuration.
         Re-initializes the model if confidence thresholds change.
         """
-        new_det_conf = config['mediapipe']['detection_confidence']
-        new_track_conf = config['mediapipe']['tracking_confidence']
+        new_det_conf = config['mediapipe']['min_detection_confidence']
+        new_track_conf = config['mediapipe']['min_tracking_confidence']
         
         # Re-initialize the model with new parameters
         self.model.close()

@@ -1,176 +1,198 @@
-import cv2
-import os
+"""
+SignLens Real-Time Inference
+Main entry point for running sign language recognition on live webcam feed.
 
+Usage:
+    python main.py
+"""
+
+import cv2
+import numpy as np
+import os
+import sys
+
+from config.loader import ConfigLoader
 from detector.holistic_detector import HolisticDetector
 from detector.keypoints import extract_keypoints
 from ui.overlay import UIOverlay
 from utils.fps_counter import FPSCounter
 from utils.logger import setup_logger
-from config.loader import ConfigLoader
-
-# Try to import predictor (may not exist if model not trained)
-try:
-    from model.predictor import SignPredictor
-    PREDICTOR_AVAILABLE = True
-except ImportError:
-    PREDICTOR_AVAILABLE = False
+from model.predictor import SignPredictor
 
 
-class SignLanguageDetector:
-    def __init__(self):
-        # Load config once
-        self.config = ConfigLoader.load_config()
-        
-        # Setup logger with config
-        self.logger = setup_logger(self.config)
-        
-        # Initialize predictor if model exists
-        self.predictor = None
-        self._init_predictor()
+def main():
+    """Main inference loop."""
+    # 1. Load Configuration
+    config = ConfigLoader.get_config()
+    logger = setup_logger(config)
     
-    def _init_predictor(self):
-        """Try to load the trained model for predictions."""
-        if not PREDICTOR_AVAILABLE:
-            self.logger.warning("Predictor module not available")
-            return
-            
-        model_path = "model/signlens.h5"
-        metadata_path = "model/metadata.json"
-        
-        if os.path.exists(model_path) and os.path.exists(metadata_path):
-            try:
-                self.predictor = SignPredictor(model_path, metadata_path)
-                self.logger.info(f"Loaded model with classes: {self.predictor.classes}")
-            except Exception as e:
-                self.logger.warning(f"Failed to load predictor: {e}")
-                self.predictor = None
-        else:
-            self.logger.info("No trained model found. Running in detection-only mode.")
-            self.logger.info("Train a model with: python -m model.train")
-
-    def main(self):
-        self.logger.info(f"Starting {self.config['app']['name']}")
-        self.logger.info(f"Version: {self.config['app']['version']}")
-        self.logger.info(f"Loading {self.config['app']['name']}...")
-       
-        # Initialize detectors
-        self.logger.info("Loading Mediapipe Model...")
-        detector = HolisticDetector(self.config)
-        self.logger.info("Holistic Model Loaded...")
-        self.logger.info("Loading FPS Counter...")
-        fps_counter = FPSCounter()
-        self.logger.info("FPS Counter Loaded...")
-
-        # Initialize camera with error handling
-        self.logger.info("Initializing camera...")
-        try:
-            cap = cv2.VideoCapture(self.config['camera']['index'])
-            if not cap.isOpened():
-                self.logger.error(f"Failed to open camera at index {self.config['camera']['index']}")
-                print("ERROR: Could not open camera. Please check:")
-                print("  1. Camera is connected")
-                print("  2. Camera is not in use by another application")
-                print("  3. Camera index in config.yaml is correct")
-                return
-        except Exception as e:
-            self.logger.error(f"Camera initialization failed: {e}")
-            print(f"ERROR: Camera initialization failed: {e}")
-            return
-            
-        self.logger.info(f"Using camera index: {self.config['camera']['index']}")
-        # Set camera resolution if specified
-        if 'width' in self.config['camera'] and 'height' in self.config['camera']:
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.config['camera']['width'])
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.config['camera']['height'])
-            self.logger.info(f"Using camera resolution: {self.config['camera']['width']}x{self.config['camera']['height']}")
-
-        # Initialize UI
-        ui = UIOverlay(self.config)
-        
-        # Prediction state
-        last_prediction = None
-        last_confidence = 0.0
-
+    # Get settings from config
+    camera_index = config['camera']['index']
+    camera_width = config['camera']['width']
+    camera_height = config['camera']['height']
+    
+    inference_config = config.get('inference', {})
+    threshold = inference_config.get('prediction_threshold', 0.5)
+    prediction_interval = inference_config.get('prediction_interval', 5)
+    stability_buffer = inference_config.get('stability_buffer', 2)
+    
+    ui_config = config.get('ui', {})
+    window_name = ui_config.get('window_name', 'SignLens')
+    show_landmarks = ui_config.get('show_landmarks', True)
+    
+    # Colors
+    colors = [
+        tuple(ui_config.get('colors', {}).get('primary', [245, 117, 16])),
+        tuple(ui_config.get('colors', {}).get('secondary', [117, 245, 16])),
+        tuple(ui_config.get('colors', {}).get('tertiary', [16, 117, 245]))
+    ]
+    
+    logger.info("=" * 50)
+    logger.info("SignLens Real-Time Inference")
+    logger.info("=" * 50)
+    
+    print("=" * 50)
+    print("  SignLens Real-Time Inference")
+    print("=" * 50)
+    
+    # 2. Load Model
+    try:
+        predictor = SignPredictor(config=config)
+    except FileNotFoundError as e:
+        logger.error(str(e))
+        print(f"\n❌ {e}")
+        print("\nTo train a model, run:")
+        print("  1. python record.py   (to collect data)")
+        print("  2. python -m model.train   (to train the model)")
+        return
+    
+    logger.info(f"Model loaded with {len(predictor.classes)} classes: {predictor.classes}")
+    
+    # 3. Setup Camera
+    print(f"\nOpening camera {camera_index}...")
+    cap = cv2.VideoCapture(camera_index)
+    
+    if not cap.isOpened():
+        logger.error(f"Could not open camera at index {camera_index}")
+        print(f"❌ Error: Could not open camera at index {camera_index}")
+        print("   Please check your camera connection and config settings.")
+        return
+    
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, camera_width)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, camera_height)
+    
+    # 4. Initialize Components
+    detector = HolisticDetector(config)
+    overlay = UIOverlay(config)
+    fps_counter = FPSCounter()
+    
+    # Inference Variables
+    predictions_history = []
+    current_sign = ""
+    frame_num = 0
+    
+    print(f"\n✅ Inference started! Press 'q' to quit.")
+    print(f"   Classes: {predictor.classes}")
+    print(f"   Threshold: {threshold}")
+    logger.info("Inference loop started")
+    
+    try:
         while cap.isOpened():
+            # Read frame
             ret, frame = cap.read()
             if not ret:
+                logger.warning("Failed to read frame from camera")
                 break
+                
+            frame_num += 1
 
-            # Detect landmarks
+            # Run detection
             image, results = detector.detect(frame)
-
-            # Draw landmarks
-            detector.draw_landmarks(image, results)
-
-            # Extract keypoints
-            keypoints = extract_keypoints(results)
             
-            # Make prediction if model is loaded
-            if self.predictor is not None:
-                self.predictor.add_frame(keypoints)
-                
-                if self.predictor.can_predict():
-                    pred_class, confidence = self.predictor.predict_with_threshold(threshold=0.6)
-                    
-                    if pred_class is not None:
-                        last_prediction = pred_class
-                        last_confidence = confidence
-                
-                # Draw prediction on screen
-                if last_prediction is not None:
-                    ui.draw_prediction(image, last_prediction, last_confidence)
-
-            # Update FPS counter
+            # Draw landmarks if enabled
+            if show_landmarks:
+                detector.draw_landmarks(image, results)
+            
+            # Update FPS
             fps_counter.update()
-            fps = fps_counter.get_fps()
-
-            # Draw UI overlays
-            ui.draw_fps(image, fps)
+            overlay.draw_fps(image, fps_counter.get_fps())
             
-            # Update status based on mode
-            if self.predictor is not None:
-                status = "Recognition Active"
-            else:
-                status = "Detection Only (No Model)"
-            ui.draw_status(image, status)
+            # Extract keypoints and add to predictor buffer
+            keypoints = extract_keypoints(results)
+            predictor.add_frame(keypoints)
+            
+            # Run prediction at specified interval
+            if predictor.can_predict() and frame_num % prediction_interval == 0:
+                predicted_class, confidence = predictor.predict()
+                predictions_history.append((predicted_class, confidence))
+                
+                # Keep only recent predictions for stability check
+                predictions_history = predictions_history[-stability_buffer:]
+                
+                # Stability check: Only update if recent predictions agree
+                if len(predictions_history) >= stability_buffer:
+                    recent_classes = [p[0] for p in predictions_history]
+                    if len(set(recent_classes)) == 1 and confidence > threshold:
+                        current_sign = predicted_class
+                        logger.debug(f"Detected: {current_sign} ({confidence:.2f})")
+            
+            # Draw header bar
+            cv2.rectangle(image, (0, 0), (image.shape[1], 50), colors[0], -1)
+            
+            # Display detected sign
+            display_text = current_sign if current_sign else "Waiting..."
+            if display_text == 'Neutral':
+                display_text = 'No sign detected'
+                
+            cv2.putText(
+                image, 
+                display_text, 
+                (10, 35), 
+                cv2.FONT_HERSHEY_SIMPLEX, 
+                1.2, 
+                (255, 255, 255), 
+                2, 
+                cv2.LINE_AA
+            )
+            
+            # Draw buffer status
+            buffer_status = predictor.get_buffer_status()
+            status_text = f"Buffer: {buffer_status['buffer_size']}/{buffer_status['sequence_length']}"
+            cv2.putText(
+                image,
+                status_text,
+                (image.shape[1] - 150, 35),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (255, 255, 255),
+                1,
+                cv2.LINE_AA
+            )
+            
+            # Show frame
+            cv2.imshow(window_name, image)
 
-            # Display the resulting frame
-            cv2.imshow('SignLens', image)
-
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            # Handle keyboard input
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('q'):
+                logger.info("User requested exit")
                 break
-
-            # Check for config updates
-            if ConfigLoader.check_for_updates():
-                self.logger.info("Configuration change detected. Reloading...")
-                self.config = ConfigLoader.reload_config()
+            elif key == ord('c'):
+                # Clear current detection
+                current_sign = ""
+                predictions_history = []
+                predictor.clear_buffer()
+                logger.info("Buffer cleared")
                 
-                # Update components
-                ui.update_config(self.config)
-                detector.update_config(self.config)
-                
-                # Update logger level
-                log_level = self.config.get('logging', {}).get('level', 'INFO').upper()
-                self.logger.setLevel(log_level)
-                for handler in self.logger.handlers:
-                    handler.setLevel(log_level)
-                
-                # Update camera resolution if changed
-                new_width = self.config['camera'].get('width')
-                new_height = self.config['camera'].get('height')
-                current_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-                current_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-                
-                if new_width and new_height and (new_width != current_width or new_height != current_height):
-                    self.logger.info(f"Updating camera resolution to {new_width}x{new_height}")
-                    cap.set(cv2.CAP_PROP_FRAME_WIDTH, new_width)
-                    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, new_height)
-        
-        self.logger.info("Closing camera and releasing resources...")
-        detector.close()
+    except KeyboardInterrupt:
+        logger.info("Interrupted by user")
+    finally:
         cap.release()
         cv2.destroyAllWindows()
+        detector.close()
+        logger.info("Inference stopped")
+        print("\n👋 Inference stopped.")
 
-if __name__ == "__main__":
-    app = SignLanguageDetector()
-    app.main()
+
+if __name__ == '__main__':
+    main()

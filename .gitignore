@@ -1,18 +1,46 @@
-venv
-logs
-.DS_Store
+# Virtual Environment
+venv/
+.venv/
+.venv310/
+
+# Python
 *.pyc
 __pycache__/
-.env
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# IDEs
 .idea/
+.vscode/
+*.sublime-*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
 *.log
+Logs/
+
+# Environment
+.env
+.env.local
+
+# Build artifacts
 coverage/
 dist/
 build/
-.pytest_cache/
-.ipynb_checkpoints/
+
+# Model artifacts (optional - uncomment to ignore)
+# model/signlens.h5
+# model/metadata.json
+# model/*.png
+
+# Dataset (optional - uncomment to ignore large datasets)
+# dataset/
+# raw_data/
+
+# Misc
 *.sqlite3
-.vscode/
-.venv/
-*.egg-info/
-.venv310/

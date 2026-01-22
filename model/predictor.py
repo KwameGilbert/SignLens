@@ -5,6 +5,7 @@ Loads the trained model and performs real-time inference.
 import os
 import json
 import numpy as np
+
 try:
     import tensorflow as tf
     from tensorflow import keras
@@ -15,13 +16,21 @@ except ImportError:
 
 
 class SignPredictor:
-    def __init__(self, model_path="model/signlens.h5", metadata_path="model/metadata.json"):
+    """
+    Sign Language Predictor class for real-time inference.
+    
+    Manages a frame buffer and provides predictions based on
+    a trained LSTM model.
+    """
+    
+    def __init__(self, model_path: str = None, metadata_path: str = None, config: dict = None):
         """
         Initialize the predictor with a trained model.
         
         Args:
-            model_path: Path to the saved Keras model
-            metadata_path: Path to the metadata JSON file
+            model_path: Path to the saved Keras model (overrides config)
+            metadata_path: Path to the metadata JSON file (overrides config)
+            config: Configuration dictionary
         """
         self.model = None
         self.metadata = None
@@ -29,9 +38,23 @@ class SignPredictor:
         self.sequence_length = 30
         self.sequence_buffer = []
         
+        # Determine paths from config or defaults
+        if config is not None:
+            training_config = config.get('training', {})
+            default_model_path = training_config.get('model_path', 'model/signlens.h5')
+        else:
+            default_model_path = 'model/signlens.h5'
+        
+        model_path = model_path or default_model_path
+        
+        # Derive metadata path from model path if not specified
+        if metadata_path is None:
+            model_dir = os.path.dirname(model_path)
+            metadata_path = os.path.join(model_dir, 'metadata.json')
+        
         self._load_model(model_path, metadata_path)
     
-    def _load_model(self, model_path, metadata_path):
+    def _load_model(self, model_path: str, metadata_path: str):
         """Load the model and metadata."""
         if not os.path.exists(model_path):
             raise FileNotFoundError(
@@ -58,7 +81,7 @@ class SignPredictor:
         
         print(f"Model loaded. Classes: {self.classes}")
     
-    def add_frame(self, keypoints):
+    def add_frame(self, keypoints: np.ndarray):
         """
         Add a frame of keypoints to the buffer.
         
@@ -71,11 +94,11 @@ class SignPredictor:
         if len(self.sequence_buffer) > self.sequence_length:
             self.sequence_buffer.pop(0)
     
-    def can_predict(self):
+    def can_predict(self) -> bool:
         """Check if we have enough frames to make a prediction."""
         return len(self.sequence_buffer) >= self.sequence_length
     
-    def predict(self):
+    def predict(self) -> tuple:
         """
         Make a prediction based on the current buffer.
         
@@ -99,7 +122,7 @@ class SignPredictor:
         
         return predicted_class, float(confidence)
     
-    def predict_with_threshold(self, threshold=0.7):
+    def predict_with_threshold(self, threshold: float = 0.7) -> tuple:
         """
         Make a prediction only if confidence exceeds threshold.
         
@@ -119,7 +142,7 @@ class SignPredictor:
         """Clear the sequence buffer."""
         self.sequence_buffer = []
     
-    def get_all_predictions(self):
+    def get_all_predictions(self) -> dict:
         """
         Get predictions for all classes.
         
@@ -135,6 +158,20 @@ class SignPredictor:
         predictions = self.model.predict(sequence, verbose=0)[0]
         
         return {self.classes[i]: float(predictions[i]) for i in range(len(self.classes))}
+    
+    def get_buffer_status(self) -> dict:
+        """
+        Get the current buffer status.
+        
+        Returns:
+            dict with buffer_size, sequence_length, ready status
+        """
+        return {
+            'buffer_size': len(self.sequence_buffer),
+            'sequence_length': self.sequence_length,
+            'ready': self.can_predict(),
+            'fill_percentage': len(self.sequence_buffer) / self.sequence_length * 100
+        }
 
 
 if __name__ == "__main__":
@@ -144,5 +181,6 @@ if __name__ == "__main__":
         print("\n✅ Predictor initialized successfully!")
         print(f"Classes: {predictor.classes}")
         print(f"Sequence length: {predictor.sequence_length}")
+        print(f"Buffer status: {predictor.get_buffer_status()}")
     except FileNotFoundError as e:
         print(f"\n❌ {e}")
