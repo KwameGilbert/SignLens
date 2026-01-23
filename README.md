@@ -8,12 +8,9 @@ A real-time Sign Language Detection application built with Python, OpenCV, and M
 - **LSTM-based Recognition**: Deep learning model learns temporal patterns in gesture sequences.
 - **Real-time Performance**: Optimized for smooth real-time inference.
 - **Multiple Recording Modes**: Keyboard, Automatic Timer, or Hybrid control.
-- **Data Augmentation**: Built-in jitter and scaling augmentation for better generalization.
+- **Data Augmentation**: Built-in jitter (5%) and scaling (±10%) augmentation.
 - **Configurable**: Fully customizable via `config/config.yaml`.
 - **Modular Design**: Clean separation of concerns (Detector, UI, Utils, Model, Tools).
-- **GUI/CLI Interface**: Flexible data recording interface.
-- **FPS Counter**: Built-in performance monitoring.
-- **Logging**: Comprehensive logging system for debugging and tracking.
 
 ## 🛠️ Tech Stack
 
@@ -22,9 +19,8 @@ A real-time Sign Language Detection application built with Python, OpenCV, and M
 - **OpenCV**: For image processing and video capture.
 - **MediaPipe**: For holistic landmark detection.
 - **NumPy**: For numerical operations and keypoint manipulation.
-- **scikit-learn**: For data splitting and preprocessing.
-- **PyYAML**: For configuration management.
 - **Matplotlib**: For training visualization.
+- **PyYAML**: For configuration management.
 
 ## 📂 Project Structure
 
@@ -37,7 +33,7 @@ SignLens/
 ├── detector/
 │   ├── __init__.py          # Package init
 │   ├── holistic_detector.py # MediaPipe Holistic wrapper
-│   └── keypoints.py         # Keypoint extraction (1662 values)
+│   └── keypoints.py         # Keypoint extraction [pose, face, lh, rh]
 ├── model/
 │   ├── __init__.py          # Package init
 │   ├── data_loader.py       # Dataset loading and augmentation
@@ -45,7 +41,7 @@ SignLens/
 │   ├── predictor.py         # Real-time inference handler
 │   ├── train.py             # Training script
 │   ├── signlens.h5          # Trained model (generated)
-│   └── metadata.json        # Model metadata (generated)
+│   └── *.png                # Training plots (generated)
 ├── tools/
 │   ├── gui.py               # GUI recorder interface
 │   ├── menu.py              # CLI menu system
@@ -60,12 +56,13 @@ SignLens/
 │   ├── fps_counter.py       # FPS calculation
 │   └── logger.py            # Logging setup
 ├── dataset/                  # Training data (generated)
-│   ├── A/                    # Sign class A
-│   ├── B/                    # Sign class B
-│   └── ...                   # More classes
 ├── logs/                     # Application logs (generated)
+├── Logs/                     # TensorBoard logs (generated)
 ├── main.py                  # 🎯 Real-time inference entry point
 ├── record.py                # 🎯 Data recording entry point
+├── collect_data.py          # 📦 Standalone data collection
+├── train_model.py           # 📦 Standalone training script
+├── model.py                 # 📦 Standalone model definition
 ├── requirements.txt         # Project dependencies
 └── README.md                # This file
 ```
@@ -77,14 +74,16 @@ SignLens/
 │                           SignLens Pipeline                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  1. DATA COLLECTION (record.py)                                             │
-│     └─▶ Webcam/Video → MediaPipe → Keypoints (1662) → .npy files           │
+│  1. DATA COLLECTION                                                         │
+│     Option A: python collect_data.py    (standalone)                       │
+│     Option B: python record.py          (modular with GUI/CLI)             │
 │                                                                             │
-│  2. MODEL TRAINING (python -m model.train)                                  │
-│     └─▶ Load .npy → Augment → Train LSTM → signlens.h5                     │
+│  2. MODEL TRAINING                                                          │
+│     Option A: python train_model.py     (standalone → sign_language_model.h5)│
+│     Option B: python -m model.train    (modular → model/signlens.h5)       │
 │                                                                             │
-│  3. REAL-TIME INFERENCE (main.py)                                           │
-│     └─▶ Webcam → MediaPipe → Keypoints → LSTM → Prediction → Display       │
+│  3. REAL-TIME INFERENCE                                                     │
+│     python main.py                      (uses modular components)          │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -98,20 +97,12 @@ SignLens/
    cd SignLens
    ```
 
-2. **Create a Virtual Environment (Recommended)**
-
-   **Windows:**
+2. **Create a Virtual Environment**
 
    ```bash
    python -m venv venv
-   venv\Scripts\activate
-   ```
-
-   **macOS/Linux:**
-
-   ```bash
-   python -m venv venv
-   source venv/bin/activate
+   venv\Scripts\activate   # Windows
+   source venv/bin/activate  # Linux/Mac
    ```
 
 3. **Install Dependencies**
@@ -123,37 +114,36 @@ SignLens/
 
 ### Step 1: Collect Training Data
 
+**Option A - Standalone (Simple):**
+
 ```bash
-python record.py
+python collect_data.py
+# Enter sign name (e.g., "A")
+# Records 30 sequences of 30 frames each
 ```
 
-This launches an interactive menu where you can:
+**Option B - Modular (GUI/CLI):**
 
-- Choose recording mode (Keyboard, Automatic, Hybrid)
-- Select class naming method
-- Choose static vs dynamic gestures
-- Set custom sequence lengths
-
-**Recording Modes:**
-
-- **Keyboard**: Press `R` to record, `S` to save, `N` for next class
-- **Automatic**: Auto-records after countdown
-- **Hybrid**: Countdown + manual control
+```bash
+python record.py          # CLI mode (default)
+python record.py --gui    # GUI mode
+```
 
 ### Step 2: Train the Model
 
+**Option A - Standalone:**
+
 ```bash
-python -m model.train
+python train_model.py
+# Saves to: sign_language_model.h5
 ```
 
-This will:
+**Option B - Modular:**
 
-- Load all collected data from `dataset/`
-- Apply data augmentation (jitter, scaling)
-- Auto-select model architecture based on dataset size
-- Train with early stopping and learning rate scheduling
-- Save the best model to `model/signlens.h5`
-- Generate training plots and confusion matrix
+```bash
+python -m model.train
+# Saves to: model/signlens.h5
+```
 
 ### Step 3: Run Real-Time Inference
 
@@ -168,74 +158,65 @@ python main.py
 
 ## 🔧 Configuration
 
-The application is driven by `config/config.yaml`:
+Edit `config/config.yaml` to customize:
 
 ```yaml
-# Camera Settings
 camera:
   index: 0 # Webcam index
   width: 640 # Resolution width
   height: 480 # Resolution height
 
-# MediaPipe Settings
 mediapipe:
   min_detection_confidence: 0.5
   min_tracking_confidence: 0.5
 
-# Data Collection Settings
-data_collection:
-  data_path: "dataset"
-  sequence_length: 30 # Frames per sequence
-  num_sequences: 30 # Sequences per sign
-
-# Training Settings
 training:
   epochs: 200
-  test_size: 0.2
+  test_size: 0.05 # 5% for testing
   model_path: "model/signlens.h5"
 
-# Inference Settings
 inference:
-  prediction_threshold: 0.5 # Confidence threshold
+  prediction_threshold: 0.5
   prediction_interval: 5 # Predict every N frames
-  stability_buffer: 2 # Matching predictions required
-
-# UI Settings
-ui:
-  show_fps: true
-  show_landmarks: true
-  window_name: "SignLens"
 ```
 
 ## 🧠 Model Architecture
 
-The LSTM model processes sequences of 30 frames, each containing 1662 keypoints:
-
-**Simple Model** (for < 100 samples/class):
-
 ```
-Input (30, 1662) → LSTM(64) → Dense(32) → Output
+Input (30 frames × 1662 keypoints)
+    ↓
+LSTM Layer 1 (64 units) + BatchNorm + Dropout(0.2)
+    ↓
+LSTM Layer 2 (128 units) + BatchNorm + Dropout(0.2)
+    ↓
+LSTM Layer 3 (64 units) + BatchNorm + Dropout(0.2)
+    ↓
+Dense Layer (64 units) + BatchNorm
+    ↓
+Dense Layer (32 units) + BatchNorm
+    ↓
+Output Layer (softmax, num_classes)
 ```
 
-**Standard Model** (for larger datasets):
+**Training Features:**
 
-```
-Input (30, 1662) → LSTM(64) → LSTM(128) → LSTM(64) → Dense(64) → Dense(32) → Output
-```
+- CategoricalCrossentropy with Label Smoothing (0.1)
+- Data Augmentation: Jitter (5%) + Scaling (±10%)
+- EarlyStopping (patience=10)
+- ReduceLROnPlateau
+- ModelCheckpoint (saves best model)
 
 ## 📊 Keypoint Breakdown
 
 | Body Part  | Landmarks | Values per Landmark     | Total    |
 | ---------- | --------- | ----------------------- | -------- |
-| Face       | 468       | 3 (x, y, z)             | 1404     |
 | Pose       | 33        | 4 (x, y, z, visibility) | 132      |
+| Face       | 468       | 3 (x, y, z)             | 1404     |
 | Left Hand  | 21        | 3 (x, y, z)             | 63       |
 | Right Hand | 21        | 3 (x, y, z)             | 63       |
 | **Total**  | **543**   | -                       | **1662** |
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+**Keypoint Order:** `[pose, face, left_hand, right_hand]`
 
 ## 📄 License
 

@@ -1,18 +1,13 @@
 """
 Predictor for SignLens
 Loads the trained model and performs real-time inference.
+
+All settings are read from config.yaml.
 """
 import os
-import json
 import numpy as np
 
-try:
-    import tensorflow as tf
-    from tensorflow import keras
-    load_model = keras.models.load_model
-except ImportError:
-    print("TensorFlow not installed. Run: pip install tensorflow")
-    raise
+from tensorflow.keras.models import load_model
 
 
 class SignPredictor:
@@ -23,63 +18,50 @@ class SignPredictor:
     a trained LSTM model.
     """
     
-    def __init__(self, model_path: str = None, metadata_path: str = None, config: dict = None):
+    def __init__(self, config: dict):
         """
-        Initialize the predictor with a trained model.
+        Initialize the predictor with configuration.
         
         Args:
-            model_path: Path to the saved Keras model (overrides config)
-            metadata_path: Path to the metadata JSON file (overrides config)
-            config: Configuration dictionary
+            config: Configuration dictionary from config.yaml
         """
         self.model = None
-        self.metadata = None
         self.classes = []
-        self.sequence_length = 30
+        
+        # Get settings from config
+        data_config = config.get('data_collection', {})
+        self.sequence_length = data_config.get('sequence_length', 30)
+        self.dataset_path = data_config.get('data_path', 'dataset')
+        
+        training_config = config.get('training', {})
+        self.model_path = training_config.get('model_path', 'model/signlens.h5')
+        
         self.sequence_buffer = []
         
-        # Determine paths from config or defaults
-        if config is not None:
-            training_config = config.get('training', {})
-            default_model_path = training_config.get('model_path', 'model/signlens.h5')
-        else:
-            default_model_path = 'model/signlens.h5'
-        
-        model_path = model_path or default_model_path
-        
-        # Derive metadata path from model path if not specified
-        if metadata_path is None:
-            model_dir = os.path.dirname(model_path)
-            metadata_path = os.path.join(model_dir, 'metadata.json')
-        
-        self._load_model(model_path, metadata_path)
+        self._load_model()
     
-    def _load_model(self, model_path: str, metadata_path: str):
-        """Load the model and metadata."""
-        if not os.path.exists(model_path):
+    def _load_model(self):
+        """Load the model and discover classes from dataset folders."""
+        if not os.path.exists(self.model_path):
             raise FileNotFoundError(
-                f"Model not found at '{model_path}'. "
-                "Train the model first using: python -m model.train"
-            )
-        
-        if not os.path.exists(metadata_path):
-            raise FileNotFoundError(
-                f"Metadata not found at '{metadata_path}'. "
+                f"Model not found at '{self.model_path}'. "
                 "Train the model first using: python -m model.train"
             )
         
         # Load model
-        print(f"Loading model from {model_path}...")
-        self.model = load_model(model_path)
+        print(f"Loading model from {self.model_path}...")
+        self.model = load_model(self.model_path)
         
-        # Load metadata
-        with open(metadata_path, 'r') as f:
-            self.metadata = json.load(f)
+        # Load classes from dataset folders
+        if os.path.exists(self.dataset_path):
+            self.classes = np.array(sorted([
+                folder for folder in os.listdir(self.dataset_path) 
+                if os.path.isdir(os.path.join(self.dataset_path, folder))
+            ]))
+        else:
+            raise FileNotFoundError(f"Dataset not found at '{self.dataset_path}'")
         
-        self.classes = self.metadata['classes']
-        self.sequence_length = self.metadata['sequence_length']
-        
-        print(f"Model loaded. Classes: {self.classes}")
+        print(f"Model loaded. Classes: {list(self.classes)}")
     
     def add_frame(self, keypoints: np.ndarray):
         """
@@ -91,8 +73,7 @@ class SignPredictor:
         self.sequence_buffer.append(keypoints)
         
         # Keep only the last sequence_length frames
-        if len(self.sequence_buffer) > self.sequence_length:
-            self.sequence_buffer.pop(0)
+        self.sequence_buffer = self.sequence_buffer[-self.sequence_length:]
     
     def can_predict(self) -> bool:
         """Check if we have enough frames to make a prediction."""
@@ -103,38 +84,38 @@ class SignPredictor:
         Make a prediction based on the current buffer.
         
         Returns:
-            tuple: (predicted_class, confidence) or (None, 0) if not enough data
+            tuple: (predictions_array, predicted_class_name)
         """
         if not self.can_predict():
-            return None, 0.0
+            return None, None
         
         # Prepare input
-        sequence = np.array(self.sequence_buffer[-self.sequence_length:])
-        sequence = np.expand_dims(sequence, axis=0)  # Add batch dimension
+        sequence = np.expand_dims(self.sequence_buffer[-self.sequence_length:], axis=0)
         
         # Predict
-        predictions = self.model.predict(sequence, verbose=0)[0]
+        res = self.model.predict(sequence, verbose=0)[0]
+        predicted_class = self.classes[np.argmax(res)]
         
-        # Get best prediction
-        class_idx = np.argmax(predictions)
-        confidence = predictions[class_idx]
-        predicted_class = self.classes[class_idx]
-        
-        return predicted_class, float(confidence)
+        return res, predicted_class
     
-    def predict_with_threshold(self, threshold: float = 0.7) -> tuple:
+    def get_prediction_with_confidence(self, threshold: float = 0.5) -> tuple:
         """
-        Make a prediction only if confidence exceeds threshold.
+        Make a prediction with confidence threshold.
         
         Args:
             threshold: Minimum confidence to return a prediction
             
         Returns:
-            tuple: (predicted_class, confidence) or (None, confidence) if below threshold
+            tuple: (predicted_class, confidence) or (None, confidence)
         """
-        predicted_class, confidence = self.predict()
+        res, predicted_class = self.predict()
         
-        if confidence >= threshold:
+        if res is None:
+            return None, 0.0
+        
+        confidence = float(res[np.argmax(res)])
+        
+        if confidence > threshold:
             return predicted_class, confidence
         return None, confidence
     
@@ -142,44 +123,27 @@ class SignPredictor:
         """Clear the sequence buffer."""
         self.sequence_buffer = []
     
-    def get_all_predictions(self) -> dict:
-        """
-        Get predictions for all classes.
-        
-        Returns:
-            dict: {class_name: confidence} for all classes
-        """
-        if not self.can_predict():
-            return {}
-        
-        sequence = np.array(self.sequence_buffer[-self.sequence_length:])
-        sequence = np.expand_dims(sequence, axis=0)
-        
-        predictions = self.model.predict(sequence, verbose=0)[0]
-        
-        return {self.classes[i]: float(predictions[i]) for i in range(len(self.classes))}
-    
     def get_buffer_status(self) -> dict:
-        """
-        Get the current buffer status.
-        
-        Returns:
-            dict with buffer_size, sequence_length, ready status
-        """
+        """Get the current buffer status."""
         return {
             'buffer_size': len(self.sequence_buffer),
             'sequence_length': self.sequence_length,
-            'ready': self.can_predict(),
-            'fill_percentage': len(self.sequence_buffer) / self.sequence_length * 100
+            'ready': self.can_predict()
         }
 
 
 if __name__ == "__main__":
     # Test the predictor
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from config.loader import ConfigLoader
+    
+    config = ConfigLoader.load_config()
+    
     try:
-        predictor = SignPredictor()
+        predictor = SignPredictor(config)
         print("\n✅ Predictor initialized successfully!")
-        print(f"Classes: {predictor.classes}")
+        print(f"Classes: {list(predictor.classes)}")
         print(f"Sequence length: {predictor.sequence_length}")
         print(f"Buffer status: {predictor.get_buffer_status()}")
     except FileNotFoundError as e:

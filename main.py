@@ -2,6 +2,8 @@
 SignLens Real-Time Inference
 Main entry point for running sign language recognition on live webcam feed.
 
+All settings are read from config.yaml - no hardcoded values.
+
 Usage:
     python main.py
 """
@@ -9,43 +11,42 @@ Usage:
 import cv2
 import numpy as np
 import os
-import sys
 
 from config.loader import ConfigLoader
 from detector.holistic_detector import HolisticDetector
 from detector.keypoints import extract_keypoints
+from model.predictor import SignPredictor
 from ui.overlay import UIOverlay
 from utils.fps_counter import FPSCounter
 from utils.logger import setup_logger
-from model.predictor import SignPredictor
 
 
 def main():
-    """Main inference loop."""
+    """Main inference loop - all settings from config."""
+    
     # 1. Load Configuration
-    config = ConfigLoader.get_config()
+    config = ConfigLoader.load_config()
     logger = setup_logger(config)
     
     # Get settings from config
-    camera_index = config['camera']['index']
-    camera_width = config['camera']['width']
-    camera_height = config['camera']['height']
+    camera_config = config.get('camera', {})
+    camera_index = camera_config.get('index', 0)
+    camera_width = camera_config.get('width', 640)
+    camera_height = camera_config.get('height', 480)
+    
+    data_config = config.get('data_collection', {})
+    sequence_length = data_config.get('sequence_length', 30)
     
     inference_config = config.get('inference', {})
     threshold = inference_config.get('prediction_threshold', 0.5)
     prediction_interval = inference_config.get('prediction_interval', 5)
-    stability_buffer = inference_config.get('stability_buffer', 2)
     
     ui_config = config.get('ui', {})
-    window_name = ui_config.get('window_name', 'SignLens')
     show_landmarks = ui_config.get('show_landmarks', True)
+    window_name = ui_config.get('window_name', 'SignLens')
     
-    # Colors
-    colors = [
-        tuple(ui_config.get('colors', {}).get('primary', [245, 117, 16])),
-        tuple(ui_config.get('colors', {}).get('secondary', [117, 245, 16])),
-        tuple(ui_config.get('colors', {}).get('tertiary', [16, 117, 245]))
-    ]
+    colors = ui_config.get('colors', {})
+    header_color = tuple(colors.get('primary', [245, 117, 16]))
     
     logger.info("=" * 50)
     logger.info("SignLens Real-Time Inference")
@@ -54,19 +55,25 @@ def main():
     print("=" * 50)
     print("  SignLens Real-Time Inference")
     print("=" * 50)
+    print(f"\nConfiguration:")
+    print(f"  Camera: index={camera_index}, resolution={camera_width}x{camera_height}")
+    print(f"  Sequence Length: {sequence_length}")
+    print(f"  Prediction Interval: every {prediction_interval} frames")
+    print(f"  Threshold: {threshold}")
     
-    # 2. Load Model
+    # 2. Load Model using predictor (reads paths from config)
     try:
-        predictor = SignPredictor(config=config)
+        predictor = SignPredictor(config)
     except FileNotFoundError as e:
         logger.error(str(e))
         print(f"\n❌ {e}")
         print("\nTo train a model, run:")
-        print("  1. python record.py   (to collect data)")
-        print("  2. python -m model.train   (to train the model)")
+        print("  1. Collect data: python record.py")
+        print("  2. Train model: python -m model.train")
         return
     
-    logger.info(f"Model loaded with {len(predictor.classes)} classes: {predictor.classes}")
+    actions = predictor.classes
+    logger.info(f"Model loaded with {len(actions)} classes: {list(actions)}")
     
     # 3. Setup Camera
     print(f"\nOpening camera {camera_index}...")
@@ -81,19 +88,19 @@ def main():
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, camera_width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, camera_height)
     
-    # 4. Initialize Components
+    # 4. Initialize Components (all read from config)
     detector = HolisticDetector(config)
     overlay = UIOverlay(config)
     fps_counter = FPSCounter()
     
     # Inference Variables
-    predictions_history = []
-    current_sign = ""
+    sequence = []
+    sentence = []
+    predictions = []
     frame_num = 0
     
-    print(f"\n✅ Inference started! Press 'q' to quit.")
-    print(f"   Classes: {predictor.classes}")
-    print(f"   Threshold: {threshold}")
+    print(f"\n✅ Inference started! Press 'q' to quit, 'c' to clear.")
+    print(f"   Classes: {list(actions)}")
     logger.info("Inference loop started")
     
     try:
@@ -106,10 +113,10 @@ def main():
                 
             frame_num += 1
 
-            # Run detection
+            # Run detection using detector module
             image, results = detector.detect(frame)
             
-            # Draw landmarks if enabled
+            # Draw landmarks if enabled (from config)
             if show_landmarks:
                 detector.draw_landmarks(image, results)
             
@@ -117,71 +124,53 @@ def main():
             fps_counter.update()
             overlay.draw_fps(image, fps_counter.get_fps())
             
-            # Extract keypoints and add to predictor buffer
+            # Extract keypoints
             keypoints = extract_keypoints(results)
-            predictor.add_frame(keypoints)
+            sequence.append(keypoints)
+            sequence = sequence[-sequence_length:]
             
-            # Run prediction at specified interval
-            if predictor.can_predict() and frame_num % prediction_interval == 0:
-                predicted_class, confidence = predictor.predict()
-                predictions_history.append((predicted_class, confidence))
+            # Prediction logic (uses interval from config)
+            if len(sequence) == sequence_length and frame_num % prediction_interval == 0:
+                res = predictor.model.predict(np.expand_dims(sequence, axis=0), verbose=0)[0]
+                predicted_action = actions[np.argmax(res)]
+                logger.debug(f"Predicted: {predicted_action}")
+                predictions.append(np.argmax(res))
                 
-                # Keep only recent predictions for stability check
-                predictions_history = predictions_history[-stability_buffer:]
-                
-                # Stability check: Only update if recent predictions agree
-                if len(predictions_history) >= stability_buffer:
-                    recent_classes = [p[0] for p in predictions_history]
-                    if len(set(recent_classes)) == 1 and confidence > threshold:
-                        current_sign = predicted_class
-                        logger.debug(f"Detected: {current_sign} ({confidence:.2f})")
+                # Stability check
+                if len(predictions) >= 2 and np.unique(predictions[-2:])[0] == np.argmax(res): 
+                    if res[np.argmax(res)] > threshold: 
+                        if len(sentence) > 0: 
+                            if actions[np.argmax(res)] != sentence[-1]:
+                                sentence = [actions[np.argmax(res)]]
+                        else:
+                            sentence = [actions[np.argmax(res)]]
+
+                if len(sentence) > 1: 
+                    sentence = sentence[-1:]
             
-            # Draw header bar
-            cv2.rectangle(image, (0, 0), (image.shape[1], 50), colors[0], -1)
+            # Draw header bar (color from config)
+            cv2.rectangle(image, (0, 0), (image.shape[1], 40), header_color, -1)
             
             # Display detected sign
-            display_text = current_sign if current_sign else "Waiting..."
+            display_text = ' '.join(sentence) if sentence else 'Waiting...'
             if display_text == 'Neutral':
                 display_text = 'No sign detected'
                 
-            cv2.putText(
-                image, 
-                display_text, 
-                (10, 35), 
-                cv2.FONT_HERSHEY_SIMPLEX, 
-                1.2, 
-                (255, 255, 255), 
-                2, 
-                cv2.LINE_AA
-            )
+            cv2.putText(image, display_text, (3, 30), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
             
-            # Draw buffer status
-            buffer_status = predictor.get_buffer_status()
-            status_text = f"Buffer: {buffer_status['buffer_size']}/{buffer_status['sequence_length']}"
-            cv2.putText(
-                image,
-                status_text,
-                (image.shape[1] - 150, 35),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.6,
-                (255, 255, 255),
-                1,
-                cv2.LINE_AA
-            )
-            
-            # Show frame
+            # Show frame (window name from config)
             cv2.imshow(window_name, image)
 
             # Handle keyboard input
-            key = cv2.waitKey(1) & 0xFF
+            key = cv2.waitKey(10) & 0xFF
             if key == ord('q'):
                 logger.info("User requested exit")
                 break
             elif key == ord('c'):
-                # Clear current detection
-                current_sign = ""
-                predictions_history = []
-                predictor.clear_buffer()
+                sentence = []
+                predictions = []
+                sequence = []
                 logger.info("Buffer cleared")
                 
     except KeyboardInterrupt:

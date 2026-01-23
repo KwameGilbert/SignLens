@@ -1,4 +1,6 @@
 # SignLens Configuration
+# Central configuration file for all components
+# All values are configurable - no hardcoded values in code
 
 app:
   name: "SignLens"
@@ -15,7 +17,7 @@ mediapipe:
   min_detection_confidence: 0.5
   min_tracking_confidence: 0.5
 
-# Data Collection Settings (used by model training)
+# Data Collection Settings
 data_collection:
   data_path: "dataset"
   sequence_length: 30 # Frames per sequence
@@ -24,26 +26,48 @@ data_collection:
 # Dataset Recorder Settings (used by record.py)
 dataset:
   output_dir: "dataset"
-  interface: "gui" # 'cli' or 'gui'
+  interface: "cli" # 'cli' or 'gui'
   sequence_lengths:
     static_default: 30
-    dynamic_default: 45
+    dynamic_default: 30
   recording:
     countdown: 3
     auto_frames: 30
   classes:
     - "A"
     - "B"
-    - "C"
     - "Neutral"
 
 # Training Settings
 training:
-  epochs: 200
-  test_size: 0.2 # 20% for testing
+  epochs: 100
+  test_size: 0.05 # 10% for testing
   batch_size: 32
   model_path: "model/signlens.h5"
   log_dir: "Logs"
+  early_stopping_patience: 10
+  reduce_lr_patience: 3
+  reduce_lr_factor: 0.3
+  min_lr: 0.00001
+
+# Data Augmentation Settings
+augmentation:
+  enabled: true
+  jitter_std: 0.05 # Standard deviation for noise (5%)
+  scale_min: 0.9 # Minimum scale factor
+  scale_max: 1.1 # Maximum scale factor
+
+# Model Architecture Settings
+model:
+  label_smoothing: 0.1
+  dropout_rate: 0.2
+  lstm_units:
+    layer1: 64
+    layer2: 128
+    layer3: 64
+  dense_units:
+    layer1: 64
+    layer2: 32
 
 # Inference Settings
 inference:

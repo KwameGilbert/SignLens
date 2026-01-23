@@ -1,194 +1,160 @@
 """
 SignLens LSTM Model Architecture
 Defines the neural network for sign language gesture classification.
+
+All configurable values are read from config.yaml via the config parameter.
 """
 
-import tensorflow as tf
-from tensorflow import keras
-
-# Define shortcuts for readability
-Sequential = keras.models.Sequential
-LSTM = keras.layers.LSTM
-Dense = keras.layers.Dense
-Dropout = keras.layers.Dropout
-BatchNormalization = keras.layers.BatchNormalization
-EarlyStopping = keras.callbacks.EarlyStopping
-ModelCheckpoint = keras.callbacks.ModelCheckpoint
-ReduceLROnPlateau = keras.callbacks.ReduceLROnPlateau
-Adam = keras.optimizers.Adam
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense, Dropout, BatchNormalization
+from tensorflow.keras.losses import CategoricalCrossentropy
+from tensorflow.keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 
 
-def build_model(input_shape: tuple, num_classes: int, model_type: str = "standard") -> Sequential:
+def build_model(input_shape: tuple, num_classes: int, config: dict) -> Sequential:
     """
-    Build an LSTM Model for sign language recognition.
+    Builds and compiles the LSTM model for sign language recognition.
+    
+    All architecture parameters are read from config['model'].
     
     Args:
         input_shape: Tuple of (sequence_length, num_features), e.g., (30, 1662)
         num_classes: Number of sign classes to predict
-        model_type: "simple" for small datasets, "standard" for larger datasets
+        config: Configuration dictionary from config.yaml
         
     Returns:
         Compiled Keras Sequential model
     """
-    if model_type == "simple":
-        return _build_simple_model(input_shape, num_classes)
-    else:
-        return _build_standard_model(input_shape, num_classes)
-
-
-def _build_simple_model(input_shape: tuple, num_classes: int) -> Sequential:
-    """
-    Build a Simple LSTM Model for small datasets.
-    Single LSTM layer - good for < 100 samples per class.
-    """
-    model = Sequential(name='SignLens_Simple')
+    # Get model settings from config
+    model_config = config.get('model', {})
+    label_smoothing = model_config.get('label_smoothing', 0.1)
+    dropout_rate = model_config.get('dropout_rate', 0.2)
     
-    # Single LSTM Layer
-    model.add(LSTM(64, return_sequences=False, activation='relu', input_shape=input_shape))
+    # LSTM units from config
+    lstm_units = model_config.get('lstm_units', {})
+    lstm1_units = lstm_units.get('layer1', 64)
+    lstm2_units = lstm_units.get('layer2', 128)
+    lstm3_units = lstm_units.get('layer3', 64)
+    
+    # Dense units from config
+    dense_units = model_config.get('dense_units', {})
+    dense1_units = dense_units.get('layer1', 64)
+    dense2_units = dense_units.get('layer2', 32)
+    
+    model = Sequential()
+    
+    # LSTM Layer 1
+    model.add(LSTM(lstm1_units, return_sequences=True, activation='relu', input_shape=input_shape))
     model.add(BatchNormalization())
-    model.add(Dropout(0.4))
+    model.add(Dropout(dropout_rate))
     
-    # Dense Classification Layers
-    model.add(Dense(32, activation='relu'))
+    # LSTM Layer 2
+    model.add(LSTM(lstm2_units, return_sequences=True, activation='relu'))
     model.add(BatchNormalization())
-    model.add(Dropout(0.4))
+    model.add(Dropout(dropout_rate))
     
-    model.add(Dense(num_classes, activation='softmax'))
-    
-    # Lower learning rate for stability
-    optimizer = Adam(learning_rate=0.0005, clipnorm=1.0)
-    
-    model.compile(
-        optimizer=optimizer,
-        loss='sparse_categorical_crossentropy',
-        metrics=['accuracy']
-    )
-    
-    return model
-
-
-def _build_standard_model(input_shape: tuple, num_classes: int) -> Sequential:
-    """
-    Build a Standard LSTM Model for larger datasets.
-    Three stacked LSTM layers - good for > 100 samples per class.
-    """
-    model = Sequential(name='SignLens_Standard')
-    
-    # LSTM Layer 1 - Initial temporal feature extraction
-    model.add(LSTM(64, return_sequences=True, activation='relu', input_shape=input_shape))
+    # LSTM Layer 3
+    model.add(LSTM(lstm3_units, return_sequences=False, activation='relu'))
     model.add(BatchNormalization())
-    model.add(Dropout(0.2))
+    model.add(Dropout(dropout_rate))
     
-    # LSTM Layer 2 - Deeper temporal feature extraction  
-    model.add(LSTM(128, return_sequences=True, activation='relu'))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.2))
-    
-    # LSTM Layer 3 - Final temporal encoding
-    model.add(LSTM(64, return_sequences=False, activation='relu'))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.2))
-    
-    # Dense Layer 1 - Feature abstraction
-    model.add(Dense(64, activation='relu'))
+    # Dense Layer 1
+    model.add(Dense(dense1_units, activation='relu'))
     model.add(BatchNormalization())
     
-    # Dense Layer 2 - Further feature compression
-    model.add(Dense(32, activation='relu'))
+    # Dense Layer 2
+    model.add(Dense(dense2_units, activation='relu'))
     model.add(BatchNormalization())
     
     # Output Layer
     model.add(Dense(num_classes, activation='softmax'))
     
-    # Use label smoothing for better generalization
-    loss = keras.losses.SparseCategoricalCrossentropy()
-    optimizer = Adam(learning_rate=0.001)
+    # Use CategoricalCrossentropy with Label Smoothing from config
+    loss = CategoricalCrossentropy(label_smoothing=label_smoothing)
     
-    model.compile(
-        optimizer=optimizer,
-        loss=loss,
-        metrics=['accuracy']
-    )
+    model.compile(optimizer='Adam', loss=loss, metrics=['categorical_accuracy'])
+    
+    print(f"Model built with: LSTM({lstm1_units}→{lstm2_units}→{lstm3_units}), "
+          f"Dense({dense1_units}→{dense2_units}), dropout={dropout_rate}, "
+          f"label_smoothing={label_smoothing}")
     
     return model
 
 
-def get_callbacks(model_path: str = "model/signlens.h5", patience: int = 15) -> list:
+def get_callbacks(config: dict) -> list:
     """
-    Get training callbacks for early stopping, checkpointing, and learning rate reduction.
+    Get training callbacks with settings from config.
     
     Args:
-        model_path: Path to save the best model
-        patience: Number of epochs to wait before early stopping
+        config: Configuration dictionary from config.yaml
         
     Returns:
         List of Keras callbacks
     """
+    # Get training settings from config
+    training_config = config.get('training', {})
+    model_path = training_config.get('model_path', 'model/signlens.h5')
+    log_dir = training_config.get('log_dir', 'Logs')
+    early_stopping_patience = training_config.get('early_stopping_patience', 10)
+    reduce_lr_patience = training_config.get('reduce_lr_patience', 3)
+    reduce_lr_factor = training_config.get('reduce_lr_factor', 0.5)
+    min_lr = training_config.get('min_lr', 0.00001)
+    
     callbacks = [
-        # Stop training when validation loss stops improving
+        # TensorBoard logging
+        TensorBoard(log_dir=log_dir),
+        
+        # Early stopping
         EarlyStopping(
             monitor='val_loss',
-            patience=patience,
+            patience=early_stopping_patience,
+            mode='min',
             restore_best_weights=True,
             verbose=1
         ),
         
-        # Save the best model
+        # Model checkpoint (save best model)
         ModelCheckpoint(
             filepath=model_path,
-            monitor='val_accuracy',
+            monitor='val_categorical_accuracy',
+            mode='max',
             save_best_only=True,
-            verbose=1,
-            save_weights_only=False
+            verbose=1
         ),
         
-        # Reduce learning rate when stuck
+        # Learning rate scheduler
         ReduceLROnPlateau(
             monitor='val_loss',
-            factor=0.5,
-            patience=5,
-            min_lr=0.00001,
+            factor=reduce_lr_factor,
+            patience=reduce_lr_patience,
+            min_lr=min_lr,
             verbose=1
         )
     ]
     
+    print(f"Callbacks: EarlyStopping(patience={early_stopping_patience}), "
+          f"ReduceLR(factor={reduce_lr_factor}, patience={reduce_lr_patience})")
+    
     return callbacks
-
-
-def get_model_summary(input_shape: tuple = (30, 1662), num_classes: int = 3, model_type: str = "standard") -> str:
-    """
-    Returns a string representation of the model architecture.
-    
-    Args:
-        input_shape: Shape of input data
-        num_classes: Number of output classes
-        model_type: "simple" or "standard"
-        
-    Returns:
-        String representation of model summary
-    """
-    model = build_model(input_shape, num_classes, model_type)
-    
-    # Capture summary to string
-    string_list = []
-    model.summary(print_fn=lambda x: string_list.append(x))
-    
-    return '\n'.join(string_list)
 
 
 if __name__ == "__main__":
     # Test model creation
+    import os
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from config.loader import ConfigLoader
+    
     print("=" * 50)
     print("SignLens Model Architecture Test")
     print("=" * 50)
     
+    config = ConfigLoader.load_config()
+    
     input_shape = (30, 1662)  # 30 frames, 1662 keypoint values
-    num_classes = 5
+    num_classes = 3
     
-    print("\n--- Simple Model (for small datasets) ---")
-    simple_model = build_model(input_shape, num_classes, model_type="simple")
-    simple_model.summary()
+    model = build_model(input_shape, num_classes, config)
+    model.summary()
     
-    print("\n--- Standard Model (for larger datasets) ---")
-    standard_model = build_model(input_shape, num_classes, model_type="standard")
-    standard_model.summary()
+    print("\n✅ Model created successfully!")
