@@ -21,6 +21,59 @@ from config.loader import ConfigLoader
 from model.data_loader import DataLoader
 from model.model import build_model, get_callbacks
 from utils.logger import setup_logger
+from tensorflow.keras.callbacks import Callback
+
+
+class LivePlotCallback(Callback):
+    """
+    Keras callback for live plotting of training metrics.
+    """
+    def on_train_begin(self, logs=None):
+        plt.ion()  # Turn on interactive mode
+        self.fig, (self.ax1, self.ax2) = plt.subplots(1, 2, figsize=(12, 4))
+        self.epochs = []
+        self.acc = []
+        self.val_acc = []
+        self.loss = []
+        self.val_loss = []
+        
+        self.fig.suptitle('SignLens Live Training Monitor', fontsize=14)
+        plt.tight_layout()
+
+    def on_epoch_end(self, epoch, logs=None):
+        self.epochs.append(epoch + 1)
+        self.acc.append(logs.get('categorical_accuracy'))
+        self.val_acc.append(logs.get('val_categorical_accuracy'))
+        self.loss.append(logs.get('loss'))
+        self.val_loss.append(logs.get('val_loss'))
+
+        # Clear axes
+        self.ax1.clear()
+        self.ax2.clear()
+
+        # Accuracy Plot
+        self.ax1.plot(self.epochs, self.acc, label='Train Acc', color='#1f77b4')
+        self.ax1.plot(self.epochs, self.val_acc, label='Val Acc', color='#ff7f0e')
+        self.ax1.set_title('Accuracy')
+        self.ax1.set_xlabel('Epoch')
+        self.ax1.set_ylabel('Score')
+        self.ax1.legend(loc='lower right')
+        self.ax1.grid(True, alpha=0.3)
+
+        # Loss Plot
+        self.ax2.plot(self.epochs, self.loss, label='Train Loss', color='#d62728')
+        self.ax2.plot(self.epochs, self.val_loss, label='Val Loss', color='#9467bd')
+        self.ax2.set_title('Loss')
+        self.ax2.set_xlabel('Epoch')
+        self.ax2.set_ylabel('Value')
+        self.ax2.legend(loc='upper right')
+        self.ax2.grid(True, alpha=0.3)
+
+        plt.pause(0.1)  # Brief pause to allow update
+
+    def on_train_end(self, logs=None):
+        plt.ioff()  # Turn off interactive mode
+        plt.show() # Keep window open at end
 
 
 def plot_history(history, save_path: str):
@@ -158,6 +211,7 @@ def train():
     
     # Get callbacks (reads patience, lr settings from config)
     callbacks = get_callbacks(config)
+    callbacks.append(LivePlotCallback())
     
     history = model.fit(
         X_train, y_train,

@@ -132,8 +132,13 @@ def main():
             # Prediction logic (uses interval from config)
             if len(sequence) == sequence_length and frame_num % prediction_interval == 0:
                 res = predictor.model.predict(np.expand_dims(sequence, axis=0), verbose=0)[0]
+                confidence = res[np.argmax(res)]
                 predicted_action = actions[np.argmax(res)]
-                logger.debug(f"Predicted: {predicted_action}")
+                
+                # Print every prediction (as requested)
+                print(f"Prediction: {predicted_action:<10} | Confidence: {confidence:.4f}")
+                
+                logger.debug(f"Predicted: {predicted_action} ({confidence:.2f})")
                 predictions.append(np.argmax(res))
                 
                 # Stability check

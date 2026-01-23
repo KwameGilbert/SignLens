@@ -40,27 +40,27 @@ dataset:
 
 # Training Settings
 training:
-  epochs: 100
-  test_size: 0.05 # 10% for testing
+  epochs: 500
+  test_size: 0.20 # 20% for testing to ensure meaningful validation
   batch_size: 32
   model_path: "model/signlens.h5"
   log_dir: "Logs"
-  early_stopping_patience: 10
-  reduce_lr_patience: 3
-  reduce_lr_factor: 0.3
+  early_stopping_patience: 25 # Increased to allow for more fine-tuning
+  reduce_lr_patience: 5
+  reduce_lr_factor: 0.2 # Steeper decay for better convergence
   min_lr: 0.00001
 
 # Data Augmentation Settings
 augmentation:
   enabled: true
-  jitter_std: 0.05 # Standard deviation for noise (5%)
-  scale_min: 0.9 # Minimum scale factor
-  scale_max: 1.1 # Maximum scale factor
+  jitter_std: 0.05
+  scale_min: 0.9
+  scale_max: 1.1
 
 # Model Architecture Settings
 model:
   label_smoothing: 0.1
-  dropout_rate: 0.2
+  dropout_rate: 0.3 # Slightly higher to prevent overfitting on few classes
   lstm_units:
     layer1: 64
     layer2: 128
