@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Animated, StyleSheet, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, Animated, StyleSheet, TextInput, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Image } from 'expo-image';
@@ -13,6 +13,13 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
+  // Refs for scrolling
+  const scrollViewRef = useRef<ScrollView>(null);
+  const fullNameRef = useRef<View>(null);
+  const emailRef = useRef<View>(null);
+  const passwordRef = useRef<View>(null);
+  const confirmPasswordRef = useRef<View>(null);
+  
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -22,6 +29,21 @@ export default function SignUpScreen() {
   const input2Anim = useRef(new Animated.Value(0)).current;
   const input3Anim = useRef(new Animated.Value(0)).current;
   const input4Anim = useRef(new Animated.Value(0)).current;
+
+  const scrollToInput = (ref: React.RefObject<View | null>) => {
+    setTimeout(() => {
+      ref.current?.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => {
+          scrollViewRef.current?.scrollTo({
+            y: y - 100,
+            animated: true,
+          });
+        },
+        () => {}
+      );
+    }, 100);
+  };
 
   useEffect(() => {
     Animated.parallel([
@@ -63,218 +85,153 @@ export default function SignUpScreen() {
   }, []);
 
   return (
-    <View className="flex-1">
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      className="flex-1"
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+    >
+      <ScrollView 
+        ref={scrollViewRef}
+        className="flex-1"
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 50 }}
+      >
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style="light" />
 
-      {/* Background Image */}
-      <Image 
-        source={require('../../assets/images/welcome_bg.png')}
-        style={StyleSheet.absoluteFillObject}
-        contentFit="cover"
-      />
+      {/* Header section */}
+      <View className="flex-row justify-between px-6 pt-16 h-[40vh] overflow-hidden">
+        {/* Background Image */}
+        <Image
+          source={require("../../assets/images/welcome_bg.png")}
+          style={StyleSheet.absoluteFillObject}
+          contentFit="cover"
+        />
 
-      {/* Gradient Overlay */}
-      <LinearGradient
-        colors={['rgba(251, 84, 7, 0.91)', 'rgba(251, 84, 7, 0.91)', 'rgba(251, 84, 7, 0.91)']}
-        style={StyleSheet.absoluteFillObject}
-      />
+        {/* Orange Gradient Overlay */}
+        <LinearGradient
+          colors={[
+            "rgba(251, 84, 7, 0.91)",
+            "rgba(251, 84, 7, 0.91)",
+            "rgba(251, 84, 7, 0.91)",
+          ]}
+          style={StyleSheet.absoluteFillObject}
+        />
 
-      {/* Header */}
-      <View className="pt-12 px-6">
+        {/* Back Button */}
         <TouchableOpacity
           onPress={() => router.back()}
-          className="w-10 h-10 items-center justify-center"
+          className="w-10 h-10 items-center justify-center z-10"
           activeOpacity={0.7}
         >
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
       </View>
 
-      {/* Content */}
-      <Animated.View 
-        className="flex-1 justify-center px-8"
-        style={{
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        }}
-      >
-        {/* Sign Up Card */}
-        <View style={styles.card} className="bg-white rounded-3xl px-6 py-8">
-          {/* Title */}
-          <Text style={styles.title}>CREATE ACCOUNT</Text>
-          <Text style={styles.subtitle}>Join us and start learning today</Text>
 
-          {/* Full Name Input */}
-          <Animated.View className="mt-6" style={{ opacity: input1Anim }}>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Full Name"
-                placeholderTextColor="#999"
-                value={fullName}
-                onChangeText={setFullName}
-                autoComplete="name"
-              />
-            </View>
-          </Animated.View>
 
-          {/* Email Input */}
-          <Animated.View className="mt-4" style={{ opacity: input2Anim }}>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor="#999"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
-            </View>
-          </Animated.View>
+      {/* Login form */}
+      <Animated.View className="px-6 py-10 bg-white rounded-3xl w-[95%] mx-auto -mt-40 shadow-lg shadow-black/25 elevation-5">
+        <Text className="text-3xl font-bold text-center mb-1">CREATE ACCOUNT</Text>
+        <Text className="text-lg text-[#7C7C7C] text-center mb-6">
+          Join us and start learning today
+        </Text>
 
-          {/* Password Input */}
-          <Animated.View className="mt-4" style={{ opacity: input3Anim }}>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                placeholderTextColor="#999"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                autoComplete="password-new"
-              />
-            </View>
-          </Animated.View>
+        {/* forms  */}
+        <Animated.View>
 
-          {/* Confirm Password Input */}
-          <Animated.View className="mt-4" style={{ opacity: input4Anim }}>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Confirm Password"
-                placeholderTextColor="#999"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                autoComplete="password-new"
-              />
-            </View>
-          </Animated.View>
+          <View ref={fullNameRef} className="mt-4">
+            <Text className="text-lg font-semibold mb-2">Full Name</Text>
+            <TextInput
+              placeholder="Enter your full name"
+              value={fullName}
+              onChangeText={setFullName}
+              onFocus={() => scrollToInput(fullNameRef)}
+              className="border border-orange-500 rounded-full px-4 py-4"
+              autoCapitalize="words"
+              autoComplete="name"
+            />
+          </View>
 
-          {/* Sign Up Button */}
-          <TouchableOpacity 
-            style={styles.signupButton}
-            className="mt-6"
-            activeOpacity={0.9}
+          <View ref={emailRef} className="mt-4">
+            <Text className="text-lg font-semibold mb-2">Email</Text>
+            <TextInput
+              placeholder="Enter your email"
+              value={email}
+              onChangeText={setEmail}
+              onFocus={() => scrollToInput(emailRef)}
+              className="border border-orange-500 rounded-full px-4 py-4"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+            />
+          </View>
+
+          <View ref={passwordRef} className="mt-4">
+            <Text className="text-lg font-semibold mb-2">Password</Text>
+            <TextInput
+              placeholder="Enter your password"
+              value={password}
+              onChangeText={setPassword}
+              onFocus={() => scrollToInput(passwordRef)}
+              className="border border-orange-500 rounded-full px-4 py-4"
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="password-new"
+            />
+          </View>
+
+          <View ref={confirmPasswordRef} className="mt-4">
+            <Text className="text-lg font-semibold mb-2">Confirm Password</Text>
+            <TextInput
+              placeholder="Enter your confirm password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              onFocus={() => scrollToInput(confirmPasswordRef)}
+              className="border border-orange-500 rounded-full px-4 py-4"
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="password-new"
+            />
+          </View>
+
+          <TouchableOpacity
+            onPress={() => router.push("/(auth)/login")}
+            className="bg-[#FB5607] rounded-full px-4 py-4 mt-4"
           >
-            <Text style={styles.signupButtonText}>LOGIN</Text>
+            <Text className="text-white text-center text-2xl font-semibold">
+              Sign Up
+            </Text>
           </TouchableOpacity>
 
-          {/* Social Sign Up */}
-          <View className="flex-row justify-center gap-4 mt-6">
-            <TouchableOpacity style={styles.socialButton} activeOpacity={0.9}>
-              <Text style={styles.socialIcon}>G</Text>
+          <View className="flex-row justify-center gap-10 mt-3">
+            <TouchableOpacity className="bg-white border border-orange-500 rounded-full p-4">
+             <Ionicons name="logo-google" size={24} color="black" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton} activeOpacity={0.9}>
-              <Ionicons name="logo-apple" size={24} color="#000" />
+
+            <TouchableOpacity className="bg-white border border-orange-500 rounded-full p-4">
+             <Ionicons name="logo-apple" size={24} color="black" />
             </TouchableOpacity>
           </View>
 
-          {/* Login Link */}
-          <View className="flex-row justify-center mt-6">
-            <Text style={styles.footerText}>Already have an account? </Text>
-            <TouchableOpacity 
-              onPress={() => router.push('/(auth)/login')}
-              activeOpacity={0.7}
+          <View className="flex-row justify-center mt-3 gap-2">
+            <Text className="text-lg text-[#474746] font-semibold">
+              Already have an account?
+            </Text>
+            <TouchableOpacity
+              onPress={() => router.push("/(auth)/login")}
             >
-              <Text style={styles.linkText}>Login</Text>
+              <Text className="text-lg font-semibold text-[#FB5607]">
+                Login
+              </Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View> 
       </Animated.View>
-    </View>
+
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#000',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#666',
-    fontWeight: '400',
-  },
-  inputContainer: {
-    borderWidth: 1.5,
-    borderColor: '#FB5407',
-    borderRadius: 25,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  input: {
-    fontSize: 15,
-    color: '#000',
-  },
-  inputLabel: {
-    fontSize: 15,
-    color: '#999',
-  },
-  signupButton: {
-    backgroundColor: '#FB5407',
-    borderRadius: 25,
-    paddingVertical: 16,
-    alignItems: 'center',
-    shadowColor: '#FB5407',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  signupButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  socialButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 1.5,
-    borderColor: '#E0E0E0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-  },
-  socialIcon: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#000',
-  },
-  footerText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  linkText: {
-    fontSize: 14,
-    color: '#FB5407',
-    fontWeight: '600',
-  },
-});

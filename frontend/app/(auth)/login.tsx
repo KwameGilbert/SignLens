@@ -5,6 +5,9 @@ import {
   Animated,
   StyleSheet,
   TextInput,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -18,9 +21,29 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // Refs for scrolling
+  const scrollViewRef = useRef<ScrollView>(null);
+  const emailRef = useRef<View>(null);
+  const passwordRef = useRef<View>(null);
+
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
+
+  const scrollToInput = (ref: React.RefObject<View | null>) => {
+    setTimeout(() => {
+      ref.current?.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => {
+          scrollViewRef.current?.scrollTo({
+            y: y - 100,
+            animated: true,
+          });
+        },
+        () => {}
+      );
+    }, 100);
+  };
 
   useEffect(() => {
     Animated.parallel([
@@ -38,12 +61,22 @@ export default function LoginScreen() {
   }, []);
 
   return (
-    <View className="flex-1 bg-white">
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1"
+    >
+      <ScrollView 
+        ref={scrollViewRef}
+        className="flex-1 bg-white"
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 50 }}
+      >
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style="light" />
 
       {/* Header section */}
-      <View className="flex-row justify-between px-6 pt-12 h-[40vh] overflow-hidden">
+      <View className="flex-row justify-between px-6 pt-16 h-[40vh] overflow-hidden">
         {/* Background Image */}
         <Image
           source={require("../../assets/images/welcome_bg.png")}
@@ -72,31 +105,39 @@ export default function LoginScreen() {
       </View>
 
       {/* Login form */}
-      <Animated.View className="px-6 py-6 bg-gray-100 rounded-[20px] w-[95%] mx-auto -mt-20">
-        <Text className="text-3xl font-semibold  mb-6">Login</Text>
-        <Text className="text-lg text-[#7C7C7C] mb-2">
+      <Animated.View className="px-6 py-10 bg-white rounded-3xl w-[95%] mx-auto -mt-40 shadow-lg shadow-black/25 elevation-5">
+        <Text className="text-3xl font-bold text-center mb-6">LOGIN</Text>
+        <Text className="text-lg text-[#7C7C7C] text-center mb-2">
           Welcome back! Please login to continue
         </Text>
 
         {/* forms  */}
         <Animated.View>
-          <View>
+          <View ref={emailRef} className="mt-4">
             <Text className="text-lg font-semibold mb-2">Email</Text>
             <TextInput
               placeholder="Enter your email"
               value={email}
               onChangeText={setEmail}
+              onFocus={() => scrollToInput(emailRef)}
               className="border border-orange-500 rounded-full px-4 py-4"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
             />
           </View>
 
-          <View className="mt-6">
+          <View ref={passwordRef} className="mt-6">
             <Text className="text-lg font-semibold mb-2">Password</Text>
             <TextInput
               placeholder="Enter your password"
               value={password}
               onChangeText={setPassword}
+              onFocus={() => scrollToInput(passwordRef)}
               className="border border-orange-500 rounded-full px-4 py-4"
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="password"
             />
           </View>
 
@@ -130,7 +171,7 @@ export default function LoginScreen() {
           </View>
 
           <View className="flex-row justify-center mt-6 gap-2">
-            <Text className="text-lg font-semibold">
+            <Text className="text-lg text-[#474746] font-semibold">
               Don&apos;t have an account?
             </Text>
             <TouchableOpacity
@@ -143,6 +184,7 @@ export default function LoginScreen() {
           </View>
         </Animated.View> 
       </Animated.View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
