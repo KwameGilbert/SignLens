@@ -152,7 +152,7 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
-            onPress={() => router.push("/(auth)/login")}
+            onPress={() => router.replace("/(tabs)/home")}
             className="bg-[#FB5607] rounded-full px-4 py-4 mt-4"
           >
             <Text className="text-white text-center text-2xl font-semibold">
