@@ -4,6 +4,9 @@ import os
 import mediapipe as mp
 from tensorflow.keras.models import load_model
 
+# Text-to-Speech
+import pyttsx3
+
 # --- Configuration ---
 DATA_PATH = os.path.join('dataset')
 SEQUENCE_LENGTH = 30
@@ -87,6 +90,11 @@ def main():
     threshold = 0.5
     frame_num = 0
 
+    # Text-to-Speech Engine
+    tts_engine = pyttsx3.init()
+    tts_engine.setProperty('rate', 150)
+    last_spoken = ''
+
     # 4. Start Inference
     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
         while cap.isOpened():
@@ -109,23 +117,33 @@ def main():
             sequence.append(keypoints)
             sequence = sequence[-SEQUENCE_LENGTH:] # Keep only last 30 frames
             
+
             # Only predict every 5 frames (to stabilize and save CPU)
             if len(sequence) == SEQUENCE_LENGTH and frame_num % 5 == 0:
                 res = model.predict(np.expand_dims(sequence, axis=0))[0]
                 print(actions[np.argmax(res)])
                 predictions.append(np.argmax(res))
-                
-                # Visualization logic
-                if np.unique(predictions[-2:])[0] == np.argmax(res): 
-                    if res[np.argmax(res)] > threshold: 
-                        
-                        if len(sentence) > 0: 
-                            if actions[np.argmax(res)] != sentence[-1]:
-                                sentence = [actions[np.argmax(res)]] # Replace with new sign (don't append)
-                        else:
-                            sentence = [actions[np.argmax(res)]]
 
-                if len(sentence) > 1: 
+                # Visualization logic
+                if np.unique(predictions[-2:])[0] == np.argmax(res):
+                    if res[np.argmax(res)] > threshold:
+                        detected_sign = actions[np.argmax(res)]
+                        if len(sentence) > 0:
+                            if detected_sign != sentence[-1]:
+                                sentence = [detected_sign] # Replace with new sign (don't append)
+                                # Speak the detected sign
+                                if detected_sign != last_spoken and detected_sign.lower() != 'neutral':
+                                    tts_engine.say(detected_sign)
+                                    tts_engine.runAndWait()
+                                    last_spoken = detected_sign
+                        else:
+                            sentence = [detected_sign]
+                            if detected_sign != last_spoken and detected_sign.lower() != 'neutral':
+                                tts_engine.say(detected_sign)
+                                tts_engine.runAndWait()
+                                last_spoken = detected_sign
+
+                if len(sentence) > 1:
                     sentence = sentence[-1:]
 
             cv2.rectangle(image, (0,0), (640, 40), (245, 117, 16), -1)
@@ -133,7 +151,7 @@ def main():
             # Display logic
             display_text = ' '.join(sentence)
             if display_text == 'Neutral':
-                display_text = 'No sign detected'
+                display_text = ''
                 
             cv2.putText(image, display_text, (3,30), 
                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
