@@ -7,7 +7,7 @@ import React from "react";
 
 export default function HomeHeader() {
   return (
-    <View className="h-[240px] overflow-hidden rounded-b-[40px] relative">
+    <View className="h-[240px] overflow-hidden rounded-b-[30px] sticky">
       <Image
         source={require("../../assets/images/welcome_bg.png")}
         style={StyleSheet.absoluteFillObject}

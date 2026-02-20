@@ -40,7 +40,7 @@ export default function ForgotPasswordScreen() {
             animated: true,
           });
         },
-        () => {}
+        () => {},
       );
     }, 100);
   };
@@ -83,7 +83,7 @@ export default function ForgotPasswordScreen() {
           duration: 1000,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     ).start();
   }, [fadeAnim, iconPulse, iconScale, slideAnim]);
 
@@ -133,11 +133,14 @@ export default function ForgotPasswordScreen() {
 
         <View className="flex-1 items-center justify-center bg-white px-6 py-10 rounded-3xl w-[95%] mx-auto -mt-40 shadow-lg shadow-black/25 elevation-5">
           <View className="bg-orange-100 h-20 w-20 p-2 rounded-full flex items-center justify-center">
-           <Ionicons name="key-outline" size={40} color="orange" />
+            <Ionicons name="key-outline" size={40} color="orange" />
           </View>
 
           <Text className="text-2xl font-bold mt-4">Reset Password</Text>
-          <Text className="text-gray-600 mt-2 text-center text-lg px-4">Enter your email address and we&apos;ll send you a link to reset your password</Text>
+          <Text className="text-gray-600 mt-2 text-center text-lg px-4">
+            Enter your email address and we&apos;ll send you a link to reset
+            your password
+          </Text>
 
           {/* form */}
           <View className="mt-5">
@@ -157,11 +160,11 @@ export default function ForgotPasswordScreen() {
               className="w-80 h-16 items-center justify-center z-10 bg-orange-500 rounded-full mt-5"
               activeOpacity={0.7}
             >
-            <Text className="text-white text-xl font-bold">Continue</Text>
-            </TouchableOpacity> 
+              <Text className="text-white text-xl font-bold">Continue</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
-} 
+}
