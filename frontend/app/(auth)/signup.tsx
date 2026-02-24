@@ -1,10 +1,11 @@
-import { View, Text, TouchableOpacity, Animated, StyleSheet, TextInput, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
+import FormInput from '../../components/ui/FormInput';
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -12,77 +13,6 @@ export default function SignUpScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
-  // Refs for scrolling
-  const scrollViewRef = useRef<ScrollView>(null);
-  const fullNameRef = useRef<View>(null);
-  const emailRef = useRef<View>(null);
-  const passwordRef = useRef<View>(null);
-  const confirmPasswordRef = useRef<View>(null);
-  
-  // Animation values
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
-  
-  // Staggered animations for inputs
-  const input1Anim = useRef(new Animated.Value(0)).current;
-  const input2Anim = useRef(new Animated.Value(0)).current;
-  const input3Anim = useRef(new Animated.Value(0)).current;
-  const input4Anim = useRef(new Animated.Value(0)).current;
-
-  const scrollToInput = (ref: React.RefObject<View | null>) => {
-    setTimeout(() => {
-      ref.current?.measureLayout(
-        scrollViewRef.current as any,
-        (x, y) => {
-          scrollViewRef.current?.scrollTo({
-            y: y - 100,
-            animated: true,
-          });
-        },
-        () => {}
-      );
-    }, 100);
-  };
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Staggered input animations
-    Animated.stagger(100, [
-      Animated.timing(input1Anim, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-      Animated.timing(input2Anim, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-      Animated.timing(input3Anim, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-      Animated.timing(input4Anim, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
 
   return (
     <KeyboardAvoidingView 
@@ -91,8 +21,7 @@ export default function SignUpScreen() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       <ScrollView 
-        ref={scrollViewRef}
-        className="flex-1"
+        className="flex-1 bg-white"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 50 }}
@@ -131,104 +60,85 @@ export default function SignUpScreen() {
 
 
 
-      {/* Login form */}
-      <Animated.View className="px-6 py-10 bg-white rounded-3xl w-[95%] mx-auto -mt-40 shadow-lg shadow-black/25 elevation-5">
-        <Text className="text-3xl font-bold text-center mb-1">CREATE ACCOUNT</Text>
-        <Text className="text-lg text-[#7C7C7C] text-center mb-6">
+      {/* Sign up form */}
+      <View className="px-6 py-8 bg-white dark:bg-slate-900 rounded-3xl w-[95%] mx-auto -mt-40 shadow-lg shadow-black/25 elevation-5">
+        <Text className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">Create Account</Text>
+        <Text className="text-base text-slate-500 dark:text-slate-400 text-center mb-6">
           Join us and start learning today
         </Text>
 
-        {/* forms  */}
-        <Animated.View>
+        {/* Form inputs */}
+        <FormInput
+          label="Full Name"
+          placeholder="Enter your full name"
+          value={fullName}
+          onChangeText={setFullName}
+          autoCapitalize="words"
+          autoComplete="name"
+        />
 
-          <View ref={fullNameRef} className="mt-4">
-            <Text className="text-lg font-semibold mb-2">Full Name</Text>
-            <TextInput
-              placeholder="Enter your full name"
-              value={fullName}
-              onChangeText={setFullName}
-              onFocus={() => scrollToInput(fullNameRef)}
-              className="border border-orange-500 rounded-full px-4 py-4"
-              autoCapitalize="words"
-              autoComplete="name"
-            />
-          </View>
+        <FormInput
+          label="Email"
+          placeholder="Enter your email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+        />
 
-          <View ref={emailRef} className="mt-4">
-            <Text className="text-lg font-semibold mb-2">Email</Text>
-            <TextInput
-              placeholder="Enter your email"
-              value={email}
-              onChangeText={setEmail}
-              onFocus={() => scrollToInput(emailRef)}
-              className="border border-orange-500 rounded-full px-4 py-4"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
-          </View>
+        <FormInput
+          label="Password"
+          placeholder="Enter your password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoCapitalize="none"
+          autoComplete="password-new"
+        />
 
-          <View ref={passwordRef} className="mt-4">
-            <Text className="text-lg font-semibold mb-2">Password</Text>
-            <TextInput
-              placeholder="Enter your password"
-              value={password}
-              onChangeText={setPassword}
-              onFocus={() => scrollToInput(passwordRef)}
-              className="border border-orange-500 rounded-full px-4 py-4"
-              secureTextEntry
-              autoCapitalize="none"
-              autoComplete="password-new"
-            />
-          </View>
+        <FormInput
+          label="Confirm Password"
+          placeholder="Confirm your password"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+          autoCapitalize="none"
+          autoComplete="password-new"
+        />
 
-          <View ref={confirmPasswordRef} className="mt-4">
-            <Text className="text-lg font-semibold mb-2">Confirm Password</Text>
-            <TextInput
-              placeholder="Enter your confirm password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              onFocus={() => scrollToInput(confirmPasswordRef)}
-              className="border border-orange-500 rounded-full px-4 py-4"
-              secureTextEntry
-              autoCapitalize="none"
-              autoComplete="password-new"
-            />
-          </View>
+        <TouchableOpacity
+          onPress={() => router.push("/(auth)/login")}
+          className="bg-primary dark:bg-primary rounded-xl px-4 py-4 mb-4"
+        >
+          <Text className="text-white text-center text-lg font-bold">
+            Sign Up
+          </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => router.push("/(auth)/login")}
-            className="bg-[#FB5607] rounded-full px-4 py-4 mt-4"
-          >
-            <Text className="text-white text-center text-2xl font-semibold">
-              Sign Up
-            </Text>
+        <View className="flex-row justify-center gap-4 mb-6">
+          <TouchableOpacity className="flex-1 border border-slate-300 dark:border-slate-600 rounded-xl p-3 items-center">
+            <Ionicons name="logo-google" size={24} color="#FB5607" />
           </TouchableOpacity>
 
-          <View className="flex-row justify-center gap-10 mt-3">
-            <TouchableOpacity className="bg-white border border-orange-500 rounded-full p-4">
-             <Ionicons name="logo-google" size={24} color="black" />
-            </TouchableOpacity>
+          <TouchableOpacity className="flex-1 border border-slate-300 dark:border-slate-600 rounded-xl p-3 items-center">
+            <Ionicons name="logo-apple" size={24} color="#000000" />
+          </TouchableOpacity>
+        </View>
 
-            <TouchableOpacity className="bg-white border border-orange-500 rounded-full p-4">
-             <Ionicons name="logo-apple" size={24} color="black" />
-            </TouchableOpacity>
-          </View>
-
-          <View className="flex-row justify-center mt-3 gap-2">
-            <Text className="text-lg text-[#474746] font-semibold">
-              Already have an account?
+        <View className="flex-row justify-center gap-2">
+          <Text className="text-base text-slate-600 dark:text-slate-400 font-medium">
+            Already have an account?
+          </Text>
+          <TouchableOpacity
+            onPress={() => router.push("/(auth)/login")}
+          >
+            <Text className="text-base font-bold text-primary">
+              Login
             </Text>
-            <TouchableOpacity
-              onPress={() => router.push("/(auth)/login")}
-            >
-              <Text className="text-lg font-semibold text-[#FB5607]">
-                Login
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </Animated.View> 
-      </Animated.View>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       </ScrollView>
     </KeyboardAvoidingView>

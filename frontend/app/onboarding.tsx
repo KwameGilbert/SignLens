@@ -83,12 +83,12 @@ export default function OnboardingScreen() {
       </View>
 
       {/* Title */}
-      <Text className="text-gray-900 text-3xl font-bold text-center mb-4">
+      <Text className="text-slate-900 text-3xl font-bold text-center mb-4 leading-10">
         {item.title}
       </Text>
 
       {/* Description */}
-      <Text className="text-gray-600 text-base text-center px-4">
+      <Text className="text-slate-600 text-base text-center px-4 leading-6">
         {item.description}
       </Text>
     </View>
@@ -129,8 +129,8 @@ export default function OnboardingScreen() {
           {onboardingData.map((_, index) => (
             <View
               key={index}
-              className={`h-2 rounded-full mx-1 ${
-                index === currentIndex ? "bg-orange-500 w-8" : "bg-gray-300 w-2"
+              className={`h-2 rounded-full mx-1 transition-all ${
+                index === currentIndex ? "bg-primary w-8" : "bg-slate-300 w-2"
               }`}
             />
           ))}
@@ -138,7 +138,7 @@ export default function OnboardingScreen() {
 
         {/* Continue/Get Started Button */}
         <TouchableOpacity
-          className="bg-orange-500 py-4 rounded-xl items-center active:opacity-90"
+          className="bg-primary py-4 rounded-xl items-center active:opacity-90"
           onPress={handleContinue}
         >
           <Text className="text-white font-bold text-lg">

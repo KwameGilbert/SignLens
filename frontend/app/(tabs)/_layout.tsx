@@ -74,6 +74,24 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="learn-category"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="learn-lesson"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="learn-checkpoint"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
