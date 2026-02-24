@@ -137,22 +137,27 @@ def main():
     print(f"Data shape: {X.shape}")
     print(f"Labels shape: {y.shape}")
 
-    # 2. Split Data (Manual Split without scikit-learn)
-    # create a list of indices and shuffle them
+    # 2. Split Data (80/10/10 Train/Validation/Test split)
+    # Create a list of indices and shuffle them
     indices = np.arange(len(X))
     np.random.shuffle(indices)
     
     X = X[indices]
     y = y[indices]
     
-    # Calculate split index for 5% testing
-    test_size = 0.05
-    split_index = int(len(X) * (1 - test_size))
+    # Calculate split indices for 80% train, 10% validation, 10% test
+    train_size = 0.8
+    val_size = 0.1
+    # test_size = 0.1 (implicit)
     
-    X_train, X_test = X[:split_index], X[split_index:]
-    y_train, y_test = y[:split_index], y[split_index:]
+    train_split = int(len(X) * train_size)
+    val_split = int(len(X) * (train_size + val_size))
+    
+    X_train, X_val, X_test = X[:train_split], X[train_split:val_split], X[val_split:]
+    y_train, y_val, y_test = y[:train_split], y[train_split:val_split], y[val_split:]
     
     print(f"Training Data: {X_train.shape}")
+    print(f"Validation Data: {X_val.shape}")
     print(f"Testing Data: {X_test.shape}")
     
     # 3. Build Model
@@ -171,7 +176,7 @@ def main():
     
     callbacks = [tb_callback, early_stopping, checkpoint, lr_scheduler]
     
-    history = model.fit(X_train, y_train, epochs=200, callbacks=callbacks, validation_data=(X_test, y_test))
+    history = model.fit(X_train, y_train, epochs=200, callbacks=callbacks, validation_data=(X_val, y_val))
     
     # No need to save manually at end, checkpoint does it.
     # But for safety we can keep it or rely on checkpoint. 
@@ -180,8 +185,14 @@ def main():
     # 6. Plot Results
     plot_history(history)
     
-    # 7. Plot Confusion Matrix
-    print("Generating Confusion Matrix...")
+    # 7. Evaluate on Test Set
+    print("\nEvaluating on Test Set...")
+    test_loss, test_accuracy = model.evaluate(X_test, y_test, verbose=0)
+    print(f"Test Loss: {test_loss:.4f}")
+    print(f"Test Accuracy: {test_accuracy:.4f}")
+    
+    # 8. Plot Confusion Matrix (on Test Set)
+    print("Generating Confusion Matrix (Test Set)...")
     y_pred = model.predict(X_test)
     plot_confusion_matrix_manual(y_test, y_pred, actions)
 

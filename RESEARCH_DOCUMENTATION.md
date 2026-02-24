@@ -431,18 +431,18 @@ Model: Sequential
 Layer Type              Units/Kernel    Activation  Return_Seq  Regularization
 ────────────────────────────────────────────────────────────────────────────────
 Input                   (30, 1662)      -           -           -
-LSTM-1 (BiDir opt)      64              relu        True        -
+LSTM-1 (BiDir opt)      64              tanh        True        -
 BatchNormalization      64              -           -           -
 Dropout                 -               -           -           0.2 (drop rate)
-LSTM-2                  128             relu        True        -
+LSTM-2                  128             tanh        True        -
 BatchNormalization      128             -           -           -
 Dropout                 -               -           -           0.2 (drop rate)
-LSTM-3                  64              relu        False       -
+LSTM-3                  64              tanh        False       -
 BatchNormalization      64              -           -           -
 Dropout                 -               -           -           0.2 (drop rate)
-Dense-1                 64              relu        -           -
+Dense-1                 64              tanh        -           -
 BatchNormalization      64              -           -           -
-Dense-2                 32              relu        -           -
+Dense-2                 32              tanh        -           -
 BatchNormalization      32              -           -           -
 Output Dense            num_classes     softmax     -           -
 ────────────────────────────────────────────────────────────────────────────────
@@ -458,7 +458,7 @@ Total Trainable Params: ~1,200,000+ (varies with num_classes)
 **Layer 2: LSTM Layer 1 (64 units)**
 - **Configuration:**
   ```python
-  LSTM(64, return_sequences=True, activation='relu', input_shape=(30, 1662))
+  LSTM(64, return_sequences=True, activation='tanh', input_shape=(30, 1662))
   ```
 - **Output Shape:** (batch_size, 30, 64)
 - **Purpose:** Initial temporal feature extraction; processes each time step and preserves sequence for next layer
@@ -479,7 +479,7 @@ Total Trainable Params: ~1,200,000+ (varies with num_classes)
 **Layer 5: LSTM Layer 2 (128 units)**
 - **Configuration:**
   ```python
-  LSTM(128, return_sequences=True, activation='relu')
+  LSTM(128, return_sequences=True, activation='tanh')
   ```
 - **Output Shape:** (batch_size, 30, 128)
 - **Purpose:** Deeper temporal modeling; captures more complex patterns and interactions between initial features
@@ -497,7 +497,7 @@ Total Trainable Params: ~1,200,000+ (varies with num_classes)
 **Layer 8: LSTM Layer 3 (64 units, return_sequences=False)**
 - **Configuration:**
   ```python
-  LSTM(64, return_sequences=False, activation='relu')
+  LSTM(64, return_sequences=False, activation='tanh')
   ```
 - **Output Shape:** (batch_size, 64)
 - **Purpose:** Final temporal feature extraction and sequence-to-vector reduction
@@ -516,7 +516,7 @@ Total Trainable Params: ~1,200,000+ (varies with num_classes)
 **Layer 11: Dense Layer 1 (64 units)**
 - **Configuration:**
   ```python
-  Dense(64, activation='relu')
+  Dense(64, activation='tanh')
   ```
 - **Output Shape:** (batch_size, 64)
 - **Purpose:** Non-linear feature transformation and interaction learning
@@ -529,7 +529,7 @@ Total Trainable Params: ~1,200,000+ (varies with num_classes)
 **Layer 13: Dense Layer 2 (32 units)**
 - **Configuration:**
   ```python
-  Dense(32, activation='relu')
+  Dense(32, activation='tanh')
   ```
 - **Output Shape:** (batch_size, 32)
 - **Purpose:** Further compression and feature refinement before classification
@@ -551,13 +551,15 @@ Total Trainable Params: ~1,200,000+ (varies with num_classes)
 
 #### 4.2.3 Activation Functions
 
-**ReLU (Rectified Linear Unit)**
+**Tanh (Hyperbolic Tangent)**
 ```
-f(x) = max(0, x)
+f(x) = (e^x - e^-x) / (e^x + e^-x)
+Range: [-1, 1]
 ```
-- **Advantages:** Sparse activation, faster computation, mitigation of vanishing gradient problem
-- **Usage:** All LSTM and dense layers
-- **Benefit:** Allows network to learn non-linear decision boundaries
+- **Advantages:** Symmetric around zero (outputs range from -1 to 1), stronger gradients than sigmoid, better for LSTM cells
+- **Usage:** All LSTM layers and dense hidden layers
+- **Benefit:** Provides better representation learning; LSTM cells traditionally use tanh activation for gate computations; symmetric range helps with gradient flow during backpropagation
+- **Comparison to ReLU:** While ReLU is faster and leads to sparser activation, tanh is particularly well-suited for LSTM networks due to its mathematical properties within the gating mechanism
 
 **Softmax**
 ```
@@ -748,7 +750,7 @@ def augment_data(X, y):
 ```python
 def split_data_stratified(X, y):
     """
-    Splits data into training (95%) and testing (5%) with stratification.
+    Splits data into training (80%), validation (10%), and testing (10%) splits.
     """
     
     # Shuffle data
@@ -771,13 +773,17 @@ def split_data_stratified(X, y):
 ```
 
 **Split Ratios:**
-- **Training Set:** 95% (~1710 augmented sequences)
-- **Testing Set:** 5% (~90 augmented sequences)
+- **Training Set:** 80% (~1440 augmented sequences)
+- **Validation Set:** 10% (~180 augmented sequences)
+- **Testing Set:** 10% (~180 augmented sequences)
 
 **Rationale:**
-- Large training set to learn robust features
-- Small test set for final unbiased evaluation
-- All data is utilized (no separate validation set; validation done during training via callbacks)
+- **Training Set (80%):** Large set to learn robust temporal patterns and gesture features
+- **Validation Set (10%):** Used during training to monitor model performance, guide early stopping, and tune hyperparameters; prevents overfitting
+- **Testing Set (10%):** Completely held out and unused during training; provides unbiased final evaluation metrics for publication and comparison
+
+**Methodological Importance:**
+Using the test set as validation during training (as in prior versions) introduces data leakage and can lead to overestimation of model performance. The 80/10/10 split follows standard machine learning best practices and ensures reproducibility for peer review and publication.
 
 ### 5.3 Training Procedure
 
@@ -788,7 +794,7 @@ history = model.fit(
     X_train, y_train,
     epochs=200,
     batch_size=32,          # (default)
-    validation_data=(X_test, y_test),
+    validation_data=(X_val, y_val),
     callbacks=[
         TensorBoard(log_dir=log_dir),
         EarlyStopping(
@@ -817,7 +823,7 @@ history = model.fit(
 **Training Hyperparameters:**
 - **Max Epochs:** 200
 - **Batch Size:** 32 (default; balanced between memory and gradient stability)
-- **Validation Data:** Test set (5% of data)
+- **Validation Data:** Separate validation set (10% of data, held distinct from test set to prevent data leakage)
 
 #### 5.3.2 Callback Functions (Advanced Training Intelligence)
 
@@ -996,6 +1002,32 @@ Interpretation:
 - High confusion between classes A and B → Collect more diverse data for those signs
 - One class always misclassified → May have label errors; review training data
 
+#### 5.4.3 Final Test Set Evaluation
+
+After training completes, the model is evaluated on the held-out test set to obtain unbiased performance metrics for publication and comparison:
+
+```python
+# Evaluate on Test Set (Completely Unseen Data)
+test_loss, test_accuracy = model.evaluate(X_test, y_test, verbose=0)
+
+print(f"Test Loss: {test_loss:.4f}")
+print(f"Test Accuracy: {test_accuracy:.4f}")
+
+# Generate Confusion Matrix on Test Set
+y_pred = model.predict(X_test)
+plot_confusion_matrix_manual(y_test, y_pred, actions)
+```
+
+**Key Methodological Points:**
+1. **Data Integrity:** The test set has never been seen by the model during training or validation
+2. **Unbiased Metrics:** Test set performance represents true generalization ability
+3. **Publication Standard:** Test set results are the only metrics reported in academic publications
+4. **Reproducibility:** These metrics enable fair comparison with other sign language recognition systems
+
+**Expected Performance:**
+- Test set accuracy is typically 2-5% lower than validation accuracy (due to lack of fine-tuning on validation data)
+- Significant gap (>10%) between validation and test accuracy may indicate data quality issues or distribution mismatch
+
 ---
 
 ## 6. Implementation Details and Code Organization
@@ -1054,7 +1086,7 @@ def get_model(input_shape, num_classes):
         
     Architecture:
         - Input shape: (30, 1662) - 30 frames with 1662 keypoint features each
-        - 3 LSTM layers (64 → 128 → 64 units) with ReLU activation
+        - 3 LSTM layers (64 → 128 → 64 units) with tanh activation
         - BatchNormalization after each LSTM layer
         - Dropout (0.2) for regularization
         - 2 Dense layers (64 → 32 units) for classification
@@ -1064,27 +1096,27 @@ def get_model(input_shape, num_classes):
     model = Sequential()
     
     # LSTM Layer 1: Initial temporal feature extraction
-    model.add(LSTM(64, return_sequences=True, activation='relu', 
+    model.add(LSTM(64, return_sequences=True, activation='tanh', 
                    input_shape=input_shape))
     model.add(BatchNormalization())
     model.add(Dropout(0.2))
     
     # LSTM Layer 2: Deeper temporal modeling
-    model.add(LSTM(128, return_sequences=True, activation='relu'))
+    model.add(LSTM(128, return_sequences=True, activation='tanh'))
     model.add(BatchNormalization())
     model.add(Dropout(0.2))
     
     # LSTM Layer 3: Final temporal synthesis (reduction to vector)
-    model.add(LSTM(64, return_sequences=False, activation='relu'))
+    model.add(LSTM(64, return_sequences=False, activation='tanh'))
     model.add(BatchNormalization())
     model.add(Dropout(0.2))
     
     # Dense Layer 1: Non-linear feature transformation
-    model.add(Dense(64, activation='relu'))
+    model.add(Dense(64, activation='tanh'))
     model.add(BatchNormalization())
     
     # Dense Layer 2: Feature refinement
-    model.add(Dense(32, activation='relu'))
+    model.add(Dense(32, activation='tanh'))
     model.add(BatchNormalization())
     
     # Output Layer: Multi-class classification
@@ -1163,7 +1195,7 @@ Load Data
   └─ Output: X (1800×30×1662), y (1800×20)
 
 Split Data
-  ├─ 95% training, 5% testing
+  ├─ 80% training, 10% validation, 10% testing
   └─ Shuffle to ensure random distribution
 
 Build Model
