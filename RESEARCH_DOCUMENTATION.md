@@ -440,9 +440,9 @@ Dropout                 -               -           -           0.2 (drop rate)
 LSTM-3                  64              tanh        False       -
 BatchNormalization      64              -           -           -
 Dropout                 -               -           -           0.2 (drop rate)
-Dense-1                 64              tanh        -           -
+Dense-1                 64              relu        -           -
 BatchNormalization      64              -           -           -
-Dense-2                 32              tanh        -           -
+Dense-2                 32              relu        -           -
 BatchNormalization      32              -           -           -
 Output Dense            num_classes     softmax     -           -
 ────────────────────────────────────────────────────────────────────────────────
@@ -516,7 +516,7 @@ Total Trainable Params: ~1,200,000+ (varies with num_classes)
 **Layer 11: Dense Layer 1 (64 units)**
 - **Configuration:**
   ```python
-  Dense(64, activation='tanh')
+  Dense(64, activation='relu')
   ```
 - **Output Shape:** (batch_size, 64)
 - **Purpose:** Non-linear feature transformation and interaction learning
@@ -529,7 +529,7 @@ Total Trainable Params: ~1,200,000+ (varies with num_classes)
 **Layer 13: Dense Layer 2 (32 units)**
 - **Configuration:**
   ```python
-  Dense(32, activation='tanh')
+  Dense(32, activation='relu')
   ```
 - **Output Shape:** (batch_size, 32)
 - **Purpose:** Further compression and feature refinement before classification
@@ -556,10 +556,19 @@ Total Trainable Params: ~1,200,000+ (varies with num_classes)
 f(x) = (e^x - e^-x) / (e^x + e^-x)
 Range: [-1, 1]
 ```
-- **Advantages:** Symmetric around zero (outputs range from -1 to 1), stronger gradients than sigmoid, better for LSTM cells
-- **Usage:** All LSTM layers and dense hidden layers
-- **Benefit:** Provides better representation learning; LSTM cells traditionally use tanh activation for gate computations; symmetric range helps with gradient flow during backpropagation
-- **Comparison to ReLU:** While ReLU is faster and leads to sparser activation, tanh is particularly well-suited for LSTM networks due to its mathematical properties within the gating mechanism
+- **Advantages:** Symmetric around zero, stronger gradients than sigmoid, mathematically well-suited for LSTM gating mechanisms
+- **Usage:** All LSTM layers
+- **Benefit:** Better gradient flow during backpropagation; symmetric range [-1, 1] is particularly effective for LSTM internal state management
+- **Rationale for SignLens:** Tanh is the traditional and mathematically principled choice for LSTM networks due to its integration with LSTM cell dynamics (as shown in the LSTM mathematics where tanh appears in both the candidate cell computation and output gate)
+
+**ReLU (Rectified Linear Unit)**
+```
+f(x) = max(0, x)
+```
+- **Advantages:** Sparse activation, faster computation, mitigation of vanishing gradient problem
+- **Usage:** Dense layers in this implementation
+- **Benefit:** Allows network to learn non-linear decision boundaries and can speed up convergence in dense layers
+- **Rationale for SignLens:** ReLU is intentionally used in the dense layers to leverage its computational efficiency and effectiveness for non-sequential feature transformation, as chosen for this model variant.
 
 **Softmax**
 ```
@@ -1112,11 +1121,11 @@ def get_model(input_shape, num_classes):
     model.add(Dropout(0.2))
     
     # Dense Layer 1: Non-linear feature transformation
-    model.add(Dense(64, activation='tanh'))
+    model.add(Dense(64, activation='relu'))
     model.add(BatchNormalization())
     
     # Dense Layer 2: Feature refinement
-    model.add(Dense(32, activation='tanh'))
+    model.add(Dense(32, activation='relu'))
     model.add(BatchNormalization())
     
     # Output Layer: Multi-class classification

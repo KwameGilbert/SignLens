@@ -31,9 +31,9 @@ def get_model(input_shape, num_classes):
     model.add(Dropout(0.2))
     
     # Dense Layers for classification
-    model.add(Dense(64, activation='tanh'))
+    model.add(Dense(64, activation='relu'))
     model.add(BatchNormalization())
-    model.add(Dense(32, activation='tanh'))
+    model.add(Dense(32, activation='relu'))
     model.add(BatchNormalization())
     
     # Output Layer
