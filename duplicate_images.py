@@ -5,7 +5,7 @@ import shutil
 dataset_dir = os.path.join(os.getcwd(), 'dataset_images')
 
 # Number of times to duplicate each image (change as needed)
-duplicates = 2  # This will make 2 copies of each image (original + 2 copies = 3 total)
+duplicates = 27  # This will make 27 copies of each image (original + 27 copies = 28 total)
 
 for class_name in os.listdir(dataset_dir):
     class_dir = os.path.join(dataset_dir, class_name)

@@ -8,8 +8,8 @@ from model_image import get_image_model
 
 DATA_PATH = os.path.join('../dataset_images')
 IMG_SIZE = (128, 128)
-BATCH_SIZE = 32
-EPOCHS = 100
+BATCH_SIZE = 2  # Reduced for small dataset
+EPOCHS = 50
 
 # Data generators
 train_datagen = ImageDataGenerator(
@@ -39,6 +39,17 @@ val_gen = train_datagen.flow_from_directory(
     shuffle=True
 )
 
+# Print number of images in each set
+print(f"Training images: {train_gen.samples}")
+print(f"Validation images: {val_gen.samples}")
+
+# Check if validation data is present
+if val_gen.samples == 0:
+    print("Warning: No validation images found. Validation metrics will not be available.")
+    validation_data = None
+else:
+    validation_data = val_gen
+
 num_classes = train_gen.num_classes
 input_shape = IMG_SIZE + (3,)
 
@@ -54,7 +65,7 @@ callbacks = [tb_callback, early_stopping, checkpoint, lr_scheduler]
 history = model.fit(
     train_gen,
     epochs=EPOCHS,
-    validation_data=val_gen,
+    validation_data=validation_data,
     callbacks=callbacks
 )
 
