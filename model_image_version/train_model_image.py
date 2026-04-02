@@ -6,7 +6,7 @@ from tensorflow.keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoi
 import matplotlib.pyplot as plt
 from model_image import get_image_model
 
-DATA_PATH = os.path.join('dataset_images')
+DATA_PATH = os.path.join('../dataset_images')
 IMG_SIZE = (128, 128)
 BATCH_SIZE = 32
 EPOCHS = 100

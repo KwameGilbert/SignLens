@@ -8,3 +8,4 @@ tensorflow==2.13.0
 protobuf==3.20.3
 mediapipe==0.10.5
 pyttsx3
+scipy
