@@ -5,7 +5,7 @@ from tensorflow.keras.models import load_model
 
 IMG_SIZE = (128, 128)
 MODEL_PATH = os.path.join('model_image_version', 'sign_language_model_image.h5')
-DATA_PATH = os.path.join('dataset_images')
+DATA_PATH = os.path.join('../dataset_images')
 
 # Get class labels
 classes = [d for d in os.listdir(DATA_PATH) if os.path.isdir(os.path.join(DATA_PATH, d))]
@@ -25,6 +25,8 @@ while cap.isOpened():
     pred_class = np.argmax(preds)
     confidence = np.max(preds)
     label = classes[pred_class]
+    # Print detected sign and confidence in terminal
+    print(f"Detected sign: {label} (confidence: {confidence:.2f})")
     cv2.putText(frame, f"{label} ({confidence:.2f})", (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
     cv2.imshow('SignLens Image Model', frame)
     if cv2.waitKey(10) & 0xFF == ord('q'):
