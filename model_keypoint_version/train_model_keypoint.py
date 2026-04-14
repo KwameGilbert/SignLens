@@ -5,7 +5,7 @@ from tensorflow.keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoi
 import matplotlib.pyplot as plt
 from model_keypoint import get_keypoint_model
 
-DATA_PATH = os.path.join('dataset_keypoints')
+DATA_PATH = os.path.join('..', 'dataset_keypoints')
 SEQUENCE_LENGTH = 30
 
 def load_data():
@@ -63,7 +63,7 @@ def main():
     checkpoint = ModelCheckpoint(os.path.join('model_keypoint_version', 'sign_language_model_keypoint.h5'), monitor='val_categorical_accuracy', mode='max', save_best_only=True, verbose=1)
     lr_scheduler = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1)
     callbacks = [tb_callback, early_stopping, checkpoint, lr_scheduler]
-    history = model.fit(X_train, y_train, epochs=200, callbacks=callbacks, validation_data=(X_val, y_val))
+    history = model.fit(X_train, y_train, epochs=100, callbacks=callbacks, validation_data=(X_val, y_val))
     plot_history(history)
     print("\nEvaluating on Test Set...")
     test_loss, test_accuracy = model.evaluate(X_test, y_test, verbose=0)
