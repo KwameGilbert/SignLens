@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, File, UploadFile, WebSocket, WebSocketDisconnect, HTTPException, status
-
 from .schemas import InputType, PredictResponse
 from .auth import verify_api_key
 from app.models.model_manager import model_manager
