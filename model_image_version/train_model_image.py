@@ -72,6 +72,18 @@ def plot_history(history):
 
 plot_history(history)
 
-# Save the trained model manually
-model.save('model_image_version/sign_language_model_image.h5')
-print('Model saved to model_image_version/sign_language_model_image.h5')
+# Versioned model saving
+def get_versioned_model_path(base_path):
+    if not os.path.exists(base_path):
+        return base_path
+    base, ext = os.path.splitext(base_path)
+    version = 1
+    while True:
+        new_path = f"{base}_{version}{ext}"
+        if not os.path.exists(new_path):
+            return new_path
+        version += 1
+
+model_path = get_versioned_model_path('model_image_version/sign_language_model_image.h5')
+model.save(model_path)
+print(f'Model saved to {model_path}')

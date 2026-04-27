@@ -61,7 +61,20 @@ def main():
     log_dir = os.path.join('model_video_version', 'Logs')
     tb_callback = TensorBoard(log_dir=log_dir)
     early_stopping = EarlyStopping(monitor='val_loss', patience=10, mode='min', restore_best_weights=True)
-    checkpoint = ModelCheckpoint(os.path.join('model_video_version', 'sign_language_model_video.h5'), monitor='val_categorical_accuracy', mode='max', save_best_only=True, verbose=1)
+    # Versioned model saving
+    def get_versioned_model_path(base_path):
+        if not os.path.exists(base_path):
+            return base_path
+        base, ext = os.path.splitext(base_path)
+        version = 1
+        while True:
+            new_path = f"{base}_{version}{ext}"
+            if not os.path.exists(new_path):
+                return new_path
+            version += 1
+
+    model_path = get_versioned_model_path(os.path.join('model_video_version', 'sign_language_model_video.h5'))
+    checkpoint = ModelCheckpoint(model_path, monitor='val_categorical_accuracy', mode='max', save_best_only=True, verbose=1)
     lr_scheduler = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1)
     callbacks = [tb_callback, early_stopping, checkpoint, lr_scheduler]
     history = model.fit(X_train, y_train, epochs=200, callbacks=callbacks, validation_data=(X_val, y_val))
