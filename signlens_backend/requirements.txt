@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-multipart
+pydantic
+opencv-python-headless
+tensorflow
+numpy
+mysql-connector-python
+python-dotenv
