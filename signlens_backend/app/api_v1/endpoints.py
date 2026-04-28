@@ -9,20 +9,7 @@ from tensorflow.keras.preprocessing import image as keras_image
 
 router = APIRouter()
 
-# Health check endpoint
-@router.get("/health", tags=["Health"])
-def health_check():
-    return {
-        "status": "ok",
-        "message": "SignLens API is running",
-        "version": "1.0.0",
-        "data": {
-            "models_loaded": list(model_manager.models.keys()),
-            "Supported input types": [InputType.image, InputType.video, InputType.stream],
-            "API documentation": "/docs",
-            "Rate limits": "100 requests per minute per API key (subject to change)"
-        }
-    }
+
 
 # REST endpoint for static image prediction
 
