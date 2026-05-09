@@ -1,6 +1,13 @@
+const path = require('path');
 const { getDefaultConfig } = require("expo/metro-config");
-const { withNativeWind } = require('nativewind/metro');
- 
-const config = getDefaultConfig(__dirname)
- 
-module.exports = withNativeWind(config, { input: './app/global.css' })
+
+const projectRoot = path.resolve(__dirname);
+const config = getDefaultConfig(projectRoot);
+
+// Configure metro to handle nativewind styling without lightningcss
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  'lightningcss': path.resolve(__dirname, 'node_modules/lightningcss')
+};
+
+module.exports = config;
