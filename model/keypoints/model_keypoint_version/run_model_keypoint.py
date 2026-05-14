@@ -5,8 +5,8 @@ import mediapipe as mp
 from tensorflow.keras.models import load_model
 
 SEQUENCE_LENGTH = 30
-DATASET_PATH = os.path.join('dataset_keypoints')
-MODEL_PATH = os.path.join('model_keypoint_version', 'sign_language_model_keypoint.h5')
+DATASET_PATH = os.path.join(os.path.dirname(__file__), '..', 'dataset_keypoints')
+MODEL_PATH = os.path.join(os.path.dirname(__file__), 'sign_language_model_keypoint.h5')
 
 mp_holistic = mp.solutions.holistic
 

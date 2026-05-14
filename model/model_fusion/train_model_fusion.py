@@ -1,13 +1,14 @@
 import os
 import numpy as np
+# pyrefly: ignore [missing-import]
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from model_fusion import get_fusion_model
 
 # Paths to pre-trained models
-IMAGE_MODEL_PATH = os.path.join('model_image_version', 'sign_language_model_image.h5')
-VIDEO_MODEL_PATH = os.path.join('model_video_version', 'sign_language_model_video.h5')
-KEYPOINT_MODEL_PATH = os.path.join('model_keypoint_version', 'sign_language_model_keypoint.h5')
+IMAGE_MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'image', 'model_image_version', 'sign_language_model_image.h5')
+VIDEO_MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'video', 'model_video_version', 'sign_language_model_video.h5')
+KEYPOINT_MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'keypoints', 'model_keypoint_version', 'sign_language_model_keypoint.h5')
 
 # Example: You must implement your own data loader to provide X_image, X_video, X_keypoint, y
 # X_image: (num_samples, 128, 128, 3)
@@ -29,10 +30,10 @@ def load_fusion_data():
 def main():
     X_image, X_video, X_keypoint, y, num_classes = load_fusion_data()
     model = get_fusion_model(IMAGE_MODEL_PATH, VIDEO_MODEL_PATH, KEYPOINT_MODEL_PATH, num_classes)
-    log_dir = os.path.join('model_fusion', 'Logs')
+    log_dir = os.path.join(os.path.dirname(__file__), '..', 'Logs')
     tb_callback = TensorBoard(log_dir=log_dir)
     early_stopping = EarlyStopping(monitor='val_loss', patience=10, mode='min', restore_best_weights=True)
-    checkpoint = ModelCheckpoint(os.path.join('model_fusion', 'sign_language_model_fusion.h5'), monitor='val_categorical_accuracy', mode='max', save_best_only=True, verbose=1)
+    checkpoint = ModelCheckpoint(os.path.join(os.path.dirname(__file__), 'sign_language_model_fusion.h5'), monitor='val_categorical_accuracy', mode='max', save_best_only=True, verbose=1)
     lr_scheduler = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1)
     callbacks = [tb_callback, early_stopping, checkpoint, lr_scheduler]
     # Split data

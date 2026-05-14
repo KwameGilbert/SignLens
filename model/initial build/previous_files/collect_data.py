@@ -6,7 +6,7 @@ import time
 import shutil
 
 # --- Configuration ---
-DATA_PATH = os.path.join('dataset')
+DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'dataset')
 SEQUENCE_LENGTH = 30  # Frames per sequence
 NO_SEQUENCES = 30     # Number of sequences to collect
 

@@ -6,7 +6,7 @@ import mediapipe as mp
 
 IMG_SIZE = (128, 128)
 SEQUENCE_LENGTH = 30
-FUSION_MODEL_PATH = os.path.join('model_fusion', 'sign_language_model_fusion.h5')
+FUSION_MODEL_PATH = os.path.join(os.path.dirname(__file__), 'sign_language_model_fusion.h5')
 
 # Placeholder: You must load the same class order as in training
 CLASSES = [str(i) for i in range(20)]

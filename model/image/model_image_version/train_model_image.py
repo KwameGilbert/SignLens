@@ -6,7 +6,7 @@ from tensorflow.keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoi
 import matplotlib.pyplot as plt
 from model_image import get_image_model
 
-DATA_PATH = os.path.join('../dataset_images')
+DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'dataset_images')
 IMG_SIZE = (128, 128)
 BATCH_SIZE = 2  # Reduced for small dataset
 EPOCHS = 50
@@ -41,7 +41,7 @@ input_shape = IMG_SIZE + (3,)
 
 model = get_image_model(input_shape, num_classes)
 
-log_dir = os.path.join('model_image_version', 'Logs')
+log_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'Logs')
 tb_callback = TensorBoard(log_dir=log_dir)
 
 # Remove validation-dependent callbacks
@@ -84,6 +84,6 @@ def get_versioned_model_path(base_path):
             return new_path
         version += 1
 
-model_path = get_versioned_model_path('model_image_version/sign_language_model_image.h5')
+model_path = get_versioned_model_path(os.path.join(os.path.dirname(__file__), 'sign_language_model_image.h5'))
 model.save(model_path)
 print(f'Model saved to {model_path}')

@@ -7,6 +7,7 @@ except ImportError:
     print("tensorflow.keras NOT found")
 
 try:
+    # pyrefly: ignore [missing-import]
     from tensorflow.keras.utils import to_categorical
     print("to_categorical found")
 except ImportError as e:

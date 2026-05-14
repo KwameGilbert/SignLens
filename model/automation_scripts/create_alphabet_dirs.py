@@ -4,7 +4,7 @@ import os
 alphabet = [chr(i) for i in range(ord('A'), ord('Z')+1)]
 
 # Path to the dataset_video directory (relative to project root)
-dataset_dir = os.path.join(os.getcwd(), 'dataset_video')
+dataset_dir = os.path.join(os.path.dirname(__file__), '..', 'video', 'dataset_video')
 
 # Create the main dataset_images directory if it doesn't exist
 os.makedirs(dataset_dir, exist_ok=True)

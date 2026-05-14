@@ -5,7 +5,7 @@ from tensorflow.keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoi
 import matplotlib.pyplot as plt
 from model_keypoint import get_keypoint_model
 
-DATA_PATH = os.path.join('..', 'dataset_keypoints')
+DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'dataset_keypoints')
 SEQUENCE_LENGTH = 30
 
 def load_data():
@@ -57,7 +57,7 @@ def main():
     print(f"Validation Data: {X_val.shape}")
     print(f"Testing Data: {X_test.shape}")
     model = get_keypoint_model(input_shape=(SEQUENCE_LENGTH, 1662), num_classes=actions.shape[0])
-    log_dir = os.path.join('model_keypoint_version', 'Logs')
+    log_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'Logs')
     tb_callback = TensorBoard(log_dir=log_dir)
     early_stopping = EarlyStopping(monitor='val_loss', patience=10, mode='min', restore_best_weights=True)
     # Versioned model saving
@@ -72,7 +72,7 @@ def main():
                 return new_path
             version += 1
 
-    model_path = get_versioned_model_path(os.path.join('model_keypoint_version', 'sign_language_model_keypoint.h5'))
+    model_path = get_versioned_model_path(os.path.join(os.path.dirname(__file__), 'sign_language_model_keypoint.h5'))
     checkpoint = ModelCheckpoint(model_path, monitor='val_categorical_accuracy', mode='max', save_best_only=True, verbose=1)
     lr_scheduler = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1)
     callbacks = [tb_callback, early_stopping, checkpoint, lr_scheduler]

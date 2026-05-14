@@ -9,7 +9,7 @@ from tensorflow.keras.models import load_model
 import pyttsx3
 
 # --- Configuration ---
-DATA_PATH = os.path.join('dataset')
+DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'dataset')
 SEQUENCE_LENGTH = 30
 colors = [(245,117,16), (117,245,16), (16,117,245)]
 
@@ -73,12 +73,13 @@ def main():
     
     # 1. Load Model
     print("\n[1/4] Loading model...")
-    if not os.path.exists('sign_language_model.h5'):
+    model_path = os.path.join(os.path.dirname(__file__), '..', 'sign_language_model.h5')
+    if not os.path.exists(model_path):
         print("❌ Model not found! Please run train_model.py first (after collecting data).")
         return
     
     try:
-        model = load_model('sign_language_model.h5')
+        model = load_model(model_path)
         print("✓ Model loaded successfully!")
     except Exception as e:
         print(f"❌ Error loading model: {e}")

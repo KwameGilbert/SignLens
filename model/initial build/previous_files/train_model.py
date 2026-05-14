@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from model import get_model
 
 # --- Configuration ---
-DATA_PATH = os.path.join('dataset')
+DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'dataset')
 SEQUENCE_LENGTH = 30
 
 def load_data():
@@ -167,11 +167,12 @@ def main():
     print("Starting training...")
     
     # Callbacks
-    log_dir = os.path.join('Logs')
+    log_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'Logs')
     tb_callback = TensorBoard(log_dir=log_dir)
     
     early_stopping = EarlyStopping(monitor='val_loss', patience=10, mode='min', restore_best_weights=True)
-    checkpoint = ModelCheckpoint('sign_language_model.h5', monitor='val_categorical_accuracy', mode='max', save_best_only=True, verbose=1)
+    model_save_path = os.path.join(os.path.dirname(__file__), '..', 'sign_language_model.h5')
+    checkpoint = ModelCheckpoint(model_save_path, monitor='val_categorical_accuracy', mode='max', save_best_only=True, verbose=1)
     lr_scheduler = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1)
     
     callbacks = [tb_callback, early_stopping, checkpoint, lr_scheduler]
