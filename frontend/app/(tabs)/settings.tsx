@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Switch, useColorScheme, StyleSheet } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet } from "react-native";
 import React, { useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
@@ -6,6 +6,7 @@ import { BlurView } from "expo-blur";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { useColorScheme } from "nativewind";
 import GlassCard from "../../components/ui/GlassCard";
 import SectionTitle from "../../components/ui/SectionTitle";
 
@@ -59,7 +60,7 @@ function InfoRow({ icon, title, value }: InfoRowProps) {
 }
 
 export default function SettingsScreen() {
-  const colorScheme = useColorScheme();
+  const { colorScheme, setColorScheme } = useColorScheme();
   const router = useRouter();
   const isDark = colorScheme === "dark";
   const blurTint = isDark ? "dark" : "light";
@@ -67,7 +68,6 @@ export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [offlineEnabled, setOfflineEnabled] = useState(false);
-  const [darkModeEnabled, setDarkModeEnabled] = useState(false);
 
   return (
     <View className="flex-1 bg-[#F2F2EA] dark:bg-slate-950">
@@ -169,8 +169,8 @@ export default function SettingsScreen() {
                 icon="moon"
                 title="Dark Mode"
                 subtitle="Theme preference"
-                value={darkModeEnabled}
-                onValueChange={setDarkModeEnabled}
+                value={isDark}
+                onValueChange={(val) => setColorScheme(val ? "dark" : "light")}
               />
           </GlassCard>
 

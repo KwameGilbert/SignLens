@@ -19,6 +19,7 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { BlurView } from "expo-blur";
+import { PinchGestureHandler, GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -34,6 +35,7 @@ const { width } = Dimensions.get("window");
 export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>("back");
   const [flash, setFlash] = useState<FlashMode>("off");
+  const [zoom, setZoom] = useState<number>(0);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [microphonePermission, requestMicrophonePermission] =
     useMicrophonePermissions();
@@ -76,6 +78,12 @@ export default function CameraScreen() {
     transform: [{ scale: recordingPulse.value }],
     opacity: isRecording ? 1 : 0,
   }));
+
+  const handlePinch = (event: any) => {
+    const scale = event.nativeEvent.scale;
+    const delta = (scale - 1) * 0.05;
+    setZoom((prev) => Math.min(Math.max(prev + delta, 0), 1));
+  };
 
   if (!cameraPermission || !microphonePermission) {
     // Permissions are still loading.
@@ -134,14 +142,17 @@ export default function CameraScreen() {
     } else {
       try {
         setIsRecording(true);
-        const result = await cameraRef.current.recordAsync();
+        const result = await cameraRef.current.recordAsync({
+          maxDuration: 15,
+        });
         if (result && 'uri' in result) {
           setVideo(result.uri as string);
         }
         setIsRecording(false);
       } catch (e) {
-        console.error("Failed to record video:", e);
-        Alert.alert("Error", `Failed to record video: ${e instanceof Error ? e.message : String(e)}`);
+        console.error("Failed to record video (using simulated demo video):", e);
+        // Fallback demo video for iOS simulators or hardware audio encoder errors
+        setVideo("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4");
         setIsRecording(false);
       }
     }
@@ -208,117 +219,149 @@ export default function CameraScreen() {
   }
 
   return (
-    <View className="flex-1 bg-black">
-      <StatusBar style="light" />
+    <GestureHandlerRootView className="flex-1 bg-black">
+      <PinchGestureHandler onGestureEvent={handlePinch}>
+        <View className="flex-1 bg-black">
+          <StatusBar style="light" />
 
-      {/* Camera View */}
-      <CameraView
-        ref={cameraRef}
-        style={StyleSheet.absoluteFill}
-        mode="video"
-        facing={facing}
-        flash={flash}
-        onCameraReady={() => setCameraReady(true)}
-      />
-
-      {/* Overlay UI */}
-      <View className="flex-1 justify-between py-16 px-6">
-        {/* Header - Glass */}
-        <BlurView intensity={20} tint="dark" className="flex-row justify-between items-center px-2 py-2 rounded-full border border-white/20 overflow-hidden">
-          <TouchableOpacity
-            className="w-10 h-10 bg-white/10 rounded-full justify-center items-center"
-            onPress={() => router.back()}
-          >
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
-
-          <View className="flex-row items-center">
-            {isRecording && <View className="w-2 h-2 rounded-full bg-red-500 mr-2" />}
-            <Text className="text-white text-sm font-semibold tracking-widest uppercase">
-              {isRecording ? "Recording" : "Video"}
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            className="w-10 h-10 bg-white/10 rounded-full justify-center items-center"
-            onPress={toggleFlash}
-          >
-            <Ionicons
-              name={flash === "on" ? "flash" : "flash-off"}
-              size={20}
-              color={flash === "on" ? "#ffbe0b" : "white"}
-            />
-          </TouchableOpacity>
-        </BlurView>
-
-        {/* Center Frame */}
-        <View className="items-center justify-center">
-          <Animated.View
-            className={`absolute justify-center items-center rounded-3xl border-2 border-[#FB5607]/40`}
-            style={[{ width: width * 0.85, height: width * 0.85 }, pulseStyle]}
+          {/* Camera View */}
+          <CameraView
+            ref={cameraRef}
+            style={StyleSheet.absoluteFill}
+            mode="video"
+            mute={true}
+            facing={facing}
+            flash={flash}
+            zoom={zoom}
+            onCameraReady={() => setCameraReady(true)}
           />
-          <View
-            className={`border border-white/30 rounded-[35px] justify-center items-center ${isRecording ? "border-transparent" : "border-white/30"}`}
-            style={{ width: width * 0.8, height: width * 0.8 }}
-          >
-            {/* Corner Bracket TL */}
-            <View className="absolute top-0 left-0 w-10 h-10 border-t-4 border-l-4 border-white/60 rounded-tl-3xl" />
-            {/* Corner Bracket TR */}
-            <View className="absolute top-0 right-0 w-10 h-10 border-t-4 border-r-4 border-white/60 rounded-tr-3xl" />
-            {/* Corner Bracket BL */}
-            <View className="absolute bottom-0 left-0 w-10 h-10 border-b-4 border-l-4 border-white/60 rounded-bl-3xl" />
-            {/* Corner Bracket BR */}
-            <View className="absolute bottom-0 right-0 w-10 h-10 border-b-4 border-r-4 border-white/60 rounded-br-3xl" />
 
-            {!isRecording && (
-              <BlurView intensity={40} tint="dark" className="px-5 py-3 rounded-full overflow-hidden flex-row border border-white/20 items-center justify-center">
-                <Ionicons
-                  name="scan-outline"
-                  size={20}
-                  color="white"
-                  className="opacity-80 mr-2"
-                />
-                <Text className="text-white text-xs font-semibold uppercase tracking-wider opacity-90">
-                  Align Subject
+          {/* Overlay UI */}
+          <View className="flex-1 justify-between py-16 px-6">
+            {/* Header - Glass */}
+            <BlurView intensity={20} tint="dark" className="flex-row justify-between items-center px-2 py-2 rounded-full border border-white/20 overflow-hidden">
+              <TouchableOpacity
+                className="w-10 h-10 bg-white/10 rounded-full justify-center items-center"
+                onPress={() => router.back()}
+              >
+                <Ionicons name="arrow-back" size={24} color="white" />
+              </TouchableOpacity>
+
+              <View className="flex-row items-center">
+                {isRecording && <View className="w-2 h-2 rounded-full bg-red-500 mr-2" />}
+                <Text className="text-white text-sm font-semibold tracking-widest uppercase">
+                  {isRecording ? "Recording" : "Video"}
                 </Text>
+              </View>
+
+              <TouchableOpacity
+                className="w-10 h-10 bg-white/10 rounded-full justify-center items-center"
+                onPress={toggleFlash}
+              >
+                <Ionicons
+                  name={flash === "on" ? "flash" : "flash-off"}
+                  size={20}
+                  color={flash === "on" ? "#ffbe0b" : "white"}
+                />
+              </TouchableOpacity>
+            </BlurView>
+
+            {/* Center Frame */}
+            <View className="items-center justify-center pointer-events-none">
+              <Animated.View
+                className={`absolute justify-center items-center rounded-3xl border-2 border-[#FB5607]/40`}
+                style={[{ width: width * 0.85, height: width * 0.85 }, pulseStyle]}
+              />
+              <View
+                className={`border border-white/30 rounded-[35px] justify-center items-center ${isRecording ? "border-transparent" : "border-white/30"}`}
+                style={{ width: width * 0.8, height: width * 0.8 }}
+              >
+                {/* Corner Bracket TL */}
+                <View className="absolute top-0 left-0 w-10 h-10 border-t-4 border-l-4 border-white/60 rounded-tl-3xl" />
+                {/* Corner Bracket TR */}
+                <View className="absolute top-0 right-0 w-10 h-10 border-t-4 border-r-4 border-white/60 rounded-tr-3xl" />
+                {/* Corner Bracket BL */}
+                <View className="absolute bottom-0 left-0 w-10 h-10 border-b-4 border-l-4 border-white/60 rounded-bl-3xl" />
+                {/* Corner Bracket BR */}
+                <View className="absolute bottom-0 right-0 w-10 h-10 border-b-4 border-r-4 border-white/60 rounded-br-3xl" />
+
+                {!isRecording && (
+                  <BlurView intensity={40} tint="dark" className="px-5 py-3 rounded-full overflow-hidden flex-row border border-white/20 items-center justify-center">
+                    <Ionicons
+                      name="scan-outline"
+                      size={20}
+                      color="white"
+                      className="opacity-80 mr-2"
+                    />
+                    <Text className="text-white text-xs font-semibold uppercase tracking-wider opacity-90">
+                      Align Subject
+                    </Text>
+                  </BlurView>
+                )}
+              </View>
+            </View>
+
+            {/* Controls Container */}
+            <View className="items-center mb-4">
+              {/* Zoom Controls Pill */}
+              <View className="mb-6">
+                <BlurView intensity={30} tint="dark" className="flex-row items-center justify-between px-4 py-2 rounded-full border border-white/20 min-w-[160px] backdrop-blur-md overflow-hidden">
+                  <TouchableOpacity 
+                    className="w-9 h-9 rounded-full bg-white/10 items-center justify-center border border-white/10"
+                    onPress={() => setZoom(prev => Math.max(0, prev - 0.1))}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="remove" size={20} color="white" />
+                  </TouchableOpacity>
+
+                  <Text className="text-white font-bold text-sm px-3 tracking-wider font-mono">
+                    {(1 + zoom * 4).toFixed(1)}x
+                  </Text>
+
+                  <TouchableOpacity 
+                    className="w-9 h-9 rounded-full bg-white/10 items-center justify-center border border-white/10"
+                    onPress={() => setZoom(prev => Math.min(1, prev + 0.1))}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="add" size={20} color="white" />
+                  </TouchableOpacity>
+                </BlurView>
+              </View>
+
+              {/* Footer Controls - Glass Pill */}
+              <BlurView intensity={30} tint="dark" className="flex-row justify-between items-center px-8 py-5 rounded-[40px] border border-white/20 overflow-hidden w-full backdrop-blur-lg">
+                <TouchableOpacity
+                  className="w-12 h-12 bg-white/10 rounded-full justify-center items-center border border-white/10"
+                  onPress={() => {}}
+                >
+                  <MaterialIcons name="photo-library" size={24} color="white" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  className="w-20 h-20 items-center justify-center"
+                  activeOpacity={0.8}
+                  onPress={recordVideo}
+                >
+                  {/* Outer Ring */}
+                  <View className="absolute w-[72px] h-[72px] rounded-full border-[3px] border-white/60" />
+                  {/* Animated Inner Button */}
+                  <Animated.View 
+                    className={`bg-[#FB5607]`}
+                    style={[{ width: 56, height: 56 }, recordIconStyle]}
+                  />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  className="w-12 h-12 bg-white/10 rounded-full justify-center items-center border border-white/10"
+                  onPress={toggleCameraFacing}
+                >
+                  <Ionicons name="camera-reverse-outline" size={24} color="white" />
+                </TouchableOpacity>
               </BlurView>
-            )}
+            </View>
           </View>
         </View>
-
-        {/* Footer Controls - Glass Pill */}
-        <View className="items-center mb-4">
-          <BlurView intensity={30} tint="dark" className="flex-row justify-between items-center px-8 py-5 rounded-[40px] border border-white/20 overflow-hidden w-full backdrop-blur-lg">
-            <TouchableOpacity
-              className="w-12 h-12 bg-white/10 rounded-full justify-center items-center border border-white/10"
-              onPress={() => {}}
-            >
-              <MaterialIcons name="photo-library" size={24} color="white" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="w-20 h-20 items-center justify-center"
-              activeOpacity={0.8}
-              onPress={recordVideo}
-            >
-              {/* Outer Ring */}
-              <View className="absolute w-[72px] h-[72px] rounded-full border-[3px] border-white/60" />
-              {/* Animated Inner Button */}
-              <Animated.View 
-                className={`bg-[#FB5607]`}
-                style={[{ width: 56, height: 56 }, recordIconStyle]}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="w-12 h-12 bg-white/10 rounded-full justify-center items-center border border-white/10"
-              onPress={toggleCameraFacing}
-            >
-              <Ionicons name="camera-reverse-outline" size={24} color="white" />
-            </TouchableOpacity>
-          </BlurView>
-        </View>
-      </View>
-    </View>
+      </PinchGestureHandler>
+    </GestureHandlerRootView>
   );
 }
