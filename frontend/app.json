@@ -6,32 +6,24 @@
     "orientation": "portrait",
     "scheme": "frontend",
     "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
     "android": {
-      "predictiveBackGestureEnabled": false,
-      "package": "signlense.com"
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static"
     },
     "plugins": [
       "expo-router",
-      "expo-video",
-      "expo-font",
-      "expo-audio",
-      "expo-asset"
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "d3066164-3167-4688-96c9-99640733bcef"
-      }
     }
   }
 }
