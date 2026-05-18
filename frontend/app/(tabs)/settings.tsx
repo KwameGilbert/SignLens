@@ -1,11 +1,11 @@
 import { View, Text, ScrollView, TouchableOpacity, Switch, useColorScheme, StyleSheet } from "react-native";
 import React, { useState } from "react";
 import { StatusBar } from "expo-status-bar";
+import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import AnimatedBackground from "../../components/ui/AnimatedBackground";
 import GlassCard from "../../components/ui/GlassCard";
 import SectionTitle from "../../components/ui/SectionTitle";
 
@@ -60,6 +60,7 @@ function InfoRow({ icon, title, value }: InfoRowProps) {
 
 export default function SettingsScreen() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
   const isDark = colorScheme === "dark";
   const blurTint = isDark ? "dark" : "light";
 
@@ -70,7 +71,6 @@ export default function SettingsScreen() {
 
   return (
     <View className="flex-1 bg-[#F2F2EA] dark:bg-slate-950">
-      <AnimatedBackground />
       <StatusBar style={isDark ? "light" : "dark"} />
 
       <ScrollView
@@ -100,7 +100,10 @@ export default function SettingsScreen() {
           <View className="relative z-10 px-5 pt-14 pb-8">
             <View className="flex-row justify-between items-center mb-4">
             <Text className="text-white text-3xl font-bold">Settings</Text>
-            <TouchableOpacity className="w-10 h-10 rounded-full border border-white/35 bg-white/20 items-center justify-center">
+            <TouchableOpacity
+              onPress={() => router.push("/profile")}
+              className="w-10 h-10 rounded-full border border-white/35 bg-white/20 items-center justify-center"
+            >
               <Ionicons name="person-outline" size={22} color="white" />
             </TouchableOpacity>
           </View>

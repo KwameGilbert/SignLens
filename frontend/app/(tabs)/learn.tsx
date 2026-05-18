@@ -4,7 +4,6 @@ import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import LearningHeader from "../../components/learn/LearningHeader";
 import CategoryCard from "../../components/learn/CategoryCard";
-import AnimatedBackground from "../../components/ui/AnimatedBackground";
 import GlassCard from "../../components/ui/GlassCard";
 import SectionTitle from "../../components/ui/SectionTitle";
 import {
@@ -21,7 +20,6 @@ export default function LearnScreen() {
 
   return (
     <View className="flex-1 bg-[#F2F2EA] dark:bg-slate-950">
-      <AnimatedBackground />
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}

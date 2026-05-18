@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, useColorScheme, StyleSheet } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
+import { useRouter } from "expo-router";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
@@ -8,6 +9,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 export default function HomeHeader() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
   const blurTint = colorScheme === "dark" ? "dark" : "light";
 
   return (
@@ -43,7 +45,10 @@ export default function HomeHeader() {
             Afriyie Anthony
           </Text>
         </View>
-        <TouchableOpacity className="bg-white/20 p-2 rounded-full border border-white/35 backdrop-blur-md">
+        <TouchableOpacity
+          onPress={() => router.push("/profile")}
+          className="bg-white/20 p-2 rounded-full border border-white/35 backdrop-blur-md"
+        >
           <Ionicons name="person" size={20} color="white" />
         </TouchableOpacity>
       </View>
