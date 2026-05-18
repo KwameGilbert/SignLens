@@ -8,6 +8,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  useColorScheme,
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -18,6 +19,8 @@ import { useEffect, useRef, useState } from "react";
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [email, setEmail] = useState("");
 
   // Refs for scrolling
@@ -94,7 +97,7 @@ export default function ForgotPasswordScreen() {
     >
       <ScrollView
         ref={scrollViewRef}
-        className="flex-1"
+        className="flex-1 bg-[#F2F2EA] dark:bg-slate-950"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 50 }}
@@ -131,13 +134,13 @@ export default function ForgotPasswordScreen() {
           </TouchableOpacity>
         </View>
 
-        <View className="flex-1 items-center justify-center bg-white px-6 py-10 rounded-3xl w-[95%] mx-auto -mt-40 shadow-lg shadow-black/25 elevation-5">
-          <View className="bg-orange-100 h-20 w-20 p-2 rounded-full flex items-center justify-center">
-            <Ionicons name="key-outline" size={40} color="orange" />
+        <View className="flex-1 items-center justify-center bg-white dark:bg-slate-900 px-6 py-10 rounded-3xl w-[95%] mx-auto -mt-40 shadow-lg shadow-black/25 dark:border dark:border-slate-800 elevation-5">
+          <View className="bg-orange-100 dark:bg-orange-950/40 h-20 w-20 p-2 rounded-full flex items-center justify-center border border-orange-200 dark:border-orange-800/60">
+            <Ionicons name="key-outline" size={40} color="#FB5607" />
           </View>
 
-          <Text className="text-2xl font-bold mt-4">Reset Password</Text>
-          <Text className="text-gray-600 mt-2 text-center text-lg px-4">
+          <Text className="text-2xl font-bold mt-4 text-slate-900 dark:text-white">Reset Password</Text>
+          <Text className="text-gray-600 dark:text-slate-400 mt-2 text-center text-lg px-4">
             Enter your email address and we&apos;ll send you a link to reset
             your password
           </Text>
@@ -149,7 +152,8 @@ export default function ForgotPasswordScreen() {
               value={email}
               onChangeText={setEmail}
               onFocus={() => scrollToInput(emailRef)}
-              className="border border-orange-500 rounded-full px-4 w-80 h-16"
+              className="border border-orange-500 rounded-full px-6 text-base text-slate-900 dark:text-white bg-white dark:bg-slate-800 w-80 h-16"
+              placeholderTextColor={isDark ? "#64748B" : "#9CA3AF"}
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
@@ -157,7 +161,7 @@ export default function ForgotPasswordScreen() {
 
             <TouchableOpacity
               onPress={() => router.push("/(auth)/otp-verification")}
-              className="w-80 h-16 items-center justify-center z-10 bg-orange-500 rounded-full mt-5"
+              className="w-80 h-16 items-center justify-center z-10 bg-[#FB5607] rounded-full mt-5 shadow-md shadow-[#FB5607]/40"
               activeOpacity={0.7}
             >
               <Text className="text-white text-xl font-bold">Continue</Text>

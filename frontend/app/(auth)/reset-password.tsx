@@ -8,6 +8,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  useColorScheme,
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -18,6 +19,8 @@ import { useEffect, useRef, useState } from "react";
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -67,7 +70,7 @@ export default function ResetPasswordScreen() {
     >
       <ScrollView
         ref={scrollViewRef}
-        className="flex-1 bg-white"
+        className="flex-1 bg-[#F2F2EA] dark:bg-slate-950"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 50 }}
@@ -106,18 +109,18 @@ export default function ResetPasswordScreen() {
 
         {/* Form Container */}
         <Animated.View
-          className="px-6 py-10 bg-white rounded-3xl w-[95%] mx-auto -mt-40 shadow-lg shadow-black/25 elevation-5"
+          className="px-6 py-10 bg-white dark:bg-slate-900 rounded-3xl w-[95%] mx-auto -mt-40 shadow-lg shadow-black/25 dark:border dark:border-slate-800 elevation-5"
           style={{
             opacity: fadeAnim,
             transform: [{ translateY: slideAnim }],
           }}
         >
             
-          <Text className="text-2xl font-bold text-center mb-2">
+          <Text className="text-2xl font-bold text-center text-slate-900 dark:text-white mb-2">
             RESET PASSWORD
           </Text>
-          <Text className="text-sm text-[#7C7C7C] text-center mb-10">
-            Welcome back! Please login to continue
+          <Text className="text-sm text-[#7C7C7C] dark:text-slate-400 text-center mb-10">
+            Enter your new secure password below
           </Text>
 
           {/* Form Fields */}
@@ -128,9 +131,9 @@ export default function ResetPasswordScreen() {
                 value={newPassword}
                 onChangeText={setNewPassword}
                 onFocus={() => scrollToInput(newPasswordRef)}
-                className="border border-orange-500 rounded-full px-6 py-4 text-base"
+                className="border border-orange-500 rounded-full px-6 py-4 text-base text-slate-900 dark:text-white bg-white dark:bg-slate-800"
                 secureTextEntry
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={isDark ? "#64748B" : "#9CA3AF"}
               />
             </View>
 
@@ -140,13 +143,14 @@ export default function ResetPasswordScreen() {
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 onFocus={() => scrollToInput(confirmPasswordRef)}
-                className="border border-orange-500 rounded-full px-6 py-4 text-base"
+                className="border border-orange-500 rounded-full px-6 py-4 text-base text-slate-900 dark:text-white bg-white dark:bg-slate-800"
                 secureTextEntry
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={isDark ? "#64748B" : "#9CA3AF"}
               />
             </View>
 
             <TouchableOpacity
+              onPress={() => router.replace("/(auth)/login")}
               className="bg-[#FB5607] rounded-full py-4 items-center shadow-lg shadow-orange-500/30 elevation-5"
               activeOpacity={0.8}
             >

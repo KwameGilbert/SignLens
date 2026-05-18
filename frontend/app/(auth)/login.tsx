@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  useColorScheme,
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -17,6 +18,8 @@ import FormInput from "../../components/ui/FormInput";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -26,7 +29,7 @@ export default function LoginScreen() {
       className="flex-1"
     >
       <ScrollView 
-        className="flex-1 bg-white"
+        className="flex-1 bg-[#F2F2EA] dark:bg-slate-950"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 50 }}
@@ -64,7 +67,7 @@ export default function LoginScreen() {
       </View>
 
       {/* Login form */}
-      <View className="px-6 py-8 bg-white dark:bg-slate-900 rounded-3xl w-[95%] mx-auto -mt-40 shadow-lg shadow-black/25 elevation-5">
+      <View className="px-6 py-8 bg-white dark:bg-slate-900 rounded-3xl w-[95%] mx-auto -mt-40 shadow-lg shadow-black/25 dark:border dark:border-slate-800 elevation-5">
         <Text className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">Login</Text>
         <Text className="text-base text-slate-500 dark:text-slate-400 text-center mb-6">
           Welcome back! Please login to continue
@@ -103,7 +106,7 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           onPress={() => router.replace("/(tabs)/home")}
-          className="bg-primary dark:bg-primary rounded-xl px-4 py-4 mb-4"
+          className="bg-primary dark:bg-primary rounded-xl px-4 py-4 mb-4 shadow-md shadow-[#FB5607]/40"
         >
           <Text className="text-white text-center text-lg font-bold">
             Login
@@ -111,12 +114,12 @@ export default function LoginScreen() {
         </TouchableOpacity>
 
         <View className="flex-row justify-center gap-4 mb-6">
-          <TouchableOpacity className="flex-1 border border-slate-300 dark:border-slate-600 rounded-xl p-3 items-center">
+          <TouchableOpacity className="flex-1 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl p-3 items-center shadow-sm">
             <Ionicons name="logo-google" size={24} color="#FB5607" />
           </TouchableOpacity>
 
-          <TouchableOpacity className="flex-1 border border-slate-300 dark:border-slate-600 rounded-xl p-3 items-center">
-            <Ionicons name="logo-apple" size={24} color="#000000" />
+          <TouchableOpacity className="flex-1 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl p-3 items-center shadow-sm">
+            <Ionicons name="logo-apple" size={24} color={isDark ? "#FFFFFF" : "#000000"} />
           </TouchableOpacity>
         </View>
 
