@@ -21,7 +21,6 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1 bg-white">
-      <AnimatedBackground />
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}

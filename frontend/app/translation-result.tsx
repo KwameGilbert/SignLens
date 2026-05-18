@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
-import React, { useEffect } from "react";
+import React from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Video, ResizeMode } from "expo-av";
+import { VideoView, useVideoPlayer } from "expo-video";
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import * as Speech from 'expo-speech';
@@ -23,6 +23,16 @@ export default function TranslationResultScreen() {
   const params = useLocalSearchParams();
   const videoUri = params.videoUri as string;
 
+  function VideoBackground() {
+    const player = useVideoPlayer({ uri: videoUri }, (videoPlayer) => {
+      videoPlayer.muted = true;
+      videoPlayer.loop = true;
+      videoPlayer.play();
+    });
+
+    return <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="cover" />;
+  }
+
   // Mock translation result
   const translatedText = "Hello, how are you?";
 
@@ -38,14 +48,7 @@ export default function TranslationResultScreen() {
       <View className="absolute inset-0 bg-slate-900">
         {videoUri ? (
           <>
-            <Video
-              source={{ uri: videoUri }}
-              style={StyleSheet.absoluteFill}
-              resizeMode={ResizeMode.COVER}
-              shouldPlay
-              isLooping
-              isMuted
-            />
+            <VideoBackground />
             {/* Heavy Blur Overlay to make it a vibrant background */}
             <BlurView intensity={70} tint="dark" style={StyleSheet.absoluteFill} />
             <View className="absolute inset-0 bg-black/40" />

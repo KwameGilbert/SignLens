@@ -18,7 +18,7 @@ const onboardingData = [
     title: "Real-Time Sign Language\nTranslation",
     description:
       "Use your camera to instantly translate sign language into text and voice",
-    image: require("../assets/images/scan.png"),
+    image: require("../assets/images/Scan.png"),
   },
   {
     id: "2",

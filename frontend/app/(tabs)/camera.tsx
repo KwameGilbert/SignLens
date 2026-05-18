@@ -17,7 +17,7 @@ import {
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Video, ResizeMode } from "expo-av";
+import { VideoView, useVideoPlayer } from "expo-video";
 import { BlurView } from "expo-blur";
 import Animated, {
   useSharedValue,
@@ -37,8 +37,9 @@ export default function CameraScreen() {
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [microphonePermission, requestMicrophonePermission] =
     useMicrophonePermissions();
-  const [video, setVideo] = useState<string | null>(null);
+  const [video, setVideo] = useState<string | undefined>(undefined);
   const [isRecording, setIsRecording] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
   const cameraRef = useRef<CameraView>(null);
   const router = useRouter();
 
@@ -89,9 +90,11 @@ export default function CameraScreen() {
         </Text>
         <TouchableOpacity
           className="bg-[#FB5607] py-3 px-6 rounded-xl"
-          onPress={() => {
-            requestCameraPermission();
-            requestMicrophonePermission();
+          onPress={async () => {
+            const cameraStatus = await requestCameraPermission();
+            if (cameraStatus.granted) {
+              await requestMicrophonePermission();
+            }
           }}
         >
           <Text className="text-white font-bold">Grant Permissions</Text>
@@ -109,44 +112,68 @@ export default function CameraScreen() {
   }
 
   async function recordVideo() {
-    if (cameraRef.current) {
-      if (isRecording) {
+    if (!cameraRef.current) {
+      Alert.alert("Error", "Camera is not available.");
+      return;
+    }
+
+    if (!cameraReady) {
+      Alert.alert("Error", "Camera is not ready yet. Please try again.");
+      return;
+    }
+
+    if (isRecording) {
+      try {
         setIsRecording(false);
         cameraRef.current.stopRecording();
-      } else {
+      } catch (e) {
+        console.error("Failed to stop recording:", e);
+        Alert.alert("Error", `Failed to stop recording: ${e instanceof Error ? e.message : String(e)}`);
+        setIsRecording(false);
+      }
+    } else {
+      try {
         setIsRecording(true);
-        try {
-          const videoData = await cameraRef.current.recordAsync();
-          if (videoData?.uri) {
-            setVideo(videoData.uri);
-          }
-        } catch (error) {
-          console.error("Failed to record video:", error);
-          Alert.alert("Error", "Failed to record video.");
-          setIsRecording(false);
+        const result = await cameraRef.current.recordAsync();
+        if (result && 'uri' in result) {
+          setVideo(result.uri as string);
         }
+        setIsRecording(false);
+      } catch (e) {
+        console.error("Failed to record video:", e);
+        Alert.alert("Error", `Failed to record video: ${e instanceof Error ? e.message : String(e)}`);
+        setIsRecording(false);
       }
     }
   }
 
   if (video) {
+    function RecordedVideoPreview() {
+      const player = useVideoPlayer({ uri: video }, (videoPlayer) => {
+        videoPlayer.loop = true;
+        videoPlayer.play();
+      });
+
+      return (
+        <VideoView
+          player={player}
+          style={StyleSheet.absoluteFill}
+          contentFit="contain"
+          nativeControls
+        />
+      );
+    }
+
     return (
       <View className="flex-1 bg-black">
         <StatusBar style="light" />
-        <Video
-          source={{ uri: video }}
-          style={StyleSheet.absoluteFill}
-          resizeMode={ResizeMode.CONTAIN}
-          useNativeControls
-          isLooping
-          shouldPlay
-        />
+        <RecordedVideoPreview />
 
         <View className="flex-1 justify-between py-12 px-6" pointerEvents="box-none">
           <BlurView intensity={30} tint="dark" className="flex-row justify-between items-center mt-4 p-2 rounded-full border border-white/20">
             <TouchableOpacity
               className="w-10 h-10 bg-white/10 rounded-full justify-center items-center"
-              onPress={() => setVideo(null)}
+              onPress={() => setVideo(undefined)}
             >
               <Ionicons name="close" size={24} color="white" />
             </TouchableOpacity>
@@ -158,7 +185,7 @@ export default function CameraScreen() {
                   pathname: "/translation-result",
                   params: { videoUri: video }
                 });
-                setVideo(null);
+                setVideo(undefined);
               }}
             >
                <Text className="text-white font-bold tracking-wide">Translate Sign</Text>
@@ -170,7 +197,7 @@ export default function CameraScreen() {
           <View className="flex-row justify-center items-center mb-6">
             <TouchableOpacity
               className="bg-white/20 backdrop-blur-md py-3 px-8 rounded-full border border-white/30"
-              onPress={() => setVideo(null)}
+              onPress={() => setVideo(undefined)}
             >
               <Text className="text-white font-bold text-lg">Retake</Text>
             </TouchableOpacity>
@@ -191,6 +218,7 @@ export default function CameraScreen() {
         mode="video"
         facing={facing}
         flash={flash}
+        onCameraReady={() => setCameraReady(true)}
       />
 
       {/* Overlay UI */}

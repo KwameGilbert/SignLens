@@ -1,7 +1,11 @@
 import { View, Text } from "react-native";
-import { Video, ResizeMode } from "expo-av";
+import { VideoView, useVideoPlayer } from "expo-video";
 
 export default function AvatarLessonPlayer() {
+  const player = useVideoPlayer(require("../../assets/videos/splash_video.mp4"), (videoPlayer) => {
+    videoPlayer.loop = true;
+  });
+
   return (
     <View className="bg-white rounded-2xl p-4 shadow-sm shadow-black/10 elevation-2 mb-4">
       <View className="flex-row items-center justify-between mb-3">
@@ -11,13 +15,11 @@ export default function AvatarLessonPlayer() {
         </Text>
       </View>
 
-      <Video
-        source={require("../../assets/videos/splash_video.mp4")}
+      <VideoView
+        player={player}
         style={{ width: "100%", height: 220, borderRadius: 14 }}
-        resizeMode={ResizeMode.COVER}
-        useNativeControls
-        shouldPlay={false}
-        isLooping
+        contentFit="cover"
+        nativeControls
       />
 
       <Text className="text-gray-500 text-xs mt-3">
