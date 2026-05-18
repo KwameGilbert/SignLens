@@ -20,9 +20,9 @@ export default function AchievementItem({
   return (
     <TouchableOpacity 
       activeOpacity={0.7}
-      className="flex-row items-center py-4 border-b border-white/20 dark:border-white/10 last:border-0"
+      className="flex-row items-center py-4 border-b border-slate-100 dark:border-slate-800 last:border-0"
     >
-      <View className="w-12 h-12 bg-white/60 dark:bg-white/10 rounded-xl justify-center items-center mr-4 shadow-sm border border-white/40 dark:border-white/5 backdrop-blur-md">
+      <View className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-xl justify-center items-center mr-4 border border-slate-100 dark:border-slate-700">
         <IconComponent name={icon} size={24} color={iconColor} />
       </View>
       <View className="flex-1">

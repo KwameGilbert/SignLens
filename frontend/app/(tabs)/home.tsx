@@ -20,7 +20,7 @@ export default function HomeScreen() {
   const isDark = colorScheme === "dark";
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-[#F2F2EA] dark:bg-slate-950">
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
@@ -31,8 +31,8 @@ export default function HomeScreen() {
         <HomeHeader />
 
         {/* Quick Action Section */}
-        <View className="px-6 mt-6">
-          <SectionTitle title="Quick Actions" className="px-1 mb-4" />
+        <View className="px-6 mt-3">
+          <SectionTitle title="Quick Actions" className="px-1 mb-2" />
           <View className="flex-row flex-wrap justify-between">
             <QuickActionButton
               icon="camera-outline"
@@ -47,6 +47,7 @@ export default function HomeScreen() {
               desc="Convert Text"
               color="#F97316"
               iconLib="MaterialCommunityIcons"
+              route="/text-to-sign"
             />
             <QuickActionButton
               icon="microphone-outline"
@@ -54,12 +55,13 @@ export default function HomeScreen() {
               desc="Speak & convert"
               color="#EA580C"
               iconLib="MaterialCommunityIcons"
+              route="/voice-to-sign"
             />
             <QuickActionButton
               icon="book"
               label="Learn"
               desc="Practice Signs"
-              color="#C2410C"
+              color="#F97316"
               iconLib="Ionicons"
               route="/(tabs)/learn"
             />
@@ -67,15 +69,15 @@ export default function HomeScreen() {
         </View>
 
         {/* Recent Achievements */}
-        <View className="px-6 mt-1">
-          <View className="flex-row justify-between items-center mb-4 px-1">
+        <View className="px-6 mt-1 mb-4">
+          <View className="flex-row justify-between items-center mb-2 px-1">
             <SectionTitle title="Recent Achievements" />
             <TouchableOpacity>
               <Text className="text-[#FB5607] font-semibold dark:text-[#ffbe0b]">View all</Text>
             </TouchableOpacity>
           </View>
 
-          <GlassCard intensityLight={60} intensityDark={30}>
+          <View className="bg-white dark:bg-slate-900 rounded-2xl px-4 py-2 shadow-sm shadow-black/5 border border-slate-200 dark:border-slate-800">
               <AchievementItem
                 IconComponent={Ionicons}
                 icon="ribbon"
@@ -97,7 +99,7 @@ export default function HomeScreen() {
                 subtitle="Unlocked recently"
                 iconColor="#F97316"
               />
-          </GlassCard>
+          </View>
         </View>
       </ScrollView>
     </View>

@@ -50,14 +50,14 @@ export default function QuickActionButton({
 
   return (
     <AnimatedPressable
-      className="bg-white/80 dark:bg-white/10 p-4 rounded-2xl w-[48%] shadow-sm shadow-black/5 elevation-2 mb-4 border border-white/40 dark:border-white/20 backdrop-blur-md"
+      className="bg-white/80 dark:bg-white/10 p-4 rounded-xl w-[48%] shadow-sm shadow-black/5 elevation-2 mb-2 border border-white/40 dark:border-white/20 backdrop-blur-md"
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       onPress={handlePress}
       style={animatedStyle}
     >
       <View
-        className={`w-12 h-12 rounded-xl justify-center items-center mb-3 shadow-md`}
+        className={`w-12 h-12 rounded-xl justify-center items-center mb-2 shadow-sm`}
         style={{ backgroundColor: color, shadowColor: color }}
       >
         {iconLib === "Ionicons" ? (

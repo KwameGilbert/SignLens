@@ -13,7 +13,7 @@ export default function HomeHeader() {
   return (
     <Animated.View 
       entering={FadeInUp.duration(800).springify()}
-      className="px-6 pt-16 pb-8 rounded-b-[30px] overflow-hidden relative"
+      className="px-6 pt-14 pb-4 rounded-b-[20px] overflow-hidden relative"
     >
       {/* Background Image */}
       <Image
@@ -34,48 +34,48 @@ export default function HomeHeader() {
 
       {/* Content */}
       <View className="relative z-10">
-        <View className="flex-row justify-between items-start mb-6">
+        <View className="flex-row justify-between items-start mb-3">
         <View>
-          <Text className="text-white/85 text-lg font-medium mb-1">
+          <Text className="text-white/85 text-md font-medium mb-1">
             Welcome back,
           </Text>
-          <Text className="text-white text-3xl font-bold">
+          <Text className="text-white text-2xl font-bold">
             Afriyie Anthony
           </Text>
         </View>
         <TouchableOpacity className="bg-white/20 p-2 rounded-full border border-white/35 backdrop-blur-md">
-          <Ionicons name="person" size={24} color="white" />
+          <Ionicons name="person" size={20} color="white" />
         </TouchableOpacity>
       </View>
 
-      {/* Streak Card - Glassmorphism */}
-      <View className="rounded-3xl overflow-hidden shadow-sm shadow-black/10 elevation-2 border border-white/30">
-        <BlurView intensity={40} tint={blurTint} className="p-5 flex-row justify-between">
-          <View className="flex-row items-center gap-4">
-            <View className="w-12 h-12 rounded-full bg-white/25 border border-white/30 items-center justify-center">
-              <MaterialCommunityIcons name="fire" size={28} color="#FB5607" />
+      {/* Streak Card - White Glassmorphism */}
+      <View className="rounded-2xl overflow-hidden bg-white/10 border border-white/60 shadow-md shadow-black/10">
+        <BlurView intensity={65} tint="light" className="p-4 flex-row justify-between items-center">
+          <View className="flex-row items-center gap-3.5">
+            <View className="w-11 h-11 rounded-full bg-white shadow-sm border border-white/80 items-center justify-center">
+              <MaterialCommunityIcons name="fire" size={26} color="#FB5607" />
             </View>
             <View>
-              <Text className="text-white/75 text-xs font-medium">
+              <Text className="text-white/90 text-xs font-semibold tracking-wider uppercase mb-0.5">
                 Daily streak
               </Text>
-              <Text className="text-white text-2xl font-bold">20 days</Text>
+              <Text className="text-white text-2xl font-extrabold tracking-tight">20 Days</Text>
             </View>
           </View>
-          <View className="h-full w-[1px] bg-white/25 mx-2" />
-          <View className="flex-row items-center gap-3">
+          <View className="h-9 w-[1px] bg-white/40 mx-2" />
+          <View className="flex-row items-center">
              <View>
-              <Text className="text-white/75 text-xs font-medium text-right">
+              <Text className="text-white/90 text-xs font-semibold tracking-wider uppercase text-right mb-0.5">
                 Keep it up
               </Text>
-              <View className="flex-row items-center mt-1">
+              <View className="flex-row items-center justify-end bg-white/25 px-2.5 py-1 rounded-full border border-white/40">
                 <MaterialCommunityIcons
                   name="fire"
                   size={16}
-                  color="#FFC107"
+                  color="#FFBE0B"
                   style={{ marginRight: 4 }}
                 />
-                <Text className="text-white font-semibold">On fire</Text>
+                <Text className="text-white font-bold text-xs">On fire</Text>
               </View>
             </View>
           </View>
