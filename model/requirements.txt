@@ -5,7 +5,10 @@ opencv-python
 uvicorn
 matplotlib
 tensorflow==2.13.0
+# tensorflow==2.20.0
 protobuf==3.20.3
+# protobuf>=5.28.0
 mediapipe==0.10.5
+# mediapipe>=0.10.30
 pyttsx3
 scipy
