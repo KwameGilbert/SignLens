@@ -10,19 +10,19 @@ type CategoryCardProps = {
 export default function CategoryCard({ category, onPress }: CategoryCardProps) {
   return (
     <TouchableOpacity
-      className="bg-white/65 dark:bg-white/10 rounded-2xl px-4 py-3.5 mb-3 shadow-sm shadow-black/10 elevation-2 border border-white/45 dark:border-white/15"
+      className="bg-white/65 dark:bg-white/10 rounded-2xl px-4 py-3 mb-3 shadow-sm shadow-black/10 elevation-2 border border-white/45 dark:border-white/15"
       onPress={onPress}
       activeOpacity={0.75}
     >
       <View className="flex-row items-center">
-        <View className="w-12 h-12 rounded-lg bg-[#FB5607] items-center justify-center mr-3">
-          <Text className="text-white text-2xl font-bold">{category.icon}</Text>
+        <View className="w-10 h-10 rounded-lg bg-[#FB5607] items-center justify-center mr-3">
+          <Text className="text-white text-xl font-bold">{category.icon}</Text>
         </View>
 
         <View className="flex-1">
           <View className="flex-row justify-between items-center">
-            <Text className="text-gray-900 dark:text-white text-xl font-bold">{category.title}</Text>
-            <Text className="text-[#FB5607] text-3xl font-extrabold">{category.progress}%</Text>
+            <Text className="text-gray-900 dark:text-white text-lg font-bold">{category.title}</Text>
+            <Text className="text-[#FB5607] text-2xl font-extrabold">{category.progress}%</Text>
           </View>
 
           <Text className="text-gray-500 dark:text-slate-300 text-sm mt-0.5">{category.lessonCount} lessons</Text>

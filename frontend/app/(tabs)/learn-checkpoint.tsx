@@ -74,23 +74,23 @@ export default function LearnCheckpointScreen() {
             </View>
 
             <TouchableOpacity
-              className="rounded-xl py-4 items-center mt-4 bg-[#FB5607]"
+              className="rounded-xl py-4 items-center mt-4 bg-[#FB5607] shadow-md shadow-[#FB5607]/40"
               onPress={() => {
                 if (nextLessonId) {
-                  router.push({
+                  router.replace({
                     pathname: "/(tabs)/learn-lesson",
                     params: { lessonId: nextLessonId },
                   });
                   return;
                 }
 
-                router.push({
+                router.replace({
                   pathname: "/(tabs)/learn-category",
                   params: { category: lesson.categorySlug },
                 });
               }}
             >
-              <Text className="text-white text-lg font-bold">
+              <Text className="text-white text-lg font-bold tracking-wide">
                 {nextLessonId ? "Continue to Next Lesson" : "Back to Category"}
               </Text>
             </TouchableOpacity>

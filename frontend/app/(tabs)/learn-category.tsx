@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, useColorScheme } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,6 +8,9 @@ import { getCategoryBySlug, getLessonsByCategory } from "../../services/learnRep
 
 export default function LearnCategoryScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
   const params = useLocalSearchParams<{ category?: string }>();
   const categorySlug = params.category ?? "";
 
@@ -16,11 +19,11 @@ export default function LearnCategoryScreen() {
 
   if (!category) {
     return (
-      <View className="flex-1 bg-[#F2F2EA] items-center justify-center px-6">
-        <StatusBar style="dark" />
-        <Text className="text-2xl font-bold text-gray-900 mb-3">Category not found</Text>
+      <View className="flex-1 bg-[#F2F2EA] dark:bg-slate-950 items-center justify-center px-6">
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Category not found</Text>
         <TouchableOpacity
-          className="bg-[#FB5607] px-6 py-3 rounded-xl"
+          className="bg-[#FB5607] px-6 py-3 rounded-xl shadow-md shadow-[#FB5607]/40"
           onPress={() => router.back()}
         >
           <Text className="text-white font-semibold">Go Back</Text>
@@ -30,13 +33,13 @@ export default function LearnCategoryScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-[#F2F2EA]" contentContainerStyle={{ paddingBottom: 24 }}>
-      <StatusBar style="dark" />
+    <ScrollView className="flex-1 bg-[#F2F2EA] dark:bg-slate-950" contentContainerStyle={{ paddingBottom: 24 }}>
+      <StatusBar style="light" />
 
-      <View className="px-4 pt-14 pb-5 bg-[#FB5607] rounded-b-[28px]">
+      <View className="px-4 pt-14 pb-5 bg-[#FB5607] rounded-b-[28px] shadow-lg shadow-black/20">
         <View className="flex-row items-center mb-3">
-          <TouchableOpacity onPress={() => router.back()} className="mr-3">
-            <Ionicons name="arrow-back" size={24} color="white" />
+          <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-full bg-white/20 items-center justify-center border border-white/30 backdrop-blur-md mr-3">
+            <Ionicons name="arrow-back" size={22} color="white" />
           </TouchableOpacity>
           <Text className="text-white text-2xl font-bold">{category.title}</Text>
         </View>

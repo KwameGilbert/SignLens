@@ -10,16 +10,16 @@ type LessonCardProps = {
 export default function LessonCard({ lesson, onPress }: LessonCardProps) {
   return (
     <TouchableOpacity
-      className="bg-white rounded-2xl p-4 mb-3 shadow-sm shadow-black/10 elevation-2 border border-black/5"
+      className="bg-white dark:bg-slate-900 rounded-2xl p-4 mb-3 shadow-sm shadow-black/10 elevation-2 border border-black/5 dark:border-slate-800"
       onPress={onPress}
       activeOpacity={0.8}
     >
       <View className="flex-row items-start justify-between">
         <View className="flex-1 pr-4">
-          <Text className="text-gray-900 text-lg font-bold">{lesson.title}</Text>
-          <Text className="text-gray-500 text-sm mt-1">{lesson.description}</Text>
+          <Text className="text-gray-900 dark:text-white text-lg font-bold">{lesson.title}</Text>
+          <Text className="text-gray-500 dark:text-slate-400 text-sm mt-1">{lesson.description}</Text>
 
-          <View className="h-2.5 rounded-full bg-gray-200 mt-3 overflow-hidden">
+          <View className="h-2.5 rounded-full bg-gray-200 dark:bg-slate-800 mt-3 overflow-hidden border border-slate-300/40 dark:border-slate-700/50">
             <View
               className="h-full rounded-full bg-[#FB5607]"
               style={{ width: `${lesson.progress}%` }}
