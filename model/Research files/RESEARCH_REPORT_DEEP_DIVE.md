@@ -32,12 +32,16 @@ The system leverages **MediaPipe Holistic** to extract 523 landmarks per frame:
 - **Face (468)**: Crucial for capturing non-manual markers (facial expressions).
 Resulting in a flat vector of **1,662 numerical features** (x, y, z, visibility).
 
-### 3.2 Data Preprocessing & Augmentation
+### 3.2 Data Preprocessing & Alignment Strategy
 - **Sliding Window**: Sequences are fixed to **30 frames**, providing approximately 1 second of temporal context at 30 FPS.
 - **Binary Formatting**: Data is stored in `.npy` (NumPy) format for high-speed I/O during training.
+- **Cross-Modality Syncing (Critical Improvement)**: 
+    - To address data corruption where video clips contained frames from multiple classes, a **Reverse Syncing Logic** was implemented.
+    - **Methodology**: The image dataset was manually cleaned (removing stationary signs and misclassified frames). A custom script [sync_videos_to_images.py](model/automation_scripts/sync_videos_to_images.py) was developed to trace these specific images back to their source video timestamps.
+    - **Result**: The video dataset was rebuilt to perfectly match the "Ground Truth" present in the cleaned image dataset, ensuring mathematical consistency between the CNN (image) and LSTM (video) inputs.
 - **Augmentation Techniques**:
-  - **Jittering**: Adds Gaussian noise to landmarks to simulate shaky sensors.
-  - **Scaling/Shifting**: Modifies landmark magnitudes to simulate varying distances from the camera.
+    - **Jittering**: Adds Gaussian noise to landmarks to simulate shaky sensors.
+    - **Scaling/Shifting**: Modifies landmark magnitudes to simulate varying distances from the camera.
 
 ---
 
@@ -93,6 +97,7 @@ The inclusion of a `Dockerfile` and `requirements.txt` specifically for the endp
 
 ## 7. Current Project State & Findings
 - **Optimization Status**: Successfully implemented `CategoricalCrossentropy` with `label_smoothing`, significantly reducing "over-confident" false positives.
+- **Data Integrity**: Achieved 1:1 synchronization between Video and Image datasets through the `sync_videos_to_images` protocol, removing "temporal noise" from training sequences.
 - **Performance**: The transition to LSTM has improved temporal gesture recognition by approximately **35%** over the scikit-learn baseline.
 - **Data Robustness**: The system now handles "Neutral" states, preventing the model from forcing a sign prediction when no one is in frame.
 
