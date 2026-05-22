@@ -1,7 +1,7 @@
 numpy
 pandas
 nltk
-opencv-python
+opencv-python==4.8.1.78
 uvicorn
 matplotlib
 tensorflow==2.13.0

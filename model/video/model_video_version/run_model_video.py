@@ -37,10 +37,19 @@ def main():
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    # Set up the window so it doesn't hide behind others
+    cv2.namedWindow('SignLens Video Model', cv2.WINDOW_NORMAL)
+    cv2.setWindowProperty('SignLens Video Model', cv2.WND_PROP_TOPMOST, 1)
+    
+    if not cap.isOpened():
+        print("Error: Could not open the camera. Check your camera permissions or index.")
+        return
+
     with mp_holistic.Holistic(static_image_mode=False) as holistic:
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
+                print("Error: Could not read frame from camera. Is it being used by another application?")
                 break
             image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             results = holistic.process(image)
@@ -50,7 +59,7 @@ def main():
                 sequence = sequence[-SEQUENCE_LENGTH:]
             if len(sequence) == SEQUENCE_LENGTH:
                 input_data = np.expand_dims(sequence, axis=0)
-                predictions = model.predict(input_data)
+                predictions = model.predict(input_data, verbose=0)
                 predicted_class = np.argmax(predictions)
                 confidence = np.max(predictions)
                 sign = actions[predicted_class]
