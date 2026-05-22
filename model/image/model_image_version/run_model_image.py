@@ -4,7 +4,7 @@ import cv2
 from tensorflow.keras.models import load_model
 
 IMG_SIZE = (128, 128)
-MODEL_PATH = os.path.join(os.path.dirname(__file__), 'sign_language_model_image.h5')
+MODEL_PATH = os.path.join(os.path.dirname(__file__), 'best_sign_language_model_image.h5')
 DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'dataset_images')
 
 # Get class labels
