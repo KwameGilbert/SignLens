@@ -5,7 +5,7 @@ from tensorflow.keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoi
 import matplotlib.pyplot as plt
 from model_video import get_model
 
-DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'dataset_video')
+DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'dataset_video_keypoints')
 SEQUENCE_LENGTH = 30
 
 # Load data
@@ -20,6 +20,8 @@ def load_data():
                 window = np.load(os.path.join(action_path, file_name))
                 sequences.append(window)
                 labels.append(label_map[action])
+    if len(sequences) == 0:
+        return np.array([]), np.array([]), actions
     return np.array(sequences), to_categorical(labels).astype(int), actions
 
 def plot_history(history):

@@ -6,7 +6,7 @@ from tensorflow.keras.models import load_model
 
 SEQUENCE_LENGTH = 30
 DATASET_PATH = os.path.join(os.path.dirname(__file__), '..', 'dataset_video')
-MODEL_PATH = os.path.join(os.path.dirname(__file__), 'sign_language_model_video.h5')
+MODEL_PATH = os.path.join(os.path.dirname(__file__), 'sign_language_model_video_1.h5')
 
 mp_holistic = mp.solutions.holistic
 
@@ -32,7 +32,11 @@ def main():
     actions = get_actions()
     model = load_model(MODEL_PATH)
     sequence = []
-    cap = cv2.VideoCapture(0)
+    
+    # Use cv2.CAP_DSHOW on Windows to prevent the dim/dark camera issue
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     with mp_holistic.Holistic(static_image_mode=False) as holistic:
         while cap.isOpened():
             ret, frame = cap.read()

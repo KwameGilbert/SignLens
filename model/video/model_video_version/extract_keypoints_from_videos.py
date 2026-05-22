@@ -4,8 +4,8 @@ import numpy as np
 import mediapipe as mp
 
 # Configuration
-VIDEOS_DIR = os.path.join('videos')  # Folder containing class subfolders with videos
-OUTPUT_DIR = os.path.join('model_video_version', 'dataset_video')
+VIDEOS_DIR = os.path.join('..', 'dataset_video')  # Folder containing class subfolders with videos
+OUTPUT_DIR = os.path.join('..', 'dataset_video_keypoints')
 SEQUENCE_LENGTH = 30  # Frames per sequence
 SEQUENCES_PER_CLASS = 30  # Sequences per class
 
