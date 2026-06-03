@@ -16,21 +16,19 @@ router = APIRouter()
 # Placeholder: update with your actual model filenames and class labels
 IMAGE_MODEL_FILENAME = "image_model.h5"
 VIDEO_MODEL_FILENAME = "video_model.h5"
-IMAGE_CLASSES = [chr(i) for i in range(ord('A'), ord('Z')+1)]  # ['A', ..., 'Z']
+# Keras flow_from_directory sorts folders alphabetically, so 'Neutral' is at index 14
+IMAGE_CLASSES = [chr(i) for i in range(ord('A'), ord('N')+1)] + ['Neutral'] + [chr(i) for i in range(ord('O'), ord('Z')+1)]
 VIDEO_CLASSES = [chr(i) for i in range(ord('A'), ord('Z')+1)] + [str(i) for i in range(1, 11)]
 
 def image_predict(file_bytes: bytes):
-    # Load model
-    model = model_manager.get_model(IMAGE_MODEL_FILENAME)
-    # Preprocess image (assuming 128x128 RGB)
-    img = keras_image.load_img(
-        path=None,
-        file=file_bytes,
-        target_size=(128, 128),
-        color_mode='rgb'
-    )
-    x = keras_image.img_to_array(img)
-    x = np.expand_dims(x, axis=0)
+    # Load model dynamically
+    model = model_manager.get_model('image')
+    # Preprocess image
+    np_arr = np.frombuffer(file_bytes, np.uint8)
+    img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+    img = cv2.resize(img, (128, 128))
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    x = np.expand_dims(img, axis=0)
     x = x / 255.0
     preds = model.predict(x)
     pred_class = np.argmax(preds)
@@ -47,7 +45,7 @@ def predict_image(
 ):
     if type != InputType.image:
         raise HTTPException(status_code=400, detail="This endpoint only supports type=image.")
-    file_bytes = file.file
+    file_bytes = file.file.read()
     result = image_predict(file_bytes)
     return result
 
@@ -71,25 +69,60 @@ async def predict_stream(websocket: WebSocket):
         await websocket.close(code=status.WS_1003_UNSUPPORTED_DATA)
         return
     try:
-        model = model_manager.get_model(VIDEO_MODEL_FILENAME)
-        while True:
-            frame_bytes = await websocket.receive_bytes()
-            # Decode image from bytes (assume JPEG/PNG)
-            np_arr = np.frombuffer(frame_bytes, np.uint8)
-            img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-            if img is None:
-                await websocket.send_json({"error": "Invalid image/frame data"})
-                continue
-            # Preprocess for Keras model (resize, normalize)
-            img = cv2.resize(img, (128, 128))
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            x = np.expand_dims(img, axis=0)
-            x = x / 255.0
-            preds = model.predict(x)
-            pred_class = np.argmax(preds)
-            confidence = float(np.max(preds))
-            label = VIDEO_CLASSES[pred_class] if pred_class < len(VIDEO_CLASSES) else str(pred_class)
-            result = {"prediction": label, "confidence": confidence}
-            await websocket.send_json(result)
+        model = model_manager.get_model(type_)
+        import mediapipe as mp
+        mp_holistic = mp.solutions.holistic
+        
+        sequence = []
+        SEQUENCE_LENGTH = 30
+        
+        with mp_holistic.Holistic(static_image_mode=False) as holistic:
+            while True:
+                frame_bytes = await websocket.receive_bytes()
+                # Decode image from bytes (assume JPEG/PNG)
+                np_arr = np.frombuffer(frame_bytes, np.uint8)
+                img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+                if img is None:
+                    await websocket.send_json({"error": "Invalid image/frame data"})
+                    continue
+                    
+                img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                results = holistic.process(img_rgb)
+                
+                # Extract keypoints based on type
+                pose = np.zeros(33 * 4)
+                face = np.zeros(468 * 3)
+                lh = np.zeros(21 * 3)
+                rh = np.zeros(21 * 3)
+                
+                if results.pose_landmarks:
+                    pose = np.array([[res.x, res.y, res.z, res.visibility] for res in results.pose_landmarks.landmark]).flatten()
+                if results.left_hand_landmarks:
+                    lh = np.array([[res.x, res.y, res.z] for res in results.left_hand_landmarks.landmark]).flatten()
+                if results.right_hand_landmarks:
+                    rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten()
+                
+                if type_ == "stream":
+                    if results.face_landmarks:
+                        face = np.array([[res.x, res.y, res.z] for res in results.face_landmarks.landmark]).flatten()
+                    keypoints = np.concatenate([pose, face, lh, rh]) # 1662 features
+                else:
+                    keypoints = np.concatenate([pose, lh, rh]) # 258 features
+                
+                sequence.append(keypoints)
+                if len(sequence) > SEQUENCE_LENGTH:
+                    sequence = sequence[-SEQUENCE_LENGTH:]
+                    
+                if len(sequence) == SEQUENCE_LENGTH:
+                    input_data = np.expand_dims(sequence, axis=0)
+                    preds = model.predict(input_data, verbose=0)
+                    pred_class = np.argmax(preds)
+                    confidence = float(np.max(preds))
+                    label = VIDEO_CLASSES[pred_class] if pred_class < len(VIDEO_CLASSES) else str(pred_class)
+                    result = {"prediction": label, "confidence": confidence}
+                    await websocket.send_json(result)
+                else:
+                    await websocket.send_json({"status": f"Buffering... {len(sequence)}/{SEQUENCE_LENGTH}"})
+                    
     except WebSocketDisconnect:
         pass

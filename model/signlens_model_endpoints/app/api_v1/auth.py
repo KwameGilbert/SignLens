@@ -40,6 +40,14 @@ def generate_api_key():
     conn.close()
     return key
 
+def get_existing_api_key():
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("SELECT `key` FROM api_keys LIMIT 1")
+    result = c.fetchone()
+    conn.close()
+    return result[0] if result else None
+
 def verify_api_key(x_api_key: str = Header(...)):
     conn = get_conn()
     c = conn.cursor()

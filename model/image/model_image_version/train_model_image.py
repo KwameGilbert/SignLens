@@ -52,15 +52,16 @@ model = get_image_model(input_shape, num_classes)
 log_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'Logs')
 tb_callback = TensorBoard(log_dir=log_dir)
 early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
-checkpoint = ModelCheckpoint(
-    os.path.join(os.path.dirname(__file__), 'best_sign_language_model_image.h5'),
-    monitor='val_categorical_accuracy',
-    save_best_only=True,
-    verbose=1
-)
+# checkpoint = ModelCheckpoint(
+#     os.path.join(os.path.dirname(__file__), 'best_sign_language_model_image.h5'),
+#     monitor='val_categorical_accuracy',
+#     save_best_only=True,
+#     verbose=1
+# )
 lr_scheduler = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-6, verbose=1)
 
-callbacks = [tb_callback, early_stopping, checkpoint, lr_scheduler]
+# callbacks = [tb_callback, early_stopping, checkpoint, lr_scheduler]
+callbacks = [tb_callback, early_stopping, lr_scheduler]
 
 history = model.fit(
     train_gen,
