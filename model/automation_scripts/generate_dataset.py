@@ -3,9 +3,9 @@ SignLens Complete Dataset Generator
 ====================================
 This script processes the ASL Manual Alphabet video to generate both:
 1. Video Dataset: Cuts the video into individual letter clips (front and side views) 
-   and places them directly in `model/video/dataset_video/{letter}/`.
+   and places them directly in `model/dataset/video_raw/{letter}/`.
 2. Image Dataset: Extracts frames from those clips and saves them directly in 
-   `model/image/dataset_images/{letter}/` to train the image classification model.
+   `model/dataset/image/{letter}/` to train the image classification model.
 
 Usage:
 Simply run: python model/automation_scripts/generate_dataset.py
@@ -25,8 +25,8 @@ FRAME_STEP = 3
 
 # Define target dataset folders (relative to this script)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-VIDEO_DATASET_DIR = os.path.join(SCRIPT_DIR, '..', 'video', 'dataset_video')
-IMAGE_DATASET_DIR = os.path.join(SCRIPT_DIR, '..', 'image', 'dataset_images')
+VIDEO_DATASET_DIR = os.path.join(SCRIPT_DIR, '..', 'dataset', 'video_raw')
+IMAGE_DATASET_DIR = os.path.join(SCRIPT_DIR, '..', 'dataset', 'image')
 
 # Precise timelines for the ASL manual alphabet
 TIMELINES = [

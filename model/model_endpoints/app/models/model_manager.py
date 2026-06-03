@@ -7,9 +7,9 @@ from threading import Lock
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 MODEL_PATHS = {
-    'image': os.path.join(PROJECT_ROOT, 'image', 'model_image_version', 'sign_language_model_image*.h5'),
-    'video': os.path.join(PROJECT_ROOT, 'video_no_face', 'model_video_version_no_face', 'sign_language_model_video*.h5'),
-    'stream': os.path.join(PROJECT_ROOT, 'video', 'model_video_version', 'sign_language_model_video*.h5')
+    'image': os.path.join(PROJECT_ROOT, 'image_cnn', 'saved_models', 'sign_language_model_image*.h5'),
+    'video': os.path.join(PROJECT_ROOT, 'video_lstm_optimized', 'saved_models', 'sign_language_model_video*.h5'),
+    'stream': os.path.join(PROJECT_ROOT, 'video_lstm_full', 'saved_models', 'sign_language_model_video*.h5')
 }
 
 # Thread-safe model loading

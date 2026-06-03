@@ -5,7 +5,7 @@ from tensorflow.keras.models import load_model
 
 IMG_SIZE = (128, 128)
 MODEL_PATH = os.path.join(os.path.dirname(__file__), 'best_sign_language_model_image.h5')
-DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'dataset_images')
+DATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'dataset', 'image')
 
 # Get class labels
 classes = [d for d in os.listdir(DATA_PATH) if os.path.isdir(os.path.join(DATA_PATH, d))]

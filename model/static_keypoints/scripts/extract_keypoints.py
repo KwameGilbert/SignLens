@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 import mediapipe as mp
 
-DATASET_DIR = os.path.join('dataset_keypoints')
+DATASET_DIR = os.path.join('..', '..', 'dataset', 'static_keypoints')
 CLASSES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'Neutral', 'O', 'P', 'Q', 'R', 'S', 'hello']
 SEQUENCE_LENGTH = 30
 SEQUENCES_PER_CLASS = 30

@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'dataset_video_keypoints')
+DATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'dataset', 'video_keypoints_full')
 AUGMENTATION_FACTOR = 30  # Number of variations to create per original file
 
 def add_noise(sequence, noise_level=0.01):

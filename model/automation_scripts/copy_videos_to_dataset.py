@@ -4,7 +4,7 @@ import shutil
 # Source directory containing files named A-Z (e.g., A.mp4, B.mp4, ...)
 source_dir = r'C:\Users\User\Desktop\images'
 # Destination base directory
-video_dataset_dir = os.path.join(os.path.dirname(__file__), '..', 'video', 'dataset_video')
+video_dataset_dir = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'video_raw')
 
 # List of all alphabet letters (A-Z)
 alphabet = [chr(i) for i in range(ord('A'), ord('Z')+1)]

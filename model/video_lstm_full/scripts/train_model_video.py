@@ -5,7 +5,7 @@ from tensorflow.keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoi
 import matplotlib.pyplot as plt
 from model_video import get_model
 
-DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'dataset_video_keypoints')
+DATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'dataset', 'video_keypoints_full')
 SEQUENCE_LENGTH = 30
 
 # Load data

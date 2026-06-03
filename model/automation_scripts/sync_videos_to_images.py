@@ -2,7 +2,7 @@
 SignLens Video-Image Sync Script
 ================================
 This script cleans up the video dataset by aligning it with the manually cleaned-up
-image dataset. It reads the images currently present in `model/image/dataset_images/`,
+image dataset. It reads the images currently present in `model/dataset/image/`,
 identifies which frames they represent in the original video, and extracts only 
 those specific segments into the corresponding video folders.
 
@@ -22,8 +22,8 @@ FRAME_STEP = 3
 FPS = 30.0
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-IMAGE_DATASET_DIR = os.path.join(SCRIPT_DIR, '..', 'image', 'dataset_images')
-VIDEO_DATASET_DIR = os.path.join(SCRIPT_DIR, '..', 'video', 'dataset_video')
+IMAGE_DATASET_DIR = os.path.join(SCRIPT_DIR, '..', 'dataset', 'image')
+VIDEO_DATASET_DIR = os.path.join(SCRIPT_DIR, '..', 'dataset', 'video_raw')
 SOURCE_VIDEO_PATH = os.path.join(SCRIPT_DIR, VIDEO_NAME)
 
 # TIMELINES from generate_dataset.py

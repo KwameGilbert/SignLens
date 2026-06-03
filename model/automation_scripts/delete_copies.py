@@ -1,7 +1,7 @@
 import os
 
 # Path to the dataset_images directory (relative to this script)
-dataset_dir = os.path.join(os.path.dirname(__file__), '..', 'image', 'dataset_images')
+dataset_dir = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'image')
 
 deleted_count = 0
 for class_name in os.listdir(dataset_dir):

@@ -2,7 +2,7 @@ import os
 import shutil
 
 # Path to the dataset_images directory (relative to this script)
-dataset_dir = os.path.join(os.path.dirname(__file__), '..', 'image', 'dataset_images')
+dataset_dir = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'image')
 
 # Number of times to duplicate each image (change as needed)
 duplicates = 27  # This will make 27 copies of each image (original + 27 copies = 28 total)
