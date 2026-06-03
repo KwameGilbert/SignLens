@@ -1,0 +1,48 @@
+# Model Repository Restructuring Plan
+
+Based on your feedback, I have updated the plan. All datasets will be grouped into a single root `dataset/` directory, and I will rename the API folder to `model_endpoints` instead of `backend_api`.
+
+## Proposed New Structure
+
+```text
+model/
+├── dataset/                     # All datasets moved here centrally
+│   ├── image/                   # (Currently 'image/dataset_images')
+│   ├── video_raw/               # (Currently 'video/dataset_video')
+│   ├── video_keypoints_full/    # (Currently 'video/dataset_video_keypoints')
+│   ├── video_keypoints_no_face/ # (Currently 'video_no_face/dataset_video_keypoints_no_face')
+│   └── static_keypoints/        # (Currently 'keypoints/dataset_keypoints')
+│
+├── image_cnn/                   # (Currently 'image')
+│   ├── scripts/                 # (Currently 'model_image_version')
+│   └── saved_models/            # All .h5 files will be moved here
+│
+├── video_lstm_full/             # (Currently 'video' - 1662 feature model)
+│   ├── scripts/                 # (Currently 'model_video_version')
+│   └── saved_models/            
+│
+├── video_lstm_optimized/        # (Currently 'video_no_face' - 258 feature model)
+│   ├── scripts/                 # (Currently 'model_video_version_no_face')
+│   └── saved_models/            
+│
+├── static_keypoints/            # (Currently 'keypoints')
+│   ├── scripts/                 
+│   └── saved_models/
+│
+├── model_endpoints/             # (Currently 'signlens_model_endpoints')
+│   ├── app/
+│   └── ...
+│
+└── automation_scripts/          # Will remain the same, containing client_tests
+```
+
+### Breaking Changes & Script Updates
+
+Because we are changing folder names, **every single python script will break** unless updated. I will systematically update:
+
+1. **Training & Extraction Scripts**: Update all `DATA_PATH`, `log_dir`, and `model.save()` paths inside the new `scripts/` directories to correctly point to the central `model/dataset/` and local `saved_models/` directories.
+2. **Endpoints API**: Update `model_endpoints/app/models/model_manager.py` to point to the new `saved_models/` directories.
+3. **Client Tests**: Update the test scripts to reflect the new structure.
+
+## User Review Required
+How does this updated structure look? If you approve, I will begin executing the move commands and updating the code paths immediately!
