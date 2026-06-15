@@ -9,3 +9,5 @@ if __name__ == "__main__":
     else:
         key = generate_api_key()
         print(f"Generated new API Key: {key}")
+
+
