@@ -13,6 +13,8 @@ import Badges from './pages/badges/Badges'
 import TranslationLogs from './pages/translations/TranslationLogs'
 import ActivityLogs from './pages/logs/ActivityLogs'
 import Settings from './pages/settings/Settings'
+import Notifications from './pages/notifications/Notifications'
+import Profile from './pages/profile/Profile'
 import { PageLayout } from './components/layout/PageLayout'
 
 function App() {
@@ -37,6 +39,8 @@ function App() {
           <Route path="/translations" element={<TranslationLogs />} />
           <Route path="/logs" element={<ActivityLogs />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
       </Routes>
     </BrowserRouter>
