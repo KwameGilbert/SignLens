@@ -45,61 +45,63 @@ export default function TranslationLogs() {
           </div>
         </CardHeader>
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Query / Sign Name</TableHead>
-                <TableHead>Translation Mode</TableHead>
-                <TableHead>Confidence Rating</TableHead>
-                <TableHead>Resolution Status</TableHead>
-                <TableHead>Timestamp</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredLogs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell className="font-semibold text-white">{log.query}</TableCell>
-                  <TableCell className="text-gray-300">
-                    <div className="flex items-center gap-1.5">
-                      {log.mode === "Camera" ? <Camera className="h-3.5 w-3.5 text-primary" /> : <Mic className="h-3.5 w-3.5 text-violet-400" />}
-                      {log.mode}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-bold text-gray-200">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${
-                            log.confidence >= 90
-                              ? "bg-emerald-500"
-                              : log.confidence >= 70
-                              ? "bg-amber-500"
-                              : "bg-rose-500"
-                          }`}
-                          style={{ width: `${log.confidence}%` }}
-                        />
-                      </div>
-                      <span className="text-xs">{log.confidence}%</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        log.status === "Success"
-                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                          : log.status === "Low Confidence"
-                          ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                          : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
-                      }`}
-                    >
-                      {log.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-gray-400 text-xs">{log.timestamp}</TableCell>
+          <div className="overflow-x-auto w-full">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Query / Sign Name</TableHead>
+                  <TableHead>Translation Mode</TableHead>
+                  <TableHead>Confidence Rating</TableHead>
+                  <TableHead>Resolution Status</TableHead>
+                  <TableHead>Timestamp</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredLogs.map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell className="font-semibold text-white">{log.query}</TableCell>
+                    <TableCell className="text-gray-300">
+                      <div className="flex items-center gap-1.5">
+                        {log.mode === "Camera" ? <Camera className="h-3.5 w-3.5 text-primary" /> : <Mic className="h-3.5 w-3.5 text-violet-400" />}
+                        {log.mode}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-bold text-gray-200">
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${
+                              log.confidence >= 90
+                                ? "bg-emerald-500"
+                                : log.confidence >= 70
+                                ? "bg-amber-500"
+                                : "bg-rose-500"
+                            }`}
+                            style={{ width: `${log.confidence}%` }}
+                          />
+                        </div>
+                        <span className="text-xs">{log.confidence}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          log.status === "Success"
+                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                            : log.status === "Low Confidence"
+                            ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                            : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                        }`}
+                      >
+                        {log.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-gray-400 text-xs">{log.timestamp}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

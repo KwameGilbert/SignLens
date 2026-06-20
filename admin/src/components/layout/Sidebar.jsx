@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, FolderOpen, CheckSquare, Award, Activity, History, Settings } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, FolderOpen, CheckSquare, Award, Activity, History, Settings, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "../../utils/cn";
 
@@ -34,15 +34,27 @@ const navigationGroups = [
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
   const location = useLocation();
 
   return (
-    <div className="flex h-full w-64 flex-col bg-black/40 backdrop-blur-lg border-r border-white/[0.06] z-20">
-      <div className="flex h-16 shrink-0 items-center px-6 border-b border-white/[0.06]">
+    <div 
+      className={cn(
+        "fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-[#0D121F]/95 backdrop-blur-lg border-r border-white/[0.06] transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:flex lg:bg-black/40",
+        isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      )}
+    >
+      <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-white/[0.06]">
         <h1 className="text-xl font-extrabold tracking-wider bg-gradient-to-r from-primary to-primary-soft bg-clip-text text-transparent">
           SIGNLENS
         </h1>
+        {/* Close Button inside Sidebar Drawer on Mobile */}
+        <button
+          onClick={() => setIsSidebarOpen(false)}
+          className="lg:hidden p-2 text-gray-400 hover:text-white cursor-pointer -mr-2"
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
       <div className="flex flex-1 flex-col overflow-y-auto pt-6 pb-4">
         <nav className="flex-1 space-y-6 px-4">
@@ -58,6 +70,7 @@ export function Sidebar() {
                     <Link
                       key={item.name}
                       to={item.href}
+                      onClick={() => setIsSidebarOpen(false)}
                       className={cn(
                         isActive
                           ? "bg-primary/10 text-primary border-l-2 border-primary font-bold"
