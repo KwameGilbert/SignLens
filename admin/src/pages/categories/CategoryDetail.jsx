@@ -1,6 +1,6 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
-import { ArrowLeft, School, Calculator, Heart, FolderOpen, MessageSquare, Smile, MessageCircle, Star, Award, BookOpen, Activity, Plus, Trash2, Edit, Eye, CheckCircle, Save } from "lucide-react";
+import { ArrowLeft, School, Calculator, Heart, FolderOpen, MessageSquare, Smile, MessageCircle, Star, Award, BookOpen, Activity, Plus, Trash2, Edit, Eye, CheckCircle, Save, Video } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/Table";
 import { Button } from "../../components/ui/Button";

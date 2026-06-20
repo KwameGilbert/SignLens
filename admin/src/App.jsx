@@ -8,6 +8,7 @@ import LessonDetail from './pages/lessons/LessonDetail'
 import Categories from './pages/categories/Categories'
 import CategoryDetail from './pages/categories/CategoryDetail'
 import Quizzes from './pages/quizzes/Quizzes'
+import QuizDetail from './pages/quizzes/QuizDetail'
 import Badges from './pages/badges/Badges'
 import TranslationLogs from './pages/translations/TranslationLogs'
 import ActivityLogs from './pages/logs/ActivityLogs'
@@ -31,6 +32,7 @@ function App() {
           <Route path="/categories" element={<Categories />} />
           <Route path="/categories/:slug" element={<CategoryDetail />} />
           <Route path="/quizzes" element={<Quizzes />} />
+          <Route path="/quizzes/:id" element={<QuizDetail />} />
           <Route path="/badges" element={<Badges />} />
           <Route path="/translations" element={<TranslationLogs />} />
           <Route path="/logs" element={<ActivityLogs />} />
