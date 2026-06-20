@@ -117,6 +117,7 @@ export function DashboardChart() {
             strokeWidth="3"
             strokeLinecap="round"
             strokeLinejoin="round"
+            className="animate-draw-path"
           />
 
           {/* Interactive Hover Vertical Bar */}
