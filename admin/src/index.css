@@ -1,1 +1,30 @@
 @import "tailwindcss";
+
+@theme {
+  --color-primary: #FB5607;
+  --color-primary-soft: #FDBA74;
+  --color-primary-deep: #C2410C;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #F2F2EA;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+}
+
+@utility glass-panel {
+  background-color: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@utility glow-orange {
+  box-shadow: 0 0 30px rgba(251, 86, 7, 0.15);
+}
+
+@utility glow-purple {
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.15);
+}
+
+body {
+  background-color: #080B11;
+  color: #E2E8F0;
+  font-family: var(--font-sans);
+}
