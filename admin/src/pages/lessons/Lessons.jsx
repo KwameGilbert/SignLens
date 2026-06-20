@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Folder, Eye, Trash2, X, PlusCircle, MinusCircle } from "lucide-react";
+import { Plus, Folder, Eye, Trash2, X, PlusCircle, MinusCircle, Video } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/Card";
@@ -23,9 +23,9 @@ export default function Lessons() {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [category, setCategory] = useState("Alphabets");
-  const [mediaKey, setMediaKey] = useState("learn");
   const [description, setDescription] = useState("");
   const [contentSteps, setContentSteps] = useState([""]);
+  const [videoFile, setVideoFile] = useState(null);
 
   const handleTitleChange = (e) => {
     const value = e.target.value;
@@ -56,13 +56,13 @@ export default function Lessons() {
 
   const handleCreateLesson = (e) => {
     e.preventDefault();
-    if (!title.trim() || !slug.trim()) return;
+    if (!title.trim() || !slug.trim() || !videoFile) return;
 
     const newLesson = {
       id: slug,
       title: title.trim(),
       category,
-      type: mediaKey === "learn" ? "Video" : "Interactive Scanner",
+      type: "Video",
       uploadedAt: new Date().toISOString().split("T")[0]
     };
 
@@ -75,9 +75,9 @@ export default function Lessons() {
     setTitle("");
     setSlug("");
     setCategory("Alphabets");
-    setMediaKey("learn");
     setDescription("");
     setContentSteps([""]);
+    setVideoFile(null);
   };
 
   const handleDelete = (id) => {
@@ -230,7 +230,7 @@ export default function Lessons() {
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-white/10 bg-white/[0.02] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="flex h-10 w-full rounded-md border border-white/10 bg-[#0D121F] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     {categories.slice(1).map((cat) => (
                       <option key={cat} value={cat} className="bg-[#080B11]">
@@ -240,17 +240,18 @@ export default function Lessons() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1.5">Media Mode Key</label>
-                  <select
-                    value={mediaKey}
-                    onChange={(e) => setMediaKey(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-white/10 bg-white/[0.02] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="learn" className="bg-[#080B11]">Video Player (learn)</option>
-                    <option value="scan" className="bg-[#080B11]">Live Camera Scanner (scan)</option>
-                    <option value="progress" className="bg-[#080B11]">Interactive Progress (progress)</option>
-                    <option value="voice" className="bg-[#080B11]">Audio Assist (voice)</option>
-                  </select>
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1.5">Upload Lesson Video</label>
+                  <div className="relative h-10 flex items-center justify-between border border-white/10 rounded-md bg-white/[0.02] px-3 py-2 text-sm text-gray-400">
+                    <input
+                      type="file"
+                      required
+                      accept="video/*"
+                      onChange={(e) => setVideoFile(e.target.files[0])}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                    <span className="truncate">{videoFile ? videoFile.name : "Choose MP4 video..."}</span>
+                    <Video className="h-4 w-4 text-primary shrink-0" />
+                  </div>
                 </div>
               </div>
 
@@ -299,7 +300,7 @@ export default function Lessons() {
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-white/[0.04]">
-                <Button type="button" variant="outline" className="border-white/10 text-gray-300 hover:bg-white/[0.04] hover:text-white" onClick={resetForm}>
+                <Button type="button" variant="ghost" className="border border-white/10 text-gray-300 hover:bg-white/[0.06] hover:text-white" onClick={resetForm}>
                   Cancel
                 </Button>
                 <Button type="submit" className="bg-primary hover:bg-primary-deep text-white shadow-lg hover:shadow-primary/20">

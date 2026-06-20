@@ -87,7 +87,7 @@ export default function Settings() {
       </div>
 
       <div className="flex justify-end gap-3 pt-4">
-        <Button variant="outline">Discard Changes</Button>
+        <Button variant="ghost" className="border border-white/10 text-gray-300 hover:bg-white/[0.06] hover:text-white">Discard Changes</Button>
         <Button className="flex items-center gap-2 shadow-lg hover:shadow-primary/20">
           <Save className="h-4 w-4" />
           Save Configurations

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus, FolderOpen, Heart, School, Calculator, Trash2, Edit } from "lucide-react";
+import { Plus, FolderOpen, Heart, School, Calculator, Trash2, Edit, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/Table";
 import { Input } from "../../components/ui/Input";
@@ -162,9 +163,12 @@ export default function Categories() {
                         </TableCell>
                         <TableCell className="font-bold text-gray-300">{cat.lessonCount} Lessons</TableCell>
                         <TableCell className="text-right space-x-2">
-                          <Button variant="ghost" size="sm" className="hover:bg-white/[0.04] text-gray-300 hover:text-white">
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <Link to={`/categories/${cat.slug}`}>
+                            <Button variant="ghost" size="sm" className="hover:bg-white/[0.04] text-gray-300 hover:text-white inline-flex items-center gap-1.5">
+                              <Eye className="h-4 w-4" />
+                              View Details
+                            </Button>
+                          </Link>
                           <Button
                             variant="ghost"
                             size="sm"

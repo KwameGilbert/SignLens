@@ -130,7 +130,7 @@ export default function Users() {
             </p>
 
             <div className="flex justify-end gap-3 pt-2">
-              <Button variant="outline" className="border-white/10 text-gray-300 hover:bg-white/[0.04] hover:text-white" onClick={() => setDeleteUser(null)}>
+              <Button variant="ghost" className="border border-white/10 text-gray-300 hover:bg-white/[0.06] hover:text-white" onClick={() => setDeleteUser(null)}>
                 Cancel
               </Button>
               <Button variant="destructive" onClick={handleDeleteConfirm}>
