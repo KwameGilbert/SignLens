@@ -1,13 +1,19 @@
-import { useMemo, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { useMemo, useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import QuizBlock from "../../components/learn/QuizBlock";
 import { getLessonById, getLessonNavigation, getQuizByLessonId } from "../../services/learnRepository";
 
-export default function LearnCheckpointScreen() {
+function CheckpointContent() {
   const router = useRouter();
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    setIsReady(true);
+  }, []);
+
   const params = useLocalSearchParams<{ lessonId?: string }>();
   const lessonId = params.lessonId ?? "";
 
@@ -25,6 +31,10 @@ export default function LearnCheckpointScreen() {
 
     return selectedIndex === quiz.correctIndex;
   }, [quiz, selectedIndex]);
+
+  if (!isReady) {
+    return null;
+  }
 
   if (!lesson || !quiz) {
     return (
@@ -77,17 +87,19 @@ export default function LearnCheckpointScreen() {
               className="rounded-xl py-4 items-center mt-4 bg-[#FB5607] shadow-md shadow-[#FB5607]/40"
               onPress={() => {
                 if (nextLessonId) {
-                  router.replace({
-                    pathname: "/(tabs)/learn-lesson",
-                    params: { lessonId: nextLessonId },
-                  });
+                  Alert.alert(
+                    "Continue to Next Lesson",
+                    `Next Lesson ID: ${nextLessonId}\nCurrent Lesson: ${lesson.id}`,
+                    [{ text: "OK" }]
+                  );
                   return;
                 }
 
-                router.replace({
-                  pathname: "/(tabs)/learn-category",
-                  params: { category: lesson.categorySlug },
-                });
+                Alert.alert(
+                  "Back to Category",
+                  `Category: ${lesson.categorySlug}`,
+                  [{ text: "OK" }]
+                );
               }}
             >
               <Text className="text-white text-lg font-bold tracking-wide">
@@ -99,4 +111,18 @@ export default function LearnCheckpointScreen() {
       </View>
     </ScrollView>
   );
+}
+
+export default function LearnCheckpointScreen() {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    setIsReady(true);
+  }, []);
+
+  if (!isReady) {
+    return <View style={{ flex: 1, backgroundColor: "#F2F2EA" }} />;
+  }
+
+  return <CheckpointContent />;
 }

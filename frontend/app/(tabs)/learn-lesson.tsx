@@ -1,20 +1,32 @@
-import { View, Text, TouchableOpacity, ScrollView, useColorScheme } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, useColorScheme, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
 import GlassCard from "../../components/ui/GlassCard";
 import { getCategoryBySlug, getLessonById, getLessonNavigation } from "../../services/learnRepository";
 import AvatarLessonPlayer from "../../components/learn/AvatarLessonPlayer";
 
-export default function LearnLessonScreen() {
+function LessonContent() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    setIsReady(true);
+  }, []);
 
   const params = useLocalSearchParams<{ lessonId?: string }>();
   const lessonId = params.lessonId ?? "";
 
   const lesson = getLessonById(lessonId);
+  const category = getCategoryBySlug(lesson?.categorySlug ?? "");
+  const { previousLessonId, nextLessonId } = getLessonNavigation(lesson?.id ?? "");
+
+  if (!isReady) {
+    return null;
+  }
 
   if (!lesson) {
     return (
@@ -27,9 +39,6 @@ export default function LearnLessonScreen() {
       </View>
     );
   }
-
-  const category = getCategoryBySlug(lesson.categorySlug);
-  const { previousLessonId, nextLessonId } = getLessonNavigation(lesson.id);
 
   return (
     <ScrollView className="flex-1 bg-[#F2F2EA] dark:bg-slate-950 pb-40" contentContainerStyle={{ paddingBottom: 30 }}>
@@ -101,10 +110,11 @@ export default function LearnLessonScreen() {
             disabled={!nextLessonId}
             onPress={() =>
               nextLessonId &&
-              router.replace({
-                pathname: "/(tabs)/learn-lesson",
-                params: { lessonId: nextLessonId },
-              })
+              Alert.alert(
+                "Next Lesson",
+                `Moving to next lesson\nLesson ID: ${nextLessonId}\nCurrent: ${lesson.id}`,
+                [{ text: "OK" }]
+              )
             }
           >
             <Text className={`font-bold ${nextLessonId ? "text-white" : "text-gray-500 dark:text-slate-500"}`}>Next</Text>
@@ -113,4 +123,18 @@ export default function LearnLessonScreen() {
       </View>
     </ScrollView>
   );
+}
+
+export default function LearnLessonScreen() {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    setIsReady(true);
+  }, []);
+
+  if (!isReady) {
+    return <View style={{ flex: 1, backgroundColor: "#F2F2EA" }} />;
+  }
+
+  return <LessonContent />;
 }
