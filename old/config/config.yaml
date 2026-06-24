@@ -1,0 +1,21 @@
+app:
+  name: "SignLens"
+  version: "1.0"
+
+camera:
+  index: 0
+  width: 1920
+  height: 1080
+
+mediapipe:
+  detection_confidence: 0.5
+  tracking_confidence: 0.5
+
+ui:
+  show_fps: true
+  show_status: true
+  show_prediction: false
+
+logging:
+  level: "INFO"
+  file: "logs/app.log"
