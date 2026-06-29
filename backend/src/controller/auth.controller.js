@@ -1,4 +1,4 @@
-import UserModel from '../model/user.js';
+import UserModel from '../model/user.model.js';
 import { hashPassword, comparePassword, generateToken } from '../utils/helpers.js';
 import { sendSuccess, sendCreated, sendBadRequest, sendUnauthorized, sendForbidden, sendConflict, sendInternalError } from '../utils/response.js';
 
@@ -41,8 +41,8 @@ export const register = async (req, res) => {
       user: {
         id: newUser.id,
         email: newUser.email,
-        firstName: newUser.first_name,
-        lastName: newUser.last_name,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
         role: newUser.role,
       },
     }, 'User registered successfully');
@@ -59,7 +59,7 @@ export const login = async (req, res) => {
       return sendBadRequest(res, 'Email and password are required');
     }
 
-    const user = await UserModel.findByEmail(email);
+    const user = await UserModel.findByEmail(email, true);
     if (!user) {
       return sendUnauthorized(res, 'Invalid email or password');
     }
@@ -68,7 +68,7 @@ export const login = async (req, res) => {
       return sendForbidden(res, 'Account is inactive or deactivated');
     }
 
-    const isMatch = await comparePassword(password, user.password_hash);
+    const isMatch = await comparePassword(password, user.passwordHash);
     if (!isMatch) {
       return sendUnauthorized(res, 'Invalid email or password');
     }
@@ -80,8 +80,8 @@ export const login = async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        firstName: user.first_name,
-        lastName: user.last_name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         role: user.role,
       },
     }, 'User logged in successfully');

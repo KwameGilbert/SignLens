@@ -1,5 +1,5 @@
 import mlClient from '../services/mlClient.js';
-import HistoryModel from '../model/history.js';
+import HistoryModel from '../model/history.model.js';
 import { sendSuccess, sendBadRequest, sendError, sendInternalError } from '../utils/response.js';
 
 export const predictImage = async (req, res) => {
@@ -46,6 +46,6 @@ export const predictImage = async (req, res) => {
       loggedId: savedLog.id,
     }, 'Prediction completed successfully');
   } catch (err) {
-    internalError(res, 'Internal gateway failure processing image prediction', err);
+    sendInternalError(res, 'Internal gateway failure processing image prediction', err);
   }
 };

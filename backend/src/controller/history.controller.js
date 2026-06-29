@@ -1,4 +1,4 @@
-import HistoryModel from '../model/history.js';
+import HistoryModel from '../model/history.model.js';
 import { parsePagination } from '../utils/helpers.js';
 import { sendSuccess, sendCreated, sendBadRequest, sendInternalError } from '../utils/response.js';
 
