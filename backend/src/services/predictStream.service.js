@@ -2,8 +2,8 @@ import WebSocket from 'ws';
 import jwt from 'jsonwebtoken';
 import url from 'url';
 import config from '../config/index.js';
-import UserModel from '../model/user.js';
-import HistoryModel from '../model/history.js';
+import UserModel from '../model/user.model.js';
+import HistoryModel from '../model/history.model.js';
 
 export const handlePredictStreamConnection = async (ws, req) => {
   try {
