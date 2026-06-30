@@ -6,7 +6,7 @@ from tensorflow.keras.models import load_model
 
 SEQUENCE_LENGTH = 30
 DATASET_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'dataset', 'video_raw')
-MODEL_PATH = os.path.join(os.path.dirname(__file__), 'sign_language_model_video_1.h5')
+MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'saved_models', 'sign_language_model_video_1.h5')
 
 mp_holistic = mp.solutions.holistic
 
