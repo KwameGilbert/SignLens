@@ -1,0 +1,284 @@
+{
+  "categories": [
+    {
+      "id": "cat-alphabets",
+      "slug": "alphabets",
+      "title": "Alphabets",
+      "icon": "T",
+      "lessonCount": 26,
+      "progress": 75
+    },
+    {
+      "id": "cat-numbers",
+      "slug": "numbers",
+      "title": "Numbers",
+      "icon": "#",
+      "lessonCount": 10,
+      "progress": 65
+    },
+    {
+      "id": "cat-common-phrases",
+      "slug": "common-phrases",
+      "title": "Common Phrases",
+      "icon": "💬",
+      "lessonCount": 15,
+      "progress": 15
+    },
+    {
+      "id": "cat-emotions",
+      "slug": "emotions",
+      "title": "Emotions",
+      "icon": "☺",
+      "lessonCount": 12,
+      "progress": 65
+    },
+    {
+      "id": "cat-conversation",
+      "slug": "conversation",
+      "title": "Conversation",
+      "icon": "💬",
+      "lessonCount": 20,
+      "progress": 5
+    },
+    {
+      "id": "cat-advanced-signs",
+      "slug": "advanced-signs",
+      "title": "Advanced Signs",
+      "icon": "★",
+      "lessonCount": 10,
+      "progress": 10
+    }
+  ],
+  "lessons": [
+    {
+      "id": "lesson-alpha-a-f",
+      "categorySlug": "alphabets",
+      "title": "Alphabet Signs A-F",
+      "description": "Master the hand shapes for letters A through F.",
+      "mediaKey": "learn",
+      "progress": 80,
+      "content": [
+        "Keep your palm relaxed and fingers clearly visible.",
+        "Practice each letter slowly before increasing speed.",
+        "Maintain consistency in hand orientation."
+      ]
+    },
+    {
+      "id": "lesson-alpha-g-z",
+      "categorySlug": "alphabets",
+      "title": "Alphabet Signs G-Z",
+      "description": "Complete the full alphabet with advanced hand placements.",
+      "mediaKey": "scan",
+      "progress": 70,
+      "content": [
+        "Some letters require wrist rotation for clarity.",
+        "Use mirror practice to self-correct shapes.",
+        "Link letters together for finger-spelling fluency."
+      ]
+    },
+    {
+      "id": "lesson-num-0-5",
+      "categorySlug": "numbers",
+      "title": "Numbers 0-5",
+      "description": "Learn foundational number gestures.",
+      "mediaKey": "progress",
+      "progress": 75,
+      "content": [
+        "Keep fingers fully extended where needed.",
+        "Avoid overlapping fingers to improve readability.",
+        "Repeat number transitions with rhythm."
+      ]
+    },
+    {
+      "id": "lesson-num-6-10",
+      "categorySlug": "numbers",
+      "title": "Numbers 6-10",
+      "description": "Continue number gestures with thumb combinations.",
+      "mediaKey": "voice",
+      "progress": 55,
+      "content": [
+        "Focus on thumb-to-finger contact precision.",
+        "Hold each sign for one second before switching.",
+        "Practice in front of camera for confidence."
+      ]
+    },
+    {
+      "id": "lesson-phrase-greetings",
+      "categorySlug": "common-phrases",
+      "title": "Greetings",
+      "description": "Use common greeting signs in daily conversation.",
+      "mediaKey": "learn",
+      "progress": 20,
+      "content": [
+        "Start with hello, good morning, and goodbye.",
+        "Pair signs with facial expression for tone.",
+        "Use smooth transitions between phrase signs."
+      ]
+    },
+    {
+      "id": "lesson-phrase-essentials",
+      "categorySlug": "common-phrases",
+      "title": "Essential Phrases",
+      "description": "Practice practical signs for everyday interactions.",
+      "mediaKey": "scan",
+      "progress": 10,
+      "content": [
+        "Learn thank you, please, and excuse me.",
+        "Practice phrase speed while keeping form clean.",
+        "Review combinations in short dialogues."
+      ]
+    },
+    {
+      "id": "lesson-emotion-happy-sad",
+      "categorySlug": "emotions",
+      "title": "Happy & Sad",
+      "description": "Express basic emotions with accurate hand and face cues.",
+      "mediaKey": "progress",
+      "progress": 75,
+      "content": [
+        "Facial expression is part of the sign meaning.",
+        "Keep sign movement gentle and intentional.",
+        "Practice contrast between opposite emotions."
+      ]
+    },
+    {
+      "id": "lesson-emotion-anger-fear",
+      "categorySlug": "emotions",
+      "title": "Anger & Fear",
+      "description": "Build expressive fluency with stronger emotional signs.",
+      "mediaKey": "voice",
+      "progress": 55,
+      "content": [
+        "Use controlled movement even for intense emotions.",
+        "Anchor signs near consistent body positions.",
+        "Practice in sentence context for retention."
+      ]
+    },
+    {
+      "id": "lesson-conv-intro",
+      "categorySlug": "conversation",
+      "title": "Starting a Conversation",
+      "description": "Open conversations politely and clearly.",
+      "mediaKey": "learn",
+      "progress": 10,
+      "content": [
+        "Begin with greeting and self-introduction signs.",
+        "Maintain eye contact and clear pacing.",
+        "Use turn-taking cues with pauses."
+      ]
+    },
+    {
+      "id": "lesson-conv-followup",
+      "categorySlug": "conversation",
+      "title": "Follow-up Questions",
+      "description": "Keep dialogue flowing with simple follow-up patterns.",
+      "mediaKey": "scan",
+      "progress": 5,
+      "content": [
+        "Use question expressions at sentence end.",
+        "Combine who, what, where signs naturally.",
+        "Practice short back-and-forth exchanges."
+      ]
+    },
+    {
+      "id": "lesson-advanced-speed",
+      "categorySlug": "advanced-signs",
+      "title": "Speed & Clarity",
+      "description": "Increase signing speed without losing precision.",
+      "mediaKey": "progress",
+      "progress": 15,
+      "content": [
+        "Prioritize shape accuracy before speed drills.",
+        "Record yourself and identify unclear transitions.",
+        "Use interval practice for endurance."
+      ]
+    },
+    {
+      "id": "lesson-advanced-story",
+      "categorySlug": "advanced-signs",
+      "title": "Storytelling Flow",
+      "description": "Apply advanced transitions in narrative signing.",
+      "mediaKey": "voice",
+      "progress": 5,
+      "content": [
+        "Use spatial references consistently in a story.",
+        "Blend expressions, pace, and hand movement.",
+        "Review and refine your narrative coherence."
+      ]
+    }
+  ],
+  "quizzes": [
+    {
+      "lessonId": "lesson-alpha-a-f",
+      "question": "Which principle improves sign readability most?",
+      "options": ["Faster movement", "Consistent hand orientation", "Lower camera angle", "Minimal pauses"],
+      "correctIndex": 1
+    },
+    {
+      "lessonId": "lesson-alpha-g-z",
+      "question": "What helps most with finger-spelling fluency?",
+      "options": ["Closing fingers tightly", "Skipping wrist rotation", "Linking letters smoothly", "Facing away from camera"],
+      "correctIndex": 2
+    },
+    {
+      "lessonId": "lesson-num-0-5",
+      "question": "For number clarity, you should:",
+      "options": ["Overlap fingers", "Hide thumb", "Keep fingers visible", "Use random pace"],
+      "correctIndex": 2
+    },
+    {
+      "lessonId": "lesson-num-6-10",
+      "question": "Numbers 6-10 often rely on:",
+      "options": ["Head movement", "Thumb-to-finger contact", "Shoulder shifts", "Wrist lock"],
+      "correctIndex": 1
+    },
+    {
+      "lessonId": "lesson-phrase-greetings",
+      "question": "What supports greeting signs best?",
+      "options": ["Flat facial expression", "No pauses", "Appropriate facial expression", "Closed hand only"],
+      "correctIndex": 2
+    },
+    {
+      "lessonId": "lesson-phrase-essentials",
+      "question": "Which is an essential everyday sign phrase?",
+      "options": ["Please", "Astronomy", "Algorithm", "Longitude"],
+      "correctIndex": 0
+    },
+    {
+      "lessonId": "lesson-emotion-happy-sad",
+      "question": "Emotion signs require:",
+      "options": ["Only hand movement", "Only body posture", "Hand + facial cues", "No expression"],
+      "correctIndex": 2
+    },
+    {
+      "lessonId": "lesson-emotion-anger-fear",
+      "question": "For intense emotions, movement should be:",
+      "options": ["Uncontrolled", "Very slow always", "Controlled and intentional", "Avoided"],
+      "correctIndex": 2
+    },
+    {
+      "lessonId": "lesson-conv-intro",
+      "question": "A good conversation start includes:",
+      "options": ["Fast signing", "Self-introduction", "No eye contact", "Skipping greeting"],
+      "correctIndex": 1
+    },
+    {
+      "lessonId": "lesson-conv-followup",
+      "question": "Follow-up questions rely heavily on:",
+      "options": ["Question expressions", "Random pauses", "Closed palm only", "Turning away"],
+      "correctIndex": 0
+    },
+    {
+      "lessonId": "lesson-advanced-speed",
+      "question": "Before speed drills, prioritize:",
+      "options": ["Complex stories", "Accuracy", "Long pauses", "Camera zoom"],
+      "correctIndex": 1
+    },
+    {
+      "lessonId": "lesson-advanced-story",
+      "question": "Storytelling clarity improves with:",
+      "options": ["Consistent spatial references", "No expressions", "Very rapid pace", "Single sign repetition"],
+      "correctIndex": 0
+    }
+  ]
+}
