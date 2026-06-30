@@ -12,6 +12,8 @@ MODEL_SAVE_PATH = os.path.join(os.path.dirname(__file__), '..', 'saved_models', 
 CLASSES = [chr(i) for i in range(ord('A'), ord('Z')+1)] + ['Neutral']
 EPOCHS = 100
 
+import matplotlib.pyplot as plt
+
 def load_data():
     X, y = [], []
     for label_idx, class_name in enumerate(CLASSES):
@@ -68,7 +70,7 @@ def main():
     os.makedirs(os.path.dirname(MODEL_SAVE_PATH), exist_ok=True)
     
     print("Training model...")
-    model.fit(
+    history = model.fit(
         X_train, y_train,
         validation_data=(X_test, y_test),
         epochs=EPOCHS,
@@ -77,6 +79,30 @@ def main():
     
     model.save(MODEL_SAVE_PATH)
     print(f"Model saved to {MODEL_SAVE_PATH}")
+    
+    # Plotting Accuracy and Loss
+    plt.figure(figsize=(12, 4))
+
+    # Plot Accuracy
+    plt.subplot(1, 2, 1)
+    plt.plot(history.history['categorical_accuracy'], label='Train Accuracy')
+    plt.plot(history.history['val_categorical_accuracy'], label='Validation Accuracy')
+    plt.title('Model Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend(loc='lower right')
+
+    # Plot Loss
+    plt.subplot(1, 2, 2)
+    plt.plot(history.history['loss'], label='Train Loss')
+    plt.plot(history.history['val_loss'], label='Validation Loss')
+    plt.title('Model Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend(loc='upper right')
+
+    plt.tight_layout()
+    plt.show()
 
 if __name__ == "__main__":
     main()
