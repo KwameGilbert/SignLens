@@ -3,8 +3,16 @@ import numpy as np
 import cv2
 import mediapipe as mp
 from tensorflow.keras.models import load_model
+import glob
 
-MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'saved_models', 'sign_language_model_static.h5')
+def get_latest_model():
+    model_dir = os.path.join(os.path.dirname(__file__), '..', 'saved_models')
+    models = glob.glob(os.path.join(model_dir, '*.h5'))
+    if not models:
+        raise FileNotFoundError(f"No models found in {model_dir}")
+    return max(models, key=os.path.getmtime)
+
+MODEL_PATH = get_latest_model()
 CLASSES = [chr(i) for i in range(ord('A'), ord('Z')+1)] + ['Neutral']
 
 mp_holistic = mp.solutions.holistic

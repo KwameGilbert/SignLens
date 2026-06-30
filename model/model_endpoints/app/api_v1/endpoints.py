@@ -16,8 +16,8 @@ router = APIRouter()
 # Placeholder: update with your actual model filenames and class labels
 IMAGE_MODEL_FILENAME = "image_model.h5"
 VIDEO_MODEL_FILENAME = "video_model.h5"
-# Keras flow_from_directory sorts folders alphabetically, so 'Neutral' is at index 14
-IMAGE_CLASSES = [chr(i) for i in range(ord('A'), ord('N')+1)] + ['Neutral'] + [chr(i) for i in range(ord('O'), ord('Z')+1)]
+# Static model classes (A-Z + Neutral)
+STATIC_CLASSES = [chr(i) for i in range(ord('A'), ord('Z')+1)] + ['Neutral']
 VIDEO_CLASSES = [chr(i) for i in range(ord('A'), ord('Z')+1)] + [str(i) for i in range(1, 11)]
 
 def image_predict(file_bytes: bytes):
@@ -26,14 +26,31 @@ def image_predict(file_bytes: bytes):
     # Preprocess image
     np_arr = np.frombuffer(file_bytes, np.uint8)
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-    img = cv2.resize(img, (128, 128))
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    x = np.expand_dims(img, axis=0)
-    x = x / 255.0
-    preds = model.predict(x)
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    
+    import mediapipe as mp
+    mp_holistic = mp.solutions.holistic
+    with mp_holistic.Holistic(static_image_mode=True) as holistic:
+        results = holistic.process(img_rgb)
+        
+        pose = np.zeros(33 * 4)
+        lh = np.zeros(21 * 3)
+        rh = np.zeros(21 * 3)
+        
+        if results.pose_landmarks:
+            pose = np.array([[res.x, res.y, res.z, res.visibility] for res in results.pose_landmarks.landmark]).flatten()
+        if results.left_hand_landmarks:
+            lh = np.array([[res.x, res.y, res.z] for res in results.left_hand_landmarks.landmark]).flatten()
+        if results.right_hand_landmarks:
+            rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten()
+            
+        keypoints = np.concatenate([pose, lh, rh]) # 258 features
+        x = np.expand_dims(keypoints, axis=0)
+        preds = model.predict(x, verbose=0)
+        
     pred_class = np.argmax(preds)
     confidence = float(np.max(preds))
-    label = IMAGE_CLASSES[pred_class] if pred_class < len(IMAGE_CLASSES) else str(pred_class)
+    label = STATIC_CLASSES[pred_class] if pred_class < len(STATIC_CLASSES) else str(pred_class)
     return {"prediction": label, "confidence": confidence}
 
 

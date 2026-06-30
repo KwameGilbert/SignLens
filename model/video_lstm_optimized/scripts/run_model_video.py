@@ -4,9 +4,19 @@ import cv2
 import mediapipe as mp
 from tensorflow.keras.models import load_model
 
+import glob
+
 SEQUENCE_LENGTH = 30
 DATASET_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'dataset', 'video_raw')
-MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'saved_models', 'sign_language_model_video_2.h5')
+
+def get_latest_model():
+    model_dir = os.path.join(os.path.dirname(__file__), '..', 'saved_models')
+    models = glob.glob(os.path.join(model_dir, '*.h5'))
+    if not models:
+        raise FileNotFoundError(f"No models found in {model_dir}")
+    return max(models, key=os.path.getmtime)
+
+MODEL_PATH = get_latest_model()
 
 mp_holistic = mp.solutions.holistic
 

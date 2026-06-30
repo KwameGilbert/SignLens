@@ -7,7 +7,7 @@ from threading import Lock
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 MODEL_PATHS = {
-    'image': os.path.join(PROJECT_ROOT, 'image_cnn', 'saved_models', 'sign_language_model_image*.h5'),
+    'image': os.path.join(PROJECT_ROOT, 'static_keypoints_optimized', 'saved_models', 'sign_language_model_static*.h5'),
     'video': os.path.join(PROJECT_ROOT, 'video_lstm_optimized', 'saved_models', 'sign_language_model_video*.h5'),
     'stream': os.path.join(PROJECT_ROOT, 'video_lstm_optimized', 'saved_models', 'sign_language_model_video*.h5')
 }
