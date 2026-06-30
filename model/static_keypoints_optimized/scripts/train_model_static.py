@@ -4,7 +4,6 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.callbacks import TensorBoard, EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.utils import to_categorical
-from sklearn.model_selection import train_test_split
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'dataset', 'static_keypoints_optimized')
 MODEL_SAVE_PATH = os.path.join(os.path.dirname(__file__), '..', 'saved_models', 'sign_language_model_static.h5')
@@ -40,7 +39,16 @@ def main():
     print(f"Loaded {len(X)} samples.")
     
     y = to_categorical(y).astype(int)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
+    
+    # Shuffle and split data using numpy instead of sklearn
+    indices = np.arange(len(X))
+    np.random.shuffle(indices)
+    X = X[indices]
+    y = y[indices]
+    
+    split_idx = int(len(X) * 0.9)
+    X_train, X_test = X[:split_idx], X[split_idx:]
+    y_train, y_test = y[:split_idx], y[split_idx:]
     
     model = Sequential([
         Dense(128, activation='relu', input_shape=(258,)),
