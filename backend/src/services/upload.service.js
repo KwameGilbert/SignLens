@@ -21,5 +21,4 @@ export const upload = multer({
 export default upload;
 
 
-$env:GIT_AUTHOR_DATE="2026-06-29T12:00:00"; $env:GIT_COMMITTER_DATE="2026-06-29T12:00:00"; git commit -m "Create and fix all services"; Remove-Item Env:\GIT_AUTHOR_DATE; Remove-Item Env:\GIT_COMMITTER_DATE
  
