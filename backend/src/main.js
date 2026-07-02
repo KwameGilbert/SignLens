@@ -24,10 +24,12 @@ app.use('/api', apiRouter);
 
 // Basic health check endpoint
 app.get('/', (req, res) => {
+  const protocol = req.protocol;
+  const host = req.get('host');
   res.json({
     status: 'ok',
     service: 'SignLens Mobile Gateway API',
-    docs: `http://localhost:${config.port}/docs`,
+    docs: `${protocol}://${host}/docs`,
     timestamp: new Date().toISOString(),
   });
 });
