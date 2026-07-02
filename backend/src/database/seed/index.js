@@ -19,9 +19,9 @@ export const runSeeds = async () => {
         const passwordHash = await hashPassword(acc.pass);
         await db('users').insert({
           email: acc.email,
-          password_hash: passwordHash,
-          first_name: acc.firstName,
-          last_name: acc.lastName,
+          passwordHash: passwordHash,
+          firstName: acc.firstName,
+          lastName: acc.lastName,
           role: acc.role,
           status: 'active',
         });
@@ -68,15 +68,15 @@ export const runSeeds = async () => {
     ];
 
     for (const badge of badges) {
-      const exists = await db('badges').where({ trigger_requirement: badge.trigger_requirement }).first();
+      const exists = await db('badges').where({ triggerRequirement: badge.trigger_requirement }).first();
       if (!exists) {
         console.log(`Seeding badge achievement: [${badge.name}]...`);
         await db('badges').insert({
           name: badge.name,
           icon: badge.icon,
           description: badge.description,
-          xp_reward: badge.xp_reward,
-          trigger_requirement: badge.trigger_requirement,
+          xpReward: badge.xp_reward,
+          triggerRequirement: badge.trigger_requirement,
         });
       }
     }

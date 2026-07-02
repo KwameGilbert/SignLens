@@ -1,4 +1,4 @@
-import UserModel from '../model/user.js';
+import UserModel from '../model/user.model.js';
 import { verifyToken } from '../utils/helpers.js';
 import { sendUnauthorized, sendForbidden, sendInternalError } from '../utils/response.js';
 
@@ -35,8 +35,8 @@ export const requireAuth = async (req, res, next) => {
     req.user = {
       id: user.id,
       email: user.email,
-      firstName: user.first_name,
-      lastName: user.last_name,
+      firstName: user.firstName,
+      lastName: user.lastName,
       role: user.role,
     };
 
@@ -52,7 +52,6 @@ export const requireAdmin = (req, res, next) => {
   }
   
   // Accept admin or super_admin, content_editor, moderator roles as "admin" depending on context
-  // Here requireAdmin is for basic admin operations
   const adminRoles = ['super_admin', 'admin', 'content_editor', 'moderator'];
   if (!adminRoles.includes(req.user.role)) {
     return sendForbidden(res, 'Forbidden: Admin access required');

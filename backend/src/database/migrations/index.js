@@ -8,35 +8,35 @@ export const runMigrations = async () => {
   if (!hasUsers) {
     await db.schema.createTable('users', (table) => {
       table.increments('id').primary();
-      table.string('first_name', 255);
-      table.string('last_name', 255);
+      table.string('firstName', 255);
+      table.string('lastName', 255);
       table.string('email', 255).unique().notNullable();
-      table.string('password_hash', 255).notNullable();
+      table.string('passwordHash', 255).notNullable();
       table.string('status', 50).defaultTo('active');
       table.text('profile');
       table.string('role', 50).defaultTo('user'); // super_admin, content_editor, moderator, user
-      table.timestamp('created_at').defaultTo(db.fn.now());
-      table.timestamp('updated_at').defaultTo(db.fn.now());
+      table.timestamp('createdAt').defaultTo(db.fn.now());
+      table.timestamp('updatedAt').defaultTo(db.fn.now());
     });
     console.log('Table "users" created successfully.');
   } else {
     console.log('Table "users" already exists.');
   }
 
-  // 2. Create lesson_categories table if not exists
-  const hasCategories = await db.schema.hasTable('lesson_categories');
+  // 2. Create lessonCategories table if not exists
+  const hasCategories = await db.schema.hasTable('lessonCategories');
   if (!hasCategories) {
-    await db.schema.createTable('lesson_categories', (table) => {
+    await db.schema.createTable('lessonCategories', (table) => {
       table.increments('id').primary();
       table.string('name', 255).notNullable();
       table.string('slug', 255).unique().notNullable();
       table.string('icon', 255);
-      table.timestamp('created_at').defaultTo(db.fn.now());
-      table.timestamp('updated_at').defaultTo(db.fn.now());
+      table.timestamp('createdAt').defaultTo(db.fn.now());
+      table.timestamp('updatedAt').defaultTo(db.fn.now());
     });
-    console.log('Table "lesson_categories" created successfully.');
+    console.log('Table "lessonCategories" created successfully.');
   } else {
-    console.log('Table "lesson_categories" already exists.');
+    console.log('Table "lessonCategories" already exists.');
   }
 
   // 3. Create lessons table if not exists
@@ -45,15 +45,15 @@ export const runMigrations = async () => {
     await db.schema.createTable('lessons', (table) => {
       table.increments('id').primary();
       table.string('title', 255).notNullable();
-      table.integer('category_id').unsigned().notNullable()
-        .references('id').inTable('lesson_categories').onDelete('CASCADE');
+      table.integer('categoryId').unsigned().notNullable()
+        .references('id').inTable('lessonCategories').onDelete('CASCADE');
       table.string('type', 50).notNullable(); // e.g. video, text
       table.string('slug', 255).unique().notNullable();
-      table.string('lesson_url', 500);
+      table.string('lessonUrl', 500);
       table.text('description');
       table.json('instructions'); // array of steps
-      table.timestamp('created_at').defaultTo(db.fn.now());
-      table.timestamp('updated_at').defaultTo(db.fn.now());
+      table.timestamp('createdAt').defaultTo(db.fn.now());
+      table.timestamp('updatedAt').defaultTo(db.fn.now());
     });
     console.log('Table "lessons" created successfully.');
   } else {
@@ -65,35 +65,35 @@ export const runMigrations = async () => {
   if (!hasQuizzes) {
     await db.schema.createTable('quizzes', (table) => {
       table.increments('id').primary();
-      table.integer('category_id').unsigned()
-        .references('id').inTable('lesson_categories').onDelete('SET NULL');
-      table.integer('lesson_id').unsigned().notNullable()
+      table.integer('categoryId').unsigned()
+        .references('id').inTable('lessonCategories').onDelete('SET NULL');
+      table.integer('lessonId').unsigned().notNullable()
         .references('id').inTable('lessons').onDelete('CASCADE');
       table.text('question').notNullable();
-      table.timestamp('created_at').defaultTo(db.fn.now());
-      table.timestamp('updated_at').defaultTo(db.fn.now());
+      table.timestamp('createdAt').defaultTo(db.fn.now());
+      table.timestamp('updatedAt').defaultTo(db.fn.now());
     });
     console.log('Table "quizzes" created successfully.');
   } else {
     console.log('Table "quizzes" already exists.');
   }
 
-  // 5. Create quiz_options table if not exists
-  const hasQuizOptions = await db.schema.hasTable('quiz_options');
+  // 5. Create quizOptions table if not exists
+  const hasQuizOptions = await db.schema.hasTable('quizOptions');
   if (!hasQuizOptions) {
-    await db.schema.createTable('quiz_options', (table) => {
+    await db.schema.createTable('quizOptions', (table) => {
       table.increments('id').primary();
-      table.integer('quiz_id').unsigned().notNullable()
+      table.integer('quizId').unsigned().notNullable()
         .references('id').inTable('quizzes').onDelete('CASCADE');
       table.string('name', 555).notNullable();
-      table.boolean('is_correct').defaultTo(false);
-      table.integer('order_index').defaultTo(0);
-      table.timestamp('created_at').defaultTo(db.fn.now());
-      table.timestamp('updated_at').defaultTo(db.fn.now());
+      table.boolean('isCorrect').defaultTo(false);
+      table.integer('orderIndex').defaultTo(0);
+      table.timestamp('createdAt').defaultTo(db.fn.now());
+      table.timestamp('updatedAt').defaultTo(db.fn.now());
     });
-    console.log('Table "quiz_options" created successfully.');
+    console.log('Table "quizOptions" created successfully.');
   } else {
-    console.log('Table "quiz_options" already exists.');
+    console.log('Table "quizOptions" already exists.');
   }
 
   // 6. Create badges table if not exists
@@ -104,50 +104,50 @@ export const runMigrations = async () => {
       table.string('name', 255).notNullable();
       table.string('icon', 255); // icon reference
       table.text('description');
-      table.integer('xp_reward').defaultTo(0);
-      table.string('trigger_requirement', 255).notNullable();
-      table.timestamp('created_at').defaultTo(db.fn.now());
-      table.timestamp('updated_at').defaultTo(db.fn.now());
+      table.integer('xpReward').defaultTo(0);
+      table.string('triggerRequirement', 255).notNullable();
+      table.timestamp('createdAt').defaultTo(db.fn.now());
+      table.timestamp('updatedAt').defaultTo(db.fn.now());
     });
     console.log('Table "badges" created successfully.');
   } else {
     console.log('Table "badges" already exists.');
   }
 
-  // 7. Create translation_logs table if not exists
-  const hasTranslationLogs = await db.schema.hasTable('translation_logs');
+  // 7. Create translationLogs table if not exists
+  const hasTranslationLogs = await db.schema.hasTable('translationLogs');
   if (!hasTranslationLogs) {
-    await db.schema.createTable('translation_logs', (table) => {
+    await db.schema.createTable('translationLogs', (table) => {
       table.increments('id').primary();
-      table.integer('user_id').unsigned().notNullable()
+      table.integer('userId').unsigned().notNullable()
         .references('id').inTable('users').onDelete('CASCADE');
       table.string('mode', 50).notNullable(); // voice, camera, text
       table.string('prediction', 255).notNullable();
-      table.double('confidence_rating').notNullable();
-      table.string('resolution_status', 50).notNullable(); // failed, success, low_confidence
-      table.timestamp('created_at').defaultTo(db.fn.now());
+      table.double('confidenceRating').notNullable();
+      table.string('resolutionStatus', 50).notNullable(); // failed, success, low_confidence
+      table.timestamp('createdAt').defaultTo(db.fn.now());
     });
-    console.log('Table "translation_logs" created successfully.');
+    console.log('Table "translationLogs" created successfully.');
   } else {
-    console.log('Table "translation_logs" already exists.');
+    console.log('Table "translationLogs" already exists.');
   }
 
-  // 8. Create activity_logs table if not exists
-  const hasActivityLogs = await db.schema.hasTable('activity_logs');
+  // 8. Create activityLogs table if not exists
+  const hasActivityLogs = await db.schema.hasTable('activityLogs');
   if (!hasActivityLogs) {
-    await db.schema.createTable('activity_logs', (table) => {
+    await db.schema.createTable('activityLogs', (table) => {
       table.increments('id').primary();
-      table.integer('user_id').unsigned()
+      table.integer('userId').unsigned()
         .references('id').inTable('users').onDelete('SET NULL');
-      table.text('event_description').notNullable();
+      table.text('eventDescription').notNullable();
       table.string('category', 100).notNullable();
       table.json('before');
       table.json('after');
-      table.timestamp('created_at').defaultTo(db.fn.now());
+      table.timestamp('createdAt').defaultTo(db.fn.now());
     });
-    console.log('Table "activity_logs" created successfully.');
+    console.log('Table "activityLogs" created successfully.');
   } else {
-    console.log('Table "activity_logs" already exists.');
+    console.log('Table "activityLogs" already exists.');
   }
 
   // 9. Create settings table if not exists
@@ -157,8 +157,8 @@ export const runMigrations = async () => {
       table.increments('id').primary();
       table.string('key', 255).unique().notNullable();
       table.text('value');
-      table.timestamp('created_at').defaultTo(db.fn.now());
-      table.timestamp('updated_at').defaultTo(db.fn.now());
+      table.timestamp('createdAt').defaultTo(db.fn.now());
+      table.timestamp('updatedAt').defaultTo(db.fn.now());
     });
     console.log('Table "settings" created successfully.');
   } else {

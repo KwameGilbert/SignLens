@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { getHistory, createHistory, getAllHistory } from '../controller/history.js';
-import { requireAuth, requireAdmin } from '../middleware/auth.js';
+import { getHistory, createHistory, getAllHistory } from '../controller/history.controller.js';
+import { requireAuth, requireAdmin } from '../middleware/auth.middleware.js';
 
 const router = Router();
 

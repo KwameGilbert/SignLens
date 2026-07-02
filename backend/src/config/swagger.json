@@ -1,0 +1,774 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "SignLens Gateway API",
+    "description": "Express.js gateway backend API service for the SignLens mobile application, facilitating user management, learning content delivery, achievements, and ML prediction relays.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Kwame Gilbert",
+      "email": "admin@signlens.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8001/api/v1",
+      "description": "Local Gateway Development Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Enter the JWT Bearer token returned from `/auth/login` or `/auth/register` to access secured endpoints."
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "email": { "type": "string", "format": "email" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "role": { "type": "string", "enum": ["super_admin", "content_editor", "moderator", "user"] },
+          "status": { "type": "string", "enum": ["active", "inactive"] },
+          "profile": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "LessonCategory": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "icon": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Lesson": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "title": { "type": "string" },
+          "categoryId": { "type": "integer" },
+          "type": { "type": "string", "example": "video" },
+          "slug": { "type": "string" },
+          "lessonUrl": { "type": "string", "nullable": true },
+          "description": { "type": "string", "nullable": true },
+          "instructions": { "type": "array", "items": { "type": "object" }, "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Quiz": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "categoryId": { "type": "integer", "nullable": true },
+          "lessonId": { "type": "integer" },
+          "question": { "type": "string" },
+          "options": { "type": "array", "items": { "$ref": "#/components/schemas/QuizOption" } },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "QuizOption": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "quizId": { "type": "integer" },
+          "name": { "type": "string" },
+          "isCorrect": { "type": "boolean" },
+          "orderIndex": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Badge": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "icon": { "type": "string", "nullable": true },
+          "description": { "type": "string", "nullable": true },
+          "xpReward": { "type": "integer" },
+          "triggerRequirement": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "TranslationLog": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "userId": { "type": "integer" },
+          "mode": { "type": "string", "enum": ["voice", "camera", "text"] },
+          "prediction": { "type": "string" },
+          "confidenceRating": { "type": "number", "format": "double" },
+          "resolutionStatus": { "type": "string", "enum": ["success", "failed", "low_confidence"] },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ActivityLog": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "userId": { "type": "integer", "nullable": true },
+          "eventDescription": { "type": "string" },
+          "category": { "type": "string" },
+          "before": { "type": "object", "nullable": true },
+          "after": { "type": "object", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Setting": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "key": { "type": "string" },
+          "value": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register a new mobile user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "firstName", "lastName"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 6 },
+                  "firstName": { "type": "string" },
+                  "lastName": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created successfully" },
+          "400": { "description": "Invalid parameters" },
+          "409": { "description": "Email already exists" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Authenticate user and return JWT token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Successful login with user profile and token" },
+          "401": { "description": "Invalid credentials" },
+          "403": { "description": "Account is deactivated" }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Retrieve currently authenticated user profile",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "User profile data retrieved" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Get list of all users (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Users list retrieved" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden (requires administrator clearance)" }
+        }
+      }
+    },
+    "/history": {
+      "get": {
+        "tags": ["Translation History"],
+        "summary": "Get translation logs for the authenticated user",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": { "description": "History logs retrieved" }
+        }
+      },
+      "post": {
+        "tags": ["Translation History"],
+        "summary": "Manually log a translation query",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["prediction", "confidence"],
+                "properties": {
+                  "prediction": { "type": "string" },
+                  "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+                  "mode": { "type": "string", "enum": ["voice", "camera", "text"], "default": "camera" },
+                  "resolutionStatus": { "type": "string", "enum": ["success", "failed", "low_confidence"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "History record created" }
+        }
+      }
+    },
+    "/history/all": {
+      "get": {
+        "tags": ["Translation History"],
+        "summary": "Retrieve global translation history across all users (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": { "description": "Global history retrieved" }
+        }
+      }
+    },
+    "/predict": {
+      "post": {
+        "tags": ["Predictions Gateway"],
+        "summary": "Process and save prediction on an uploaded image file",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": { "type": "string", "format": "binary", "description": "Image file to predict" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Image prediction completed and logged" },
+          "502": { "description": "Bad Gateway - ML Server failed to process image" }
+        }
+      }
+    },
+    "/lesson-categories": {
+      "get": {
+        "tags": ["Learning Content"],
+        "summary": "List all lesson categories",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Categories list" }
+        }
+      },
+      "post": {
+        "tags": ["Learning Content"],
+        "summary": "Create a new category (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "slug"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "slug": { "type": "string" },
+                  "icon": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Category created" }
+        }
+      }
+    },
+    "/lesson-categories/{id}": {
+      "get": {
+        "tags": ["Learning Content"],
+        "summary": "Retrieve category details",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Category data" },
+          "404": { "description": "Category not found" }
+        }
+      },
+      "put": {
+        "tags": ["Learning Content"],
+        "summary": "Update category by ID (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "slug": { "type": "string" },
+                  "icon": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Category updated" }
+        }
+      },
+      "delete": {
+        "tags": ["Learning Content"],
+        "summary": "Delete category by ID (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Category deleted successfully" }
+        }
+      }
+    },
+    "/lessons": {
+      "get": {
+        "tags": ["Learning Content"],
+        "summary": "List all lessons",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "categoryId", "in": "query", "required": false, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Lessons list" }
+        }
+      },
+      "post": {
+        "tags": ["Learning Content"],
+        "summary": "Create a new lesson (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "categoryId", "type", "slug"],
+                "properties": {
+                  "title": { "type": "string" },
+                  "categoryId": { "type": "integer" },
+                  "type": { "type": "string", "example": "video" },
+                  "slug": { "type": "string" },
+                  "lessonUrl": { "type": "string" },
+                  "description": { "type": "string" },
+                  "instructions": { "type": "array", "items": { "type": "object" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Lesson created" }
+        }
+      }
+    },
+    "/lessons/{id}": {
+      "get": {
+        "tags": ["Learning Content"],
+        "summary": "Retrieve lesson details",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Lesson data" },
+          "404": { "description": "Lesson not found" }
+        }
+      },
+      "put": {
+        "tags": ["Learning Content"],
+        "summary": "Update lesson details (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "categoryId": { "type": "integer" },
+                  "type": { "type": "string" },
+                  "slug": { "type": "string" },
+                  "lessonUrl": { "type": "string" },
+                  "description": { "type": "string" },
+                  "instructions": { "type": "array", "items": { "type": "object" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Lesson updated" }
+        }
+      },
+      "delete": {
+        "tags": ["Learning Content"],
+        "summary": "Delete lesson by ID (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Lesson deleted" }
+        }
+      }
+    },
+    "/quizzes": {
+      "get": {
+        "tags": ["Learning Content"],
+        "summary": "List all quizzes",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "lessonId", "in": "query", "required": false, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Quizzes list with options included" }
+        }
+      },
+      "post": {
+        "tags": ["Learning Content"],
+        "summary": "Create a new quiz (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["lessonId", "question"],
+                "properties": {
+                  "categoryId": { "type": "integer" },
+                  "lessonId": { "type": "integer" },
+                  "question": { "type": "string" },
+                  "options": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["name", "isCorrect"],
+                      "properties": {
+                        "name": { "type": "string" },
+                        "isCorrect": { "type": "boolean" },
+                        "orderIndex": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Quiz created" }
+        }
+      }
+    },
+    "/quizzes/{id}": {
+      "get": {
+        "tags": ["Learning Content"],
+        "summary": "Retrieve quiz details with options populated",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Quiz and options data" }
+        }
+      },
+      "put": {
+        "tags": ["Learning Content"],
+        "summary": "Update quiz details (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "categoryId": { "type": "integer" },
+                  "lessonId": { "type": "integer" },
+                  "question": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Quiz updated" }
+        }
+      },
+      "delete": {
+        "tags": ["Learning Content"],
+        "summary": "Delete quiz (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Quiz deleted" }
+        }
+      }
+    },
+    "/quizzes/{quizId}/options": {
+      "get": {
+        "tags": ["Learning Content"],
+        "summary": "List options for a specific quiz",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "quizId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Quiz options list" }
+        }
+      },
+      "post": {
+        "tags": ["Learning Content"],
+        "summary": "Add a new option to a quiz (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "quizId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "isCorrect": { "type": "boolean" },
+                  "orderIndex": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Quiz option added" }
+        }
+      }
+    },
+    "/quizzes/options/{id}": {
+      "delete": {
+        "tags": ["Learning Content"],
+        "summary": "Delete a quiz option by ID (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Quiz option deleted" }
+        }
+      }
+    },
+    "/badges": {
+      "get": {
+        "tags": ["Achievements & Gamification"],
+        "summary": "List all badges",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Badges list" }
+        }
+      },
+      "post": {
+        "tags": ["Achievements & Gamification"],
+        "summary": "Create a new badge (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "triggerRequirement"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "icon": { "type": "string" },
+                  "description": { "type": "string" },
+                  "xpReward": { "type": "integer" },
+                  "triggerRequirement": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Badge created" }
+        }
+      }
+    },
+    "/badges/{id}": {
+      "get": {
+        "tags": ["Achievements & Gamification"],
+        "summary": "Retrieve badge details",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Badge data" }
+        }
+      },
+      "put": {
+        "tags": ["Achievements & Gamification"],
+        "summary": "Update badge details (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "icon": { "type": "string" },
+                  "description": { "type": "string" },
+                  "xpReward": { "type": "integer" },
+                  "triggerRequirement": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Badge updated" }
+        }
+      },
+      "delete": {
+        "tags": ["Achievements & Gamification"],
+        "summary": "Delete badge by ID (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Badge deleted" }
+        }
+      }
+    },
+    "/activity-logs": {
+      "get": {
+        "tags": ["System Administration"],
+        "summary": "Retrieve system activity logs (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "userId", "in": "query", "required": false, "schema": { "type": "integer" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": { "description": "List of system logs" }
+        }
+      },
+      "post": {
+        "tags": ["System Administration"],
+        "summary": "Log a system event",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["eventDescription", "category"],
+                "properties": {
+                  "userId": { "type": "integer" },
+                  "eventDescription": { "type": "string" },
+                  "category": { "type": "string" },
+                  "before": { "type": "object" },
+                  "after": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Event logged successfully" }
+        }
+      }
+    },
+    "/settings": {
+      "get": {
+        "tags": ["System Administration"],
+        "summary": "List all runtime settings (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Settings configuration map" }
+        }
+      }
+    },
+    "/settings/{key}": {
+      "get": {
+        "tags": ["System Administration"],
+        "summary": "Retrieve a specific setting value",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "key", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "Setting value details" },
+          "404": { "description": "Setting not found" }
+        }
+      },
+      "put": {
+        "tags": ["System Administration"],
+        "summary": "Update or create a setting configuration (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "key", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["value"],
+                "properties": {
+                  "value": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Setting successfully configured" }
+        }
+      }
+    }
+  }
+}

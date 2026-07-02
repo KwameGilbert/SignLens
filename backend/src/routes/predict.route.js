@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { predictImage } from '../controller/predict.js';
-import { requireAuth } from '../middleware/auth.js';
-import upload from '../services/upload.js';
+import { predictImage } from '../controller/predict.controller.js';
+import { requireAuth } from '../middleware/auth.middleware.js';
+import upload from '../services/upload.service.js';
 
 const router = Router();
 
