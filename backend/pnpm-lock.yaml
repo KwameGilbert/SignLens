@@ -35,6 +35,9 @@ importers:
       pg:
         specifier: ^8.12.0
         version: 8.22.0
+      swagger-ui-express:
+        specifier: ^5.0.1
+        version: 5.0.1(express@4.22.2)
       ws:
         specifier: ^8.17.1
         version: 8.21.0
@@ -44,6 +47,9 @@ importers:
         version: 3.1.14
 
 packages:
+
+  '@scarf/scarf@1.4.0':
+    resolution: {integrity: sha512-xxeapPiUXdZAE3che6f3xogoJPeZgig6omHEy1rIY5WVsB3H2BHNnZH+gHG6x91SCWyQCzWGsuL2Hh3ClO5/qQ==}
 
   accepts@1.3.8:
     resolution: {integrity: sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==}
@@ -726,6 +732,15 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
+  swagger-ui-dist@5.32.8:
+    resolution: {integrity: sha512-dgMdWXIgnI4zX4OPhKEdWnlDODbgm8W3AX0Ivn/BBqcUh6xZsBxhZMnvk6DJyRz1BTrj8dPxtarmEGgkz30oyA==}
+
+  swagger-ui-express@5.0.1:
+    resolution: {integrity: sha512-SrNU3RiBGTLLmFU8GIJdOdanJTl4TOmT27tt3bWWHppqYmAZ6IDuEuBvMU6nZq0zLEe6b/1rACXCgLZqO6ZfrA==}
+    engines: {node: '>= v0.10.32'}
+    peerDependencies:
+      express: '>=4.0.0 || >=5.0.0-beta'
+
   tarn@3.1.0:
     resolution: {integrity: sha512-QDihlHbXxQ4SnuQcRd1TPNBHUYo/hafDRDP82COYSVfRcx/3qnfGDkn1WFjozVl+AYr8ZyDKSQ/kIgHH1ri1yg==}
     engines: {node: '>=8.0.0'}
@@ -792,6 +807,8 @@ packages:
     engines: {node: '>=0.4'}
 
 snapshots:
+
+  '@scarf/scarf@1.4.0': {}
 
   accepts@1.3.8:
     dependencies:
@@ -1474,6 +1491,15 @@ snapshots:
       has-flag: 3.0.0
 
   supports-preserve-symlinks-flag@1.0.0: {}
+
+  swagger-ui-dist@5.32.8:
+    dependencies:
+      '@scarf/scarf': 1.4.0
+
+  swagger-ui-express@5.0.1(express@4.22.2):
+    dependencies:
+      express: 4.22.2
+      swagger-ui-dist: 5.32.8
 
   tarn@3.1.0: {}
 
