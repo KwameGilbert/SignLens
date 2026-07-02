@@ -1,0 +1,92 @@
+{
+  "/lessons": {
+    "get": {
+      "tags": ["Lessons"],
+      "summary": "List all lessons",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [
+        { "name": "categoryId", "in": "query", "required": false, "schema": { "type": "integer" } }
+      ],
+      "responses": {
+        "200": { "description": "Lessons list" }
+      }
+    },
+    "post": {
+      "tags": ["Lessons"],
+      "summary": "Create a new lesson (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["title", "categoryId", "type", "slug"],
+              "properties": {
+                "title": { "type": "string" },
+                "categoryId": { "type": "integer" },
+                "type": { "type": "string", "example": "video" },
+                "slug": { "type": "string" },
+                "lessonUrl": { "type": "string" },
+                "description": { "type": "string" },
+                "instructions": { "type": "array", "items": { "type": "object" } }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": { "description": "Lesson created" }
+      }
+    }
+  },
+  "/lessons/{id}": {
+    "get": {
+      "tags": ["Lessons"],
+      "summary": "Retrieve lesson details",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Lesson data" },
+        "404": { "description": "Lesson not found" }
+      }
+    },
+    "put": {
+      "tags": ["Lessons"],
+      "summary": "Update lesson details (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "title": { "type": "string" },
+                "categoryId": { "type": "integer" },
+                "type": { "type": "string" },
+                "slug": { "type": "string" },
+                "lessonUrl": { "type": "string" },
+                "description": { "type": "string" },
+                "instructions": { "type": "array", "items": { "type": "object" } }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": { "description": "Lesson updated" }
+      }
+    },
+    "delete": {
+      "tags": ["Lessons"],
+      "summary": "Delete lesson by ID (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Lesson deleted" }
+      }
+    }
+  }
+}

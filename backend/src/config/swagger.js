@@ -13,7 +13,9 @@ const schemas = readJson('schemas.json');
 const auth = readJson('auth.json');
 const history = readJson('history.json');
 const predict = readJson('predict.json');
-const learning = readJson('learning.json');
+const lessonCategory = readJson('lessonCategory.json');
+const lesson = readJson('lesson.json');
+const quiz = readJson('quiz.json');
 const badges = readJson('badges.json');
 const admin = readJson('admin.json');
 
@@ -49,7 +51,9 @@ const swaggerDocument = {
     ...auth,
     ...history,
     ...predict,
-    ...learning,
+    ...lessonCategory,
+    ...lesson,
+    ...quiz,
     ...badges,
     ...admin
   }

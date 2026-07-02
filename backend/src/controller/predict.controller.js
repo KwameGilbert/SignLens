@@ -1,4 +1,4 @@
-import mlClient from '../services/mlClient.js';
+import mlClient from '../services/mlClient.service.js';
 import HistoryModel from '../model/history.model.js';
 import { sendSuccess, sendBadRequest, sendError, sendInternalError } from '../utils/response.js';
 

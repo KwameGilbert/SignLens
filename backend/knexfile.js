@@ -1,4 +1,3 @@
-import knex from 'knex';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -6,10 +5,10 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load env variables
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+// Load environment variables from backend directory root
+dotenv.config({ path: path.join(__dirname, '.env') });
 
-const db = knex({
+const config = {
   client: 'pg',
   connection: {
     host: process.env.PGHOST || 'localhost',
@@ -24,8 +23,13 @@ const db = knex({
   pool: {
     min: 2,
     max: 20,
-    propagateCreateError: false,
   },
-});
+  migrations: {
+    directory: path.join(__dirname, 'src', 'database', 'migrations'),
+  },
+  seeds: {
+    directory: path.join(__dirname, 'src', 'database', 'seed'),
+  },
+};
 
-export default db;
+export default config;

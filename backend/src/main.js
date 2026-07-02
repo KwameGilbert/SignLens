@@ -5,8 +5,6 @@ import { WebSocketServer } from 'ws';
 import url from 'url';
 import config from './config/index.js';
 import apiRouter from './routes/index.route.js';
-import { runMigrations } from './database/migrations/index.js';
-import { runSeeds } from './database/seed/index.js';
 import { handlePredictStreamConnection } from './services/predictStream.service.js';
 import { sendNotFound } from './utils/response.js';
 import swaggerUi from 'swagger-ui-express';
@@ -25,10 +23,11 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/api', apiRouter);
 
 // Basic health check endpoint
-app.get('/health', (req, res) => {
+app.get('/', (req, res) => {
   res.json({
     status: 'ok',
     service: 'SignLens Mobile Gateway API',
+    docs: `http://localhost:${config.port}/docs`,
     timestamp: new Date().toISOString(),
   });
 });
@@ -62,10 +61,6 @@ server.on('upgrade', (request, socket, head) => {
 // Boot and database synchronization routine
 const startServer = async () => {
   try {
-    // Check and update database schemas and seeds
-    await runMigrations();
-    await runSeeds();
-
     server.listen(config.port, () => {
       console.log(`==================================================`);
       console.log(`🚀 SignLens Mobile Gateway Backend successfully started!`);

@@ -1,0 +1,142 @@
+{
+  "/quizzes": {
+    "get": {
+      "tags": ["Quizzes"],
+      "summary": "List all quizzes",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [
+        { "name": "lessonId", "in": "query", "required": false, "schema": { "type": "integer" } }
+      ],
+      "responses": {
+        "200": { "description": "Quizzes list with options included" }
+      }
+    },
+    "post": {
+      "tags": ["Quizzes"],
+      "summary": "Create a new quiz (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["lessonId", "question"],
+              "properties": {
+                "categoryId": { "type": "integer" },
+                "lessonId": { "type": "integer" },
+                "question": { "type": "string" },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["name", "isCorrect"],
+                    "properties": {
+                      "name": { "type": "string" },
+                      "isCorrect": { "type": "boolean" },
+                      "orderIndex": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": { "description": "Quiz created" }
+      }
+    }
+  },
+  "/quizzes/{id}": {
+    "get": {
+      "tags": ["Quizzes"],
+      "summary": "Retrieve quiz details with options populated",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Quiz and options data" }
+      }
+    },
+    "put": {
+      "tags": ["Quizzes"],
+      "summary": "Update quiz details (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "categoryId": { "type": "integer" },
+                "lessonId": { "type": "integer" },
+                "question": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": { "description": "Quiz updated" }
+      }
+    },
+    "delete": {
+      "tags": ["Quizzes"],
+      "summary": "Delete quiz (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Quiz deleted" }
+      }
+    }
+  },
+  "/quizzes/{quizId}/options": {
+    "get": {
+      "tags": ["Quizzes"],
+      "summary": "List options for a specific quiz",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "quizId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Quiz options list" }
+      }
+    },
+    "post": {
+      "tags": ["Quizzes"],
+      "summary": "Add a new option to a quiz (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "quizId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["name"],
+              "properties": {
+                "name": { "type": "string" },
+                "isCorrect": { "type": "boolean" },
+                "orderIndex": { "type": "integer" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": { "description": "Quiz option added" }
+      }
+    }
+  },
+  "/quizzes/options/{id}": {
+    "delete": {
+      "tags": ["Quizzes"],
+      "summary": "Delete a quiz option by ID (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Quiz option deleted" }
+      }
+    }
+  }
+}
