@@ -3,9 +3,6 @@ import cors from 'cors';
 import http from 'http';
 import { WebSocketServer } from 'ws';
 import url from 'url';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import config from './config/index.js';
 import apiRouter from './routes/index.route.js';
 import { runMigrations } from './database/migrations/index.js';
@@ -13,13 +10,7 @@ import { runSeeds } from './database/seed/index.js';
 import { handlePredictStreamConnection } from './services/predictStream.service.js';
 import { sendNotFound } from './utils/response.js';
 import swaggerUi from 'swagger-ui-express';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const swaggerDocument = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'config', 'swagger.json'), 'utf8')
-);
+import swaggerDocument from './config/swagger.js';
 
 const app = express();
 
@@ -28,10 +19,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Swagger UI API Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Route mapping
-app.use('/api/v1', apiRouter);
+app.use('/api', apiRouter);
 
 // Basic health check endpoint
 app.get('/health', (req, res) => {
@@ -59,7 +50,7 @@ server.on('upgrade', (request, socket, head) => {
   const parsedUrl = url.parse(request.url);
   const pathname = parsedUrl.pathname;
 
-  if (pathname === '/v1/predict-stream') {
+  if (pathname === '/api/predict-stream' || pathname === '/predict-stream' || pathname === '/v1/predict-stream' || pathname === '/api/v1/predict-stream') {
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request);
     });
@@ -79,8 +70,8 @@ const startServer = async () => {
       console.log(`==================================================`);
       console.log(`🚀 SignLens Mobile Gateway Backend successfully started!`);
       console.log(`📡 Listening on http://localhost:${config.port}`);
-      console.log(`🔗 WS endpoint: ws://localhost:${config.port}/api/v1/predict-stream`);
-      console.log(`📖 API Documentation: http://localhost:${config.port}/api-docs`);
+      console.log(`🔗 WS endpoint: ws://localhost:${config.port}/api/predict-stream`);
+      console.log(`📖 API Documentation: http://localhost:${config.port}/docs`);
       console.log(`==================================================`);
     });
   } catch (err) {
