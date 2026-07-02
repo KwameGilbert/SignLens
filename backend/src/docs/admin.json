@@ -1,0 +1,88 @@
+{
+  "/activity-logs": {
+    "get": {
+      "tags": ["System Administration"],
+      "summary": "Retrieve system activity logs (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [
+        { "name": "userId", "in": "query", "required": false, "schema": { "type": "integer" } },
+        { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50 } },
+        { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+      ],
+      "responses": {
+        "200": { "description": "List of system logs" }
+      }
+    },
+    "post": {
+      "tags": ["System Administration"],
+      "summary": "Log a system event",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["eventDescription", "category"],
+              "properties": {
+                "userId": { "type": "integer" },
+                "eventDescription": { "type": "string" },
+                "category": { "type": "string" },
+                "before": { "type": "object" },
+                "after": { "type": "object" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": { "description": "Event logged successfully" }
+      }
+    }
+  },
+  "/settings": {
+    "get": {
+      "tags": ["System Administration"],
+      "summary": "List all runtime settings (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "responses": {
+        "200": { "description": "Settings configuration map" }
+      }
+    }
+  },
+  "/settings/{key}": {
+    "get": {
+      "tags": ["System Administration"],
+      "summary": "Retrieve a specific setting value",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "key", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "responses": {
+        "200": { "description": "Setting value details" },
+        "404": { "description": "Setting not found" }
+      }
+    },
+    "put": {
+      "tags": ["System Administration"],
+      "summary": "Update or create a setting configuration (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "key", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["value"],
+              "properties": {
+                "value": { "type": "string" }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Setting successfully configured" }
+        }
+      }
+    }
+  }
+}

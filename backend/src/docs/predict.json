@@ -1,0 +1,26 @@
+{
+  "/predict": {
+    "post": {
+      "tags": ["Predictions Gateway"],
+      "summary": "Process and save prediction on an uploaded image file",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "content": {
+          "multipart/form-data": {
+            "schema": {
+              "type": "object",
+              "required": ["file"],
+              "properties": {
+                "file": { "type": "string", "format": "binary", "description": "Image file to predict" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": { "description": "Image prediction completed and logged" },
+        "502": { "description": "Bad Gateway - ML Server failed to process image" }
+      }
+    }
+  }
+}

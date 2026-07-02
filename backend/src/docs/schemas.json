@@ -1,0 +1,113 @@
+{
+  "User": {
+    "type": "object",
+    "properties": {
+      "id": { "type": "integer" },
+      "email": { "type": "string", "format": "email" },
+      "firstName": { "type": "string" },
+      "lastName": { "type": "string" },
+      "role": { "type": "string", "enum": ["super_admin", "content_editor", "moderator", "user"] },
+      "status": { "type": "string", "enum": ["active", "inactive"] },
+      "profile": { "type": "string", "nullable": true },
+      "createdAt": { "type": "string", "format": "date-time" },
+      "updatedAt": { "type": "string", "format": "date-time" }
+    }
+  },
+  "LessonCategory": {
+    "type": "object",
+    "properties": {
+      "id": { "type": "integer" },
+      "name": { "type": "string" },
+      "slug": { "type": "string" },
+      "icon": { "type": "string", "nullable": true },
+      "createdAt": { "type": "string", "format": "date-time" },
+      "updatedAt": { "type": "string", "format": "date-time" }
+    }
+  },
+  "Lesson": {
+    "type": "object",
+    "properties": {
+      "id": { "type": "integer" },
+      "title": { "type": "string" },
+      "categoryId": { "type": "integer" },
+      "type": { "type": "string", "example": "video" },
+      "slug": { "type": "string" },
+      "lessonUrl": { "type": "string", "nullable": true },
+      "description": { "type": "string", "nullable": true },
+      "instructions": { "type": "array", "items": { "type": "object" }, "nullable": true },
+      "createdAt": { "type": "string", "format": "date-time" },
+      "updatedAt": { "type": "string", "format": "date-time" }
+    }
+  },
+  "Quiz": {
+    "type": "object",
+    "properties": {
+      "id": { "type": "integer" },
+      "categoryId": { "type": "integer", "nullable": true },
+      "lessonId": { "type": "integer" },
+      "question": { "type": "string" },
+      "options": { "type": "array", "items": { "$ref": "#/components/schemas/QuizOption" } },
+      "createdAt": { "type": "string", "format": "date-time" },
+      "updatedAt": { "type": "string", "format": "date-time" }
+    }
+  },
+  "QuizOption": {
+    "type": "object",
+    "properties": {
+      "id": { "type": "integer" },
+      "quizId": { "type": "integer" },
+      "name": { "type": "string" },
+      "isCorrect": { "type": "boolean" },
+      "orderIndex": { "type": "integer" },
+      "createdAt": { "type": "string", "format": "date-time" },
+      "updatedAt": { "type": "string", "format": "date-time" }
+    }
+  },
+  "Badge": {
+    "type": "object",
+    "properties": {
+      "id": { "type": "integer" },
+      "name": { "type": "string" },
+      "icon": { "type": "string", "nullable": true },
+      "description": { "type": "string", "nullable": true },
+      "xpReward": { "type": "integer" },
+      "triggerRequirement": { "type": "string" },
+      "createdAt": { "type": "string", "format": "date-time" },
+      "updatedAt": { "type": "string", "format": "date-time" }
+    }
+  },
+  "TranslationLog": {
+    "type": "object",
+    "properties": {
+      "id": { "type": "integer" },
+      "userId": { "type": "integer" },
+      "mode": { "type": "string", "enum": ["voice", "camera", "text"] },
+      "prediction": { "type": "string" },
+      "confidenceRating": { "type": "number", "format": "double" },
+      "resolutionStatus": { "type": "string", "enum": ["success", "failed", "low_confidence"] },
+      "createdAt": { "type": "string", "format": "date-time" }
+    }
+  },
+  "ActivityLog": {
+    "type": "object",
+    "properties": {
+      "id": { "type": "integer" },
+      "userId": { "type": "integer", "nullable": true },
+      "eventDescription": { "type": "string" },
+      "category": { "type": "string" },
+      "before": { "type": "object", "nullable": true },
+      "after": { "type": "object", "nullable": true },
+      "createdAt": { "type": "string", "format": "date-time" }
+    }
+  },
+  "Setting": {
+    "type": "object",
+    "properties": {
+      "id": { "type": "integer" },
+      "key": { "type": "string" },
+      "value": { "type": "string", "nullable": true },
+      "createdAt": { "type": "string", "format": "date-time" },
+      "updatedAt": { "type": "string", "format": "date-time" }
+    }
+  }
+}

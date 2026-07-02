@@ -1,0 +1,311 @@
+{
+  "/lesson-categories": {
+    "get": {
+      "tags": ["Learning Content"],
+      "summary": "List all lesson categories",
+      "security": [{ "bearerAuth": [] }],
+      "responses": {
+        "200": { "description": "Categories list" }
+      }
+    },
+    "post": {
+      "tags": ["Learning Content"],
+      "summary": "Create a new category (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["name", "slug"],
+              "properties": {
+                "name": { "type": "string" },
+                "slug": { "type": "string" },
+                "icon": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": { "description": "Category created" }
+      }
+    }
+  },
+  "/lesson-categories/{id}": {
+    "get": {
+      "tags": ["Learning Content"],
+      "summary": "Retrieve category details",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Category data" },
+        "404": { "description": "Category not found" }
+      }
+    },
+    "put": {
+      "tags": ["Learning Content"],
+      "summary": "Update category by ID (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "slug": { "type": "string" },
+                "icon": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": { "description": "Category updated" }
+      }
+    },
+    "delete": {
+      "tags": ["Learning Content"],
+      "summary": "Delete category by ID (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Category deleted successfully" }
+      }
+    }
+  },
+  "/lessons": {
+    "get": {
+      "tags": ["Learning Content"],
+      "summary": "List all lessons",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [
+        { "name": "categoryId", "in": "query", "required": false, "schema": { "type": "integer" } }
+      ],
+      "responses": {
+        "200": { "description": "Lessons list" }
+      }
+    },
+    "post": {
+      "tags": ["Learning Content"],
+      "summary": "Create a new lesson (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["title", "categoryId", "type", "slug"],
+              "properties": {
+                "title": { "type": "string" },
+                "categoryId": { "type": "integer" },
+                "type": { "type": "string", "example": "video" },
+                "slug": { "type": "string" },
+                "lessonUrl": { "type": "string" },
+                "description": { "type": "string" },
+                "instructions": { "type": "array", "items": { "type": "object" } }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": { "description": "Lesson created" }
+      }
+    }
+  },
+  "/lessons/{id}": {
+    "get": {
+      "tags": ["Learning Content"],
+      "summary": "Retrieve lesson details",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Lesson data" },
+        "404": { "description": "Lesson not found" }
+      }
+    },
+    "put": {
+      "tags": ["Learning Content"],
+      "summary": "Update lesson details (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "title": { "type": "string" },
+                "categoryId": { "type": "integer" },
+                "type": { "type": "string" },
+                "slug": { "type": "string" },
+                "lessonUrl": { "type": "string" },
+                "description": { "type": "string" },
+                "instructions": { "type": "array", "items": { "type": "object" } }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": { "description": "Lesson updated" }
+      }
+    },
+    "delete": {
+      "tags": ["Learning Content"],
+      "summary": "Delete lesson by ID (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Lesson deleted" }
+      }
+    }
+  },
+  "/quizzes": {
+    "get": {
+      "tags": ["Learning Content"],
+      "summary": "List all quizzes",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [
+        { "name": "lessonId", "in": "query", "required": false, "schema": { "type": "integer" } }
+      ],
+      "responses": {
+        "200": { "description": "Quizzes list with options included" }
+      }
+    },
+    "post": {
+      "tags": ["Learning Content"],
+      "summary": "Create a new quiz (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["lessonId", "question"],
+              "properties": {
+                "categoryId": { "type": "integer" },
+                "lessonId": { "type": "integer" },
+                "question": { "type": "string" },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["name", "isCorrect"],
+                    "properties": {
+                      "name": { "type": "string" },
+                      "isCorrect": { "type": "boolean" },
+                      "orderIndex": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": { "description": "Quiz created" }
+      }
+    }
+  },
+  "/quizzes/{id}": {
+    "get": {
+      "tags": ["Learning Content"],
+      "summary": "Retrieve quiz details with options populated",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Quiz and options data" }
+      }
+    },
+    "put": {
+      "tags": ["Learning Content"],
+      "summary": "Update quiz details (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "categoryId": { "type": "integer" },
+                "lessonId": { "type": "integer" },
+                "question": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": { "description": "Quiz updated" }
+      }
+    },
+    "delete": {
+      "tags": ["Learning Content"],
+      "summary": "Delete quiz (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Quiz deleted" }
+      }
+    }
+  },
+  "/quizzes/{quizId}/options": {
+    "get": {
+      "tags": ["Learning Content"],
+      "summary": "List options for a specific quiz",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "quizId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Quiz options list" }
+      }
+    },
+    "post": {
+      "tags": ["Learning Content"],
+      "summary": "Add a new option to a quiz (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "quizId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["name"],
+              "properties": {
+                "name": { "type": "string" },
+                "isCorrect": { "type": "boolean" },
+                "orderIndex": { "type": "integer" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": { "description": "Quiz option added" }
+      }
+    }
+  },
+  "/quizzes/options/{id}": {
+    "delete": {
+      "tags": ["Learning Content"],
+      "summary": "Delete a quiz option by ID (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Quiz option deleted" }
+      }
+    }
+  }
+}
