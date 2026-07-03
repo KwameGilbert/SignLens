@@ -1,6 +1,9 @@
+import { OAuth2Client } from 'google-auth-library';
 import UserModel from '../model/user.model.js';
 import { hashPassword, comparePassword, generateToken } from '../utils/helpers.js';
 import { sendSuccess, sendCreated, sendBadRequest, sendUnauthorized, sendForbidden, sendConflict, sendInternalError } from '../utils/response.js';
+
+const client = new OAuth2Client();
 
 export const register = async (req, res) => {
   try {
@@ -100,5 +103,81 @@ export const listUsers = async (req, res) => {
     sendSuccess(res, users, 'Users list retrieved successfully');
   } catch (err) {
     sendInternalError(res, 'Internal server error retrieving users list', err);
+  }
+};
+
+export const googleLogin = async (req, res) => {
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return sendBadRequest(res, 'Google ID token is required');
+    }
+
+    let payload;
+    try {
+      const allowedClientIds = [
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_ID_WEB,
+        process.env.GOOGLE_CLIENT_ID_IOS,
+        process.env.GOOGLE_CLIENT_ID_ANDROID,
+      ].filter(Boolean);
+
+      const ticket = await client.verifyIdToken({
+        idToken,
+        ...(allowedClientIds.length > 0 ? { audience: allowedClientIds } : {}),
+      });
+      payload = ticket.getPayload();
+    } catch (verifyError) {
+      return sendUnauthorized(res, 'Invalid Google ID token', verifyError);
+    }
+
+    const { sub: googleId, email, given_name: firstName, family_name: lastName } = payload;
+
+    if (!email) {
+      return sendBadRequest(res, 'Google account email not provided');
+    }
+
+    // 1. Try to find user by googleId
+    let user = await UserModel.findByGoogleId(googleId);
+
+    if (!user) {
+      // 2. If not found by googleId, check by email
+      user = await UserModel.findByEmail(email, true);
+      
+      if (user) {
+        // Link googleId to existing user
+        user = await UserModel.update(user.id, { googleId });
+      } else {
+        // 3. Register a new user
+        user = await UserModel.create({
+          email,
+          googleId,
+          firstName: firstName || 'Google',
+          lastName: lastName || 'User',
+          role: 'user',
+          status: 'active',
+        });
+      }
+    }
+
+    if (user.status !== 'active') {
+      return sendForbidden(res, 'Account is inactive or deactivated');
+    }
+
+    const token = generateToken(user);
+
+    sendSuccess(res, {
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+      },
+    }, 'Logged in successfully with Google');
+  } catch (err) {
+    sendInternalError(res, 'Internal server error during Google login', err);
   }
 };
