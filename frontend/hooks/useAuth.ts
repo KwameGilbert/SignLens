@@ -24,10 +24,11 @@ export function useAuth() {
     queryKey: ["auth", "me"],
     queryFn: async () => {
       console.log("[AUTH] Fetching current user profile...");
-      const { data } = await getMe();
-      console.log("[AUTH] Profile fetched:", JSON.stringify(data, null, 2));
-      setUser(data);
-      return data;
+      const response = await getMe();
+      const profile = response.data.data;
+      console.log("[AUTH] Profile fetched:", JSON.stringify(profile, null, 2));
+      setUser(profile);
+      return profile;
     },
     enabled: isAuthenticated,
   });
@@ -38,19 +39,21 @@ export function useAuth() {
       console.log("[AUTH] Login request:", JSON.stringify(data, null, 2));
       return login(data);
     },
-    onSuccess: async (response) => {
+    onSuccess: (response) => {
       console.log("[AUTH] Login success:", JSON.stringify(response.data, null, 2));
-      setToken(response.data.access_token);
-      // Immediately fetch the user profile after login
-      const { data: profile } = await getMe();
-      console.log("[AUTH] Profile after login:", JSON.stringify(profile, null, 2));
+      const { token, user: profile } = response.data.data;
+      
+      setToken(token);
       setUser(profile);
+      
       router.replace("/(tabs)/home");
     },
     onError: (error: any) => {
       console.error("[AUTH] Login error:", error.response?.status, JSON.stringify(error.response?.data, null, 2));
       const message =
-        error.response?.data?.detail ?? "Login failed. Please try again.";
+        error.response?.data?.error?.message ??
+        error.response?.data?.message ??
+        "Login failed. Please try again.";
       Alert.alert("Login Error", message);
     },
   });
@@ -70,7 +73,9 @@ export function useAuth() {
     onError: (error: any) => {
       console.error("[AUTH] Register error:", error.response?.status, JSON.stringify(error.response?.data, null, 2));
       const message =
-        error.response?.data?.detail ?? "Registration failed. Please try again.";
+        error.response?.data?.error?.message ??
+        error.response?.data?.message ??
+        "Registration failed. Please try again.";
       Alert.alert("Registration Error", message);
     },
   });
