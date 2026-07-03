@@ -10,8 +10,10 @@ import { useAuthStore } from "../stores/authStore";
  * - Handles 401 Unauthorized responses globally by clearing the auth state,
  *   forcing the user back to the login screen.
  */
+const BASE_URL = "https://signlens-backend-sg1c.onrender.com/api";
+
 const apiClient = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL,
+  baseURL: BASE_URL,
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
@@ -22,6 +24,7 @@ const apiClient = axios.create({
 // Attach the JWT token to every request if available.
 apiClient.interceptors.request.use(
   (config) => {
+    console.log(`[API] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
     const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
