@@ -4,7 +4,8 @@ import type { UserProfile } from "./auth";
 // ── Types ──────────────────────────────────────────────────────────────
 
 export type UpdateProfileRequest = {
-  full_name?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
 };
 

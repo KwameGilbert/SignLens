@@ -10,7 +10,8 @@ export type LoginRequest = {
 export type RegisterRequest = {
   email: string;
   password: string;
-  full_name: string;
+  firstName: string;
+  lastName: string;
 };
 
 export type AuthResponse = {
@@ -21,7 +22,8 @@ export type AuthResponse = {
 export type UserProfile = {
   id: number;
   email: string;
-  full_name: string;
+  firstName: string;
+  lastName: string;
   is_active: boolean;
   created_at: string;
 };
@@ -36,17 +38,9 @@ export const register = (data: RegisterRequest) =>
 
 /**
  * Log in with email and password.
- * The backend expects `application/x-www-form-urlencoded` for OAuth2.
  */
-export const login = (data: LoginRequest) => {
-  const formData = new URLSearchParams();
-  formData.append("username", data.email);
-  formData.append("password", data.password);
-
-  return apiClient.post<AuthResponse>("/auth/login", formData.toString(), {
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-  });
-};
+export const login = (data: LoginRequest) =>
+  apiClient.post<AuthResponse>("/auth/login", data);
 
 /**
  * Get the currently authenticated user's profile.
