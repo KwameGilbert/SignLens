@@ -8,6 +8,7 @@ class UserModel extends BaseModel {
       'lastName',
       'email',
       'passwordHash',
+      'googleId',
       'status',
       'profile',
       'role',
@@ -21,6 +22,10 @@ class UserModel extends BaseModel {
       return this.db(this.tableName).where({ email }).first();
     }
     return this.findOne({ email });
+  }
+
+  async findByGoogleId(googleId) {
+    return this.findOne({ googleId });
   }
 
   async listAll() {
