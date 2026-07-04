@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import authRoutes from './auth.route.js';
+import userRoutes from './user.route.js';
 import historyRoutes from './history.route.js';
 import predictRoutes from './predict.route.js';
 import lessonCategoryRoutes from './lessonCategory.route.js';
@@ -12,6 +13,7 @@ import settingRoutes from './setting.route.js';
 const router = Router();
 
 router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
 router.use('/history', historyRoutes);
 router.use('/predict', predictRoutes);
 router.use('/lesson-categories', lessonCategoryRoutes);
