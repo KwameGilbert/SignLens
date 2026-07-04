@@ -97,15 +97,6 @@ export const me = (req, res) => {
   sendSuccess(res, { user: req.user }, 'User profile retrieved successfully');
 };
 
-export const listUsers = async (req, res) => {
-  try {
-    const users = await UserModel.listAll();
-    sendSuccess(res, users, 'Users list retrieved successfully');
-  } catch (err) {
-    sendInternalError(res, 'Internal server error retrieving users list', err);
-  }
-};
-
 export const googleLogin = async (req, res) => {
   try {
     const { idToken } = req.body;
