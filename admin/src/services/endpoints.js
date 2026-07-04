@@ -23,11 +23,11 @@ export const ENDPOINTS = {
     DELETE: (id) => `/lessons/${id}`,
   },
   CATEGORIES: {
-    LIST: '/categories',
-    DETAIL: (id) => `/categories/${id}`,
-    CREATE: '/categories',
-    UPDATE: (id) => `/categories/${id}`,
-    DELETE: (id) => `/categories/${id}`,
+    LIST: '/lesson-categories',
+    DETAIL: (id) => `/lesson-categories/${id}`,
+    CREATE: '/lesson-categories',
+    UPDATE: (id) => `/lesson-categories/${id}`,
+    DELETE: (id) => `/lesson-categories/${id}`,
   },
   // Add more endpoints as needed for Quizzes, Badges, etc.
 };
