@@ -1,16 +1,11 @@
 import { useState } from "react";
-import { Plus, FolderOpen, Heart, School, Calculator, Trash2, Edit, Eye } from "lucide-react";
+import { Plus, FolderOpen, Heart, School, Calculator, Trash2, Edit, Eye, Loader2, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/Table";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
-
-const initialCategories = [
-  { id: "1", title: "Basics", slug: "basics", icon: "school", lessonCount: 12 },
-  { id: "2", title: "Numbers", slug: "numbers", icon: "calculator", lessonCount: 10 },
-  { id: "3", title: "Family", slug: "family", icon: "heart", lessonCount: 8 },
-];
+import { useCategoriesQuery, useCreateCategoryMutation, useDeleteCategoryMutation } from "../../hooks/useCategories";
 
 const availableIcons = [
   { value: "school", label: "School / Education", icon: School },
@@ -20,7 +15,9 @@ const availableIcons = [
 ];
 
 export default function Categories() {
-  const [categories, setCategories] = useState(initialCategories);
+  const { data: fetchedCategories = [], isLoading, error } = useCategoriesQuery();
+  const createCategoryMutation = useCreateCategoryMutation();
+  const deleteCategoryMutation = useDeleteCategoryMutation();
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [icon, setIcon] = useState("school");
@@ -38,26 +35,32 @@ export default function Categories() {
     setSlug(generatedSlug);
   };
 
-  const handleAddCategory = (e) => {
+  const handleAddCategory = async (e) => {
     e.preventDefault();
     if (!title.trim() || !slug.trim()) return;
 
-    const newCategory = {
-      id: (categories.length + 1).toString(),
-      title: title.trim(),
-      slug: slug.trim(),
-      icon,
-      lessonCount: 0,
-    };
-
-    setCategories([...categories, newCategory]);
-    setTitle("");
-    setSlug("");
-    setIcon("school");
+    try {
+      await createCategoryMutation.mutateAsync({
+        title: title.trim(),
+        slug: slug.trim(),
+        icon,
+      });
+      setTitle("");
+      setSlug("");
+      setIcon("school");
+    } catch (err) {
+      console.error("Failed to add category:", err);
+    }
   };
 
-  const handleDelete = (id) => {
-    setCategories(categories.filter((cat) => cat.id !== id));
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this category?")) {
+      try {
+        await deleteCategoryMutation.mutateAsync(id);
+      } catch (err) {
+        console.error("Failed to delete category:", err);
+      }
+    }
   };
 
   return (
@@ -117,9 +120,9 @@ export default function Categories() {
                   </select>
                 </div>
 
-                <Button type="submit" className="w-full mt-4 flex items-center justify-center gap-2 shadow-lg hover:shadow-primary/20">
+                <Button type="submit" disabled={createCategoryMutation.isPending} className="w-full mt-4 flex items-center justify-center gap-2 shadow-lg hover:shadow-primary/20">
                   <Plus className="h-4 w-4" />
-                  Add Category
+                  {createCategoryMutation.isPending ? "Adding..." : "Add Category"}
                 </Button>
               </form>
             </CardContent>
@@ -134,6 +137,19 @@ export default function Categories() {
               <CardDescription>Review categories and lessons counts loaded in SignLens client.</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                  <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                  <p className="text-gray-400 text-sm">Loading categories...</p>
+                </div>
+              ) : error ? (
+                <div className="flex flex-col items-center justify-center py-16 space-y-3 p-6 border border-rose-500/20 bg-rose-500/5 rounded-xl">
+                  <AlertTriangle className="w-10 h-10 text-rose-500" />
+                  <p className="text-rose-400 text-sm font-semibold">
+                    {error?.response?.data?.message || error?.message || "Failed to load categories."}
+                  </p>
+                </div>
+              ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -145,7 +161,8 @@ export default function Categories() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {categories.map((cat) => {
+                  {fetchedCategories.length > 0 ? (
+                    fetchedCategories.map((cat) => {
                     const IconRecord = availableIcons.find((i) => i.value === cat.icon)?.icon || FolderOpen;
                     return (
                       <TableRow key={cat.id}>
@@ -180,9 +197,17 @@ export default function Categories() {
                         </TableCell>
                       </TableRow>
                     );
-                  })}
+                  })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-24 text-center text-gray-500">
+                        No categories found.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
+              )}
             </CardContent>
           </Card>
         </div>

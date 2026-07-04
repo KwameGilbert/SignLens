@@ -22,5 +22,12 @@ export const ENDPOINTS = {
     UPDATE: (id) => `/lessons/${id}`,
     DELETE: (id) => `/lessons/${id}`,
   },
-  // Add more endpoints as needed for Categories, Quizzes, Badges, etc.
+  CATEGORIES: {
+    LIST: '/categories',
+    DETAIL: (id) => `/categories/${id}`,
+    CREATE: '/categories',
+    UPDATE: (id) => `/categories/${id}`,
+    DELETE: (id) => `/categories/${id}`,
+  },
+  // Add more endpoints as needed for Quizzes, Badges, etc.
 };
