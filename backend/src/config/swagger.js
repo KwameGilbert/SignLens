@@ -11,6 +11,7 @@ const readJson = (file) => {
 
 const schemas = readJson('schemas.json');
 const auth = readJson('auth.json');
+const user = readJson('user.json');
 const history = readJson('history.json');
 const predict = readJson('predict.json');
 const lessonCategory = readJson('lessonCategory.json');
@@ -49,6 +50,7 @@ const swaggerDocument = {
   },
   paths: {
     ...auth,
+    ...user,
     ...history,
     ...predict,
     ...lessonCategory,
