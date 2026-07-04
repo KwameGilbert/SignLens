@@ -1,161 +1,68 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { ArrowLeft, Award, BookOpen, Flame, User, CheckCircle2, XCircle, AlertTriangle, ShieldAlert, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Award, Flame, CheckCircle2, AlertTriangle, ShieldAlert, ShieldCheck, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/Table";
 import { Button } from "../../components/ui/Button";
-
-// Mock users mapping
-const mockUserData = {
-  "1": {
-    name: "John Doe",
-    email: "john@example.com",
-    joinedDate: "2026-06-15",
-    status: "Active",
-    xp: 1250,
-    streak: 7,
-    badgesUnlocked: 4,
-    badges: [
-      { title: "First Sign", color: "#F59E0B" },
-      { title: "7-Day Streak", color: "#FB5607" },
-      { title: "Quick Learner", color: "#8B5CF6" },
-      { title: "Vocabulary Master", color: "#3B82F6" },
-    ],
-    progress: [
-      { category: "Basics", completed: 100, lessons: "12 / 12 completed" },
-      { category: "Numbers", completed: 60, lessons: "6 / 10 completed" },
-      { category: "Family", completed: 0, lessons: "0 / 8 completed" },
-    ],
-    translations: [
-      { id: "t1", query: "Hello", mode: "Camera", confidence: 98.4, status: "Success", timestamp: "2026-06-20 09:12:04" },
-      { id: "t2", query: "Thank You", mode: "Camera", confidence: 96.2, status: "Success", timestamp: "2026-06-19 14:22:10" },
-      { id: "t3", query: "Please", mode: "Voice", confidence: 93.8, status: "Success", timestamp: "2026-06-18 10:15:32" },
-      { id: "t4", query: "Help", mode: "Camera", confidence: 71.3, status: "Low Confidence", timestamp: "2026-06-17 18:04:12" },
-    ],
-  },
-  "2": {
-    name: "Jane Smith",
-    email: "jane@example.com",
-    joinedDate: "2026-06-18",
-    status: "Inactive",
-    xp: 250,
-    streak: 0,
-    badgesUnlocked: 1,
-    badges: [
-      { title: "First Sign", color: "#F59E0B" },
-    ],
-    progress: [
-      { category: "Basics", completed: 10, lessons: "1 / 12 completed" },
-      { category: "Numbers", completed: 0, lessons: "0 / 10 completed" },
-      { category: "Family", completed: 0, lessons: "0 / 8 completed" },
-    ],
-    translations: [
-      { id: "t1", query: "Goodbye", mode: "Camera", confidence: 91.0, status: "Success", timestamp: "2026-06-18 12:00:55" },
-    ],
-  },
-  "3": {
-    name: "Alice Johnson",
-    email: "alice@example.com",
-    joinedDate: "2026-06-19",
-    status: "Active",
-    xp: 750,
-    streak: 2,
-    badgesUnlocked: 2,
-    badges: [
-      { title: "First Sign", color: "#F59E0B" },
-      { title: "Quick Learner", color: "#8B5CF6" },
-    ],
-    progress: [
-      { category: "Basics", completed: 80, lessons: "9 / 12 completed" },
-      { category: "Numbers", completed: 30, lessons: "3 / 10 completed" },
-      { category: "Family", completed: 0, lessons: "0 / 8 completed" },
-    ],
-    translations: [
-      { id: "t1", query: "Yes", mode: "Camera", confidence: 97.1, status: "Success", timestamp: "2026-06-20 07:14:22" },
-      { id: "t2", query: "No", mode: "Camera", confidence: 94.6, status: "Success", timestamp: "2026-06-19 16:32:00" },
-    ],
-  },
-};
-
-const mockAdminData = {
-  "admin-1": {
-    name: "Kwame Gilbert",
-    email: "kwame@signlens.com",
-    joinedDate: "2026-06-01",
-    role: "Super Admin",
-    status: "Active",
-    permissions: ["Manage Lessons", "Manage Quizzes", "Manage Users", "Manage System Settings"],
-    auditLogs: [
-      { id: "l1", action: "Updated lesson 'Alphabet Signs A-F'", target: "Lesson Management", timestamp: "2026-06-20 18:24:10" },
-      { id: "l2", action: "Created quiz checkpoints for 'Numbers 0-5'", target: "Quiz Management", timestamp: "2026-06-20 18:20:15" },
-      { id: "l3", action: "Suspended user account 'Jane Smith'", target: "User Management", timestamp: "2026-06-20 15:45:00" },
-    ]
-  },
-  "admin-2": {
-    name: "Abigail Mensah",
-    email: "abigail@signlens.com",
-    joinedDate: "2026-06-05",
-    role: "Content Editor",
-    status: "Active",
-    permissions: ["Manage Lessons", "Manage Quizzes"],
-    auditLogs: [
-      { id: "l1", action: "Created lesson 'Greetings'", target: "Lesson Management", timestamp: "2026-06-19 11:30:22" },
-      { id: "l2", action: "Updated quiz choices for 'Alphabet Signs G-Z'", target: "Quiz Management", timestamp: "2026-06-18 16:15:40" },
-    ]
-  },
-  "admin-3": {
-    name: "Kofi Owusu",
-    email: "kofi@signlens.com",
-    joinedDate: "2026-06-10",
-    role: "Moderator",
-    status: "Inactive",
-    permissions: ["Manage Users"],
-    auditLogs: [
-      { id: "l1", action: "Suspended user account 'Kofi Mensah'", target: "User Management", timestamp: "2026-06-12 09:10:00" },
-    ]
-  }
-};
+import { useUserDetailQuery, useUpdateUserMutation } from "../../hooks/useUsers";
 
 export default function UserDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
-  const isAdmin = id?.startsWith("admin-");
-  
-  // Resolve user with generic fallback if needed
-  const user = isAdmin 
-    ? (mockAdminData[id] || {
-        name: id.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
-        email: `${id}@signlens.com`,
-        joinedDate: new Date().toISOString().split("T")[0],
-        role: "Moderator",
-        status: "Active",
-        permissions: ["Manage Lessons"],
-        auditLogs: []
-      })
-    : mockUserData[id];
-    
-  const [status, setStatus] = useState(user?.status || "Active");
 
-  if (!user) {
+  const { data: user, isLoading, error } = useUserDetailQuery(id);
+  const updateUserMutation = useUpdateUserMutation(id);
+
+  // Helper to format date strings
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "N/A";
+    return dateStr.split("T")[0];
+  };
+
+  if (isLoading) {
     return (
-      <div className="text-center py-12">
-        <h3 className="text-xl font-bold text-white">User not found</h3>
-        <Button className="mt-4" onClick={() => navigate("/users")}>
-          Back to Users
+      <div className="flex flex-col items-center justify-center py-20 space-y-4">
+        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        <p className="text-gray-400 text-sm">Retrieving user files...</p>
+      </div>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 space-y-4 max-w-md mx-auto text-center">
+        <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-500">
+          <AlertTriangle className="h-10 w-10" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-white">User Retrieve Failed</h3>
+          <p className="text-gray-400 text-sm mt-1">
+            {error?.response?.data?.message || error?.message || "The user record could not be loaded or does not exist."}
+          </p>
+        </div>
+        <Button className="mt-4 cursor-pointer" onClick={() => navigate("/users")}>
+          Back to Users Directory
         </Button>
       </div>
     );
   }
 
-  const toggleStatus = () => {
-    setStatus(status === "Active" ? "Suspended" : "Active");
+  // Determine if this is an admin dashboard account vs. normal mobile client
+  const isAdmin = user.role && user.role.toLowerCase() !== "user" && user.role.toLowerCase() !== "client";
+  const currentStatus = user.status || "Inactive";
+
+  const toggleStatus = async () => {
+    const nextStatus = currentStatus === "Active" ? "Suspended" : "Active";
+    try {
+      await updateUserMutation.mutateAsync({ status: nextStatus });
+    } catch (err) {
+      console.error("Failed to update status:", err);
+    }
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="hover:bg-white/[0.04] text-gray-400 hover:text-white" onClick={() => navigate("/users")}>
+        <Button variant="ghost" size="icon" className="hover:bg-white/[0.04] text-gray-400 hover:text-white cursor-pointer" onClick={() => navigate("/users")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
@@ -178,41 +85,44 @@ export default function UserDetail() {
                   ? "bg-purple-500/10 text-purple-400 border-purple-500/20" 
                   : "bg-primary/10 text-primary border-primary/20"
               }`}>
-                {user.name.charAt(0)}
+                {(user.firstName || "U").charAt(0).toUpperCase()}
               </div>
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-3">
-                  <h3 className="text-xl font-bold text-white">{user.name}</h3>
+                  <h3 className="text-xl font-bold text-white">{`${user.firstName || ""} ${user.lastName || ""}`.trim() || "Unnamed User"}</h3>
                   {isAdmin && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded">
                       <ShieldCheck className="h-3 w-3 shrink-0" />
-                      {user.role}
+                      {user.role || "Admin"}
                     </span>
                   )}
                   <span
                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      status === "Active"
+                      currentStatus === "Active"
                         ? "bg-green-500/10 text-emerald-400 border border-emerald-500/20"
                         : "bg-rose-500/10 text-rose-400 border-rose-500/20"
                     }`}
                   >
-                    {status}
+                    {currentStatus}
                   </span>
                 </div>
                 <p className="text-sm text-gray-400">{user.email}</p>
-                <p className="text-xs text-gray-500">Joined on {user.joinedDate}</p>
+                <p className="text-xs text-gray-500">Joined on {formatDate(user.joinedDate || user.createdAt)}</p>
               </div>
             </div>
             <div className="flex gap-3">
               <Button
-                variant={status === "Active" ? "destructive" : "ghost"}
+                variant={currentStatus === "Active" ? "destructive" : "ghost"}
                 size="sm"
-                className={`flex items-center gap-1.5 ${
-                  status !== "Active" ? "border border-white/10 text-gray-300 hover:bg-white/[0.06] hover:text-white" : ""
+                className={`flex items-center gap-1.5 cursor-pointer ${
+                  currentStatus !== "Active" ? "border border-white/10 text-gray-300 hover:bg-white/[0.06] hover:text-white" : ""
                 }`}
                 onClick={toggleStatus}
+                disabled={updateUserMutation.isPending}
               >
-                {status === "Active" ? (
+                {updateUserMutation.isPending ? (
+                  <span>Updating...</span>
+                ) : currentStatus === "Active" ? (
                   <>
                     <ShieldAlert className="h-4 w-4 shrink-0" />
                     Suspend Account
@@ -239,7 +149,7 @@ export default function UserDetail() {
               </div>
               <div>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Dashboard Role</p>
-                <h4 className="text-2xl font-black text-white mt-1">{user.role}</h4>
+                <h4 className="text-2xl font-black text-white mt-1">{user.role || "Admin"}</h4>
               </div>
             </CardContent>
           </Card>
@@ -251,7 +161,7 @@ export default function UserDetail() {
               </div>
               <div>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Actions Logged</p>
-                <h4 className="text-2xl font-black text-white mt-1">{user.auditLogs?.length || 0} Actions</h4>
+                <h4 className="text-2xl font-black text-white mt-1">{(user.auditLogs || []).length} Actions</h4>
               </div>
             </CardContent>
           </Card>
@@ -279,7 +189,7 @@ export default function UserDetail() {
               </div>
               <div>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total XP Score</p>
-                <h4 className="text-2xl font-black text-white mt-1">{user.xp} XP</h4>
+                <h4 className="text-2xl font-black text-white mt-1">{user.xp ?? 0} XP</h4>
               </div>
             </CardContent>
           </Card>
@@ -291,7 +201,7 @@ export default function UserDetail() {
               </div>
               <div>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Daily Streak</p>
-                <h4 className="text-2xl font-black text-white mt-1">{user.streak} Days</h4>
+                <h4 className="text-2xl font-black text-white mt-1">{user.streak ?? 0} Days</h4>
               </div>
             </CardContent>
           </Card>
@@ -303,7 +213,7 @@ export default function UserDetail() {
               </div>
               <div>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Trophies Unlocked</p>
-                <h4 className="text-2xl font-black text-white mt-1">{user.badgesUnlocked} / 6</h4>
+                <h4 className="text-2xl font-black text-white mt-1">{user.badgesUnlocked ?? (user.badges || []).length} Unlocked</h4>
               </div>
             </CardContent>
           </Card>
@@ -327,7 +237,7 @@ export default function UserDetail() {
                   { label: "User Access Controls", grant: "Manage Users" },
                   { label: "System Core Settings", grant: "Manage System Settings" }
                 ].map((perm, idx) => {
-                  const hasAccess = user.permissions?.includes(perm.grant) || user.role === "Super Admin";
+                  const hasAccess = (user.permissions || []).includes(perm.grant) || user.role === "Super Admin";
                   return (
                     <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
                       <span className="text-xs font-semibold text-gray-300">{perm.label}</span>
@@ -351,21 +261,25 @@ export default function UserDetail() {
                   <CardDescription>Lesson modules completed status.</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-6 space-y-4">
-                  {user.progress.map((prog, idx) => (
-                    <div key={idx} className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-bold">
-                        <span className="text-gray-300">{prog.category}</span>
-                        <span className="text-primary">{prog.completed}%</span>
+                  {(user.progress || []).length > 0 ? (
+                    user.progress.map((prog, idx) => (
+                      <div key={idx} className="space-y-1.5">
+                        <div className="flex justify-between text-xs font-bold">
+                          <span className="text-gray-300">{prog.category}</span>
+                          <span className="text-primary">{prog.completed}%</span>
+                        </div>
+                        <div className="w-full bg-white/[0.04] rounded-full h-2 overflow-hidden border border-white/[0.06]">
+                          <div
+                            className="bg-primary h-full rounded-full transition-all duration-500"
+                            style={{ width: `${prog.completed}%` }}
+                          />
+                        </div>
+                        <p className="text-[10px] text-gray-500 font-semibold">{prog.lessons}</p>
                       </div>
-                      <div className="w-full bg-white/[0.04] rounded-full h-2 overflow-hidden border border-white/[0.06]">
-                        <div
-                          className="bg-primary h-full rounded-full transition-all duration-500"
-                          style={{ width: `${prog.completed}%` }}
-                        />
-                      </div>
-                      <p className="text-[10px] text-gray-500 font-semibold">{prog.lessons}</p>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-xs text-gray-500 py-2">No learning metrics recorded yet.</p>
+                  )}
                 </CardContent>
               </Card>
 
@@ -376,20 +290,24 @@ export default function UserDetail() {
                 </CardHeader>
                 <CardContent className="pt-6">
                   <div className="flex flex-wrap gap-2">
-                    {user.badges.map((badge, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border"
-                        style={{
-                          borderColor: `${badge.color}30`,
-                          backgroundColor: `${badge.color}10`,
-                          color: badge.color,
-                        }}
-                      >
-                        <Award className="h-3.5 w-3.5" />
-                        {badge.title}
-                      </span>
-                    ))}
+                    {(user.badges || []).length > 0 ? (
+                      user.badges.map((badge, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border"
+                          style={{
+                            borderColor: `${badge.color || '#FB5607'}30`,
+                            backgroundColor: `${badge.color || '#FB5607'}10`,
+                            color: badge.color || '#FB5607',
+                          }}
+                        >
+                          <Award className="h-3.5 w-3.5" />
+                          {badge.title}
+                        </span>
+                      ))
+                    ) : (
+                      <p className="text-xs text-gray-500">No achievements unlocked yet.</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -429,7 +347,7 @@ export default function UserDetail() {
                                 Successful
                               </span>
                             </TableCell>
-                            <TableCell className="text-gray-500 text-xs">{log.timestamp}</TableCell>
+                            <TableCell className="text-gray-500 text-xs">{formatDate(log.timestamp)}</TableCell>
                           </TableRow>
                         ))
                       ) : (
@@ -463,25 +381,33 @@ export default function UserDetail() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {user.translations.map((trans) => (
-                        <TableRow key={trans.id}>
-                          <TableCell className="font-semibold text-white">"{trans.query}"</TableCell>
-                          <TableCell className="text-gray-300 text-xs">{trans.mode}</TableCell>
-                          <TableCell className="text-gray-200 font-bold text-xs">{trans.confidence}%</TableCell>
-                          <TableCell>
-                            <span
-                              className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold border ${
-                                trans.status === "Success"
-                                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                                  : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                              }`}
-                            >
-                              {trans.status}
-                            </span>
+                      {user.translations && user.translations.length > 0 ? (
+                        user.translations.map((trans) => (
+                          <TableRow key={trans.id}>
+                            <TableCell className="font-semibold text-white">"{trans.query}"</TableCell>
+                            <TableCell className="text-gray-300 text-xs">{trans.mode}</TableCell>
+                            <TableCell className="text-gray-200 font-bold text-xs">{trans.confidence}%</TableCell>
+                            <TableCell>
+                              <span
+                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold border ${
+                                  trans.status === "Success"
+                                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                    : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                                }`}
+                              >
+                                {trans.status}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-gray-500 text-xs">{formatDate(trans.timestamp)}</TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={5} className="h-24 text-center text-gray-500 text-xs">
+                            No recent recognition telemetry logs found.
                           </TableCell>
-                          <TableCell className="text-gray-500 text-xs">{trans.timestamp}</TableCell>
                         </TableRow>
-                      ))}
+                      )}
                     </TableBody>
                   </Table>
                 </div>

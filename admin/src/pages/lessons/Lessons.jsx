@@ -1,21 +1,19 @@
 import { useState } from "react";
-import { Plus, Folder, Eye, Trash2, X, PlusCircle, MinusCircle, Video } from "lucide-react";
+import { Plus, Folder, Eye, Trash2, X, PlusCircle, MinusCircle, Video, Loader2, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/Table";
 import { Input } from "../../components/ui/Input";
-
-const initialLessons = [
-  { id: "lesson-alpha-a-f", title: "Alphabet Signs A-F", category: "Alphabets", type: "Video", uploadedAt: "2026-06-10" },
-  { id: "lesson-alpha-g-z", title: "Alphabet Signs G-Z", category: "Alphabets", type: "Video", uploadedAt: "2026-06-12" },
-  { id: "lesson-num-0-5", title: "Numbers 0-5", category: "Numbers", type: "Video", uploadedAt: "2026-06-14" },
-];
+import { useLessonsQuery, useCreateLessonMutation, useDeleteLessonMutation } from "../../hooks/useLessons";
 
 const categories = ["All Lessons", "Alphabets", "Numbers", "Common Phrases", "Emotions", "Conversation", "Advanced Signs"];
 
 export default function Lessons() {
-  const [lessons, setLessons] = useState(initialLessons);
+  const { data: fetchedLessons = [], isLoading, error } = useLessonsQuery();
+  const createLessonMutation = useCreateLessonMutation();
+  const deleteLessonMutation = useDeleteLessonMutation();
+
   const [activeCategory, setActiveCategory] = useState("All Lessons");
   const [isModalOpen, setIsModalOpen] = useState(false);
   
@@ -54,20 +52,25 @@ export default function Lessons() {
     setContentSteps(updated);
   };
 
-  const handleCreateLesson = (e) => {
+  const handleCreateLesson = async (e) => {
     e.preventDefault();
     if (!title.trim() || !slug.trim() || !videoFile) return;
 
-    const newLesson = {
-      id: slug,
-      title: title.trim(),
-      category,
-      type: "Video",
-      uploadedAt: new Date().toISOString().split("T")[0]
-    };
+    const formData = new FormData();
+    formData.append("id", slug);
+    formData.append("title", title.trim());
+    formData.append("category", category);
+    formData.append("type", "Video");
+    formData.append("description", description);
+    formData.append("steps", JSON.stringify(contentSteps));
+    formData.append("video", videoFile);
 
-    setLessons([newLesson, ...lessons]);
-    resetForm();
+    try {
+      await createLessonMutation.mutateAsync(formData);
+      resetForm();
+    } catch (err) {
+      console.error("Failed to create lesson:", err);
+    }
   };
 
   const resetForm = () => {
@@ -80,11 +83,17 @@ export default function Lessons() {
     setVideoFile(null);
   };
 
-  const handleDelete = (id) => {
-    setLessons(lessons.filter((l) => l.id !== id));
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this lesson?")) {
+      try {
+        await deleteLessonMutation.mutateAsync(id);
+      } catch (err) {
+        console.error("Failed to delete lesson:", err);
+      }
+    }
   };
 
-  const filteredLessons = lessons.filter(
+  const filteredLessons = fetchedLessons.filter(
     (l) => activeCategory === "All Lessons" || l.category === activeCategory
   );
 
@@ -101,6 +110,19 @@ export default function Lessons() {
         </Button>
       </div>
 
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-20 space-y-4">
+          <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          <p className="text-gray-400 text-sm">Loading lessons...</p>
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-16 space-y-3 p-6 border border-rose-500/20 bg-rose-500/5 rounded-xl">
+          <AlertTriangle className="w-10 h-10 text-rose-500" />
+          <p className="text-rose-400 text-sm font-semibold">
+            {error?.response?.data?.message || error?.message || "Failed to load lessons."}
+          </p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Categories Navigation Bar */}
         <div className="md:col-span-1 space-y-4">
@@ -156,7 +178,7 @@ export default function Lessons() {
                         <TableCell className="font-semibold text-white">{lesson.title}</TableCell>
                         <TableCell className="text-gray-300">{lesson.category}</TableCell>
                         <TableCell className="text-gray-400">{lesson.type}</TableCell>
-                        <TableCell className="text-gray-400">{lesson.uploadedAt}</TableCell>
+                        <TableCell className="text-gray-400">{lesson.uploadedAt ? lesson.uploadedAt.split("T")[0] : "N/A"}</TableCell>
                         <TableCell className="text-right space-x-2">
                           <Link to={`/lessons/${lesson.id}`}>
                             <Button variant="ghost" size="sm" className="hover:bg-white/[0.04] text-gray-300 hover:text-white flex items-center gap-1.5 inline-flex">
@@ -188,6 +210,7 @@ export default function Lessons() {
           </Card>
         </div>
       </div>
+      )}
 
       {/* Add New Lesson Modal */}
       {isModalOpen && (
@@ -303,8 +326,8 @@ export default function Lessons() {
                 <Button type="button" variant="ghost" className="border border-white/10 text-gray-300 hover:bg-white/[0.06] hover:text-white" onClick={resetForm}>
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-primary hover:bg-primary-deep text-white shadow-lg hover:shadow-primary/20">
-                  Create Lesson Checkpoint
+                <Button type="submit" disabled={createLessonMutation.isPending} className="bg-primary hover:bg-primary-deep text-white shadow-lg hover:shadow-primary/20">
+                  {createLessonMutation.isPending ? "Creating..." : "Create Lesson Checkpoint"}
                 </Button>
               </div>
             </form>
