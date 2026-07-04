@@ -193,7 +193,7 @@ export default function Lessons() {
                            lesson.category || "Unknown"}
                         </TableCell>
                         <TableCell className="text-gray-400">{lesson.type}</TableCell>
-                        <TableCell className="text-gray-400">{lesson.uploadedAt ? lesson.uploadedAt.split("T")[0] : "N/A"}</TableCell>
+                        <TableCell className="text-gray-400">{lesson.createdAt ? lesson.createdAt.split("T")[0] : "N/A"}</TableCell>
                         <TableCell className="text-right space-x-2">
                           <Link to={`/lessons/${lesson.id}`}>
                             <Button variant="ghost" size="sm" className="hover:bg-white/[0.04] text-gray-300 hover:text-white flex items-center gap-1.5 inline-flex">
