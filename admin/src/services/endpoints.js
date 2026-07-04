@@ -18,6 +18,9 @@ export const ENDPOINTS = {
   LESSONS: {
     LIST: '/lessons',
     DETAIL: (id) => `/lessons/${id}`,
+    CREATE: '/lessons',
+    UPDATE: (id) => `/lessons/${id}`,
+    DELETE: (id) => `/lessons/${id}`,
   },
   // Add more endpoints as needed for Categories, Quizzes, Badges, etc.
 };
