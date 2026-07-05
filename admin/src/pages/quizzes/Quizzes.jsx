@@ -106,10 +106,14 @@ export default function Quizzes() {
         }
         
         await createQuizMutation.mutateAsync({
+          categoryId: parseInt(selectedCategory, 10),
           lessonId: parseInt(selectedLessonId, 10),
           question: q.question.trim(),
-          options: trimmedOptions,
-          correctIndex: cIdx
+          options: trimmedOptions.map((opt, i) => ({
+            name: opt,
+            isCorrect: i === cIdx,
+            orderIndex: i
+          }))
         });
       }
       resetForm();
@@ -201,15 +205,31 @@ export default function Quizzes() {
                       <TableCell className="text-gray-300 max-w-xs truncate">{quiz.question}</TableCell>
                       <TableCell className="text-gray-400">
                         <ul className="list-disc list-inside text-xs space-y-0.5">
-                          {quiz.options.map((opt, i) => (
-                            <li key={i} className={i === quiz.correctIndex ? "text-emerald-400 font-bold" : ""}>
-                              {opt}
-                            </li>
-                          ))}
+                          {quiz.options && quiz.options.length > 0 ? (
+                            quiz.options.map((opt, i) => {
+                              // Support both object {text, isCorrect} and string formats
+                              const isCorrect = typeof opt === 'object' ? opt.isCorrect : i === quiz.correctIndex;
+                              const optText = typeof opt === 'object' ? (opt.name || opt.text) : opt;
+                              return (
+                                <li key={i} className={isCorrect ? "text-emerald-400 font-bold" : ""}>
+                                  {optText}
+                                </li>
+                              );
+                            })
+                          ) : (
+                            <span className="text-gray-600 italic">No options</span>
+                          )}
                         </ul>
                       </TableCell>
                       <TableCell className="text-emerald-400 font-semibold text-xs">
-                        Option {quiz.correctIndex + 1}
+                        {quiz.options && quiz.options.length > 0
+                          ? (() => {
+                              const correctIdx = quiz.options.findIndex(o => typeof o === 'object' ? o.isCorrect : false);
+                              if (correctIdx !== -1) return `Option ${correctIdx + 1}`;
+                              if (quiz.correctIndex !== undefined && quiz.correctIndex !== null) return `Option ${quiz.correctIndex + 1}`;
+                              return "N/A";
+                            })()
+                          : "N/A"}
                       </TableCell>
                       <TableCell className="text-right space-x-2">
                         <Link to={`/quizzes/${quiz.id}`}>

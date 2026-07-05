@@ -36,5 +36,12 @@ export const ENDPOINTS = {
     UPDATE: (id) => `/quizzes/${id}`,
     DELETE: (id) => `/quizzes/${id}`,
   },
+  TRANSLATIONS: {
+    LIST: '/history',
+    DETAIL: (id) => `/history/${id}`,
+    CREATE: '/history',
+    UPDATE: (id) => `/history/${id}`,
+    DELETE: (id) => `/history/${id}`,
+  },
   // Add more endpoints as needed for Badges, etc.
 };
