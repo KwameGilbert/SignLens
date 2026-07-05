@@ -1,60 +1,27 @@
-import { useState } from "react";
-import { Plus, CheckSquare, Eye, Trash2, X, Search, PlusCircle, MinusCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, CheckSquare, Eye, Trash2, X, Search, PlusCircle, MinusCircle, Loader2, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/Table";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
-
-const mockLessons = [
-  { id: "lesson-alpha-a-f", title: "Alphabet Signs A-F", category: "Alphabets" },
-  { id: "lesson-alpha-g-z", title: "Alphabet Signs G-Z", category: "Alphabets" },
-  { id: "lesson-num-0-5", title: "Numbers 0-5", category: "Numbers" },
-  { id: "lesson-num-6-10", title: "Numbers 6-10", category: "Numbers" },
-  { id: "lesson-phrase-greetings", title: "Greetings", category: "Common Phrases" },
-  { id: "lesson-phrase-essentials", title: "Essential Phrases", category: "Common Phrases" }
-];
-
-const categories = ["Alphabets", "Numbers", "Common Phrases", "Emotions", "Conversation", "Advanced Signs"];
-
-const initialQuizzes = [
-  {
-    id: "lesson-alpha-a-f",
-    lessonId: "lesson-alpha-a-f",
-    lessonTitle: "Alphabet Signs A-F",
-    question: "Which principle improves sign readability most?",
-    options: ["Faster movement", "Consistent hand orientation", "Lower camera angle", "Minimal pauses"],
-    correctIndex: 1,
-  },
-  {
-    id: "lesson-alpha-g-z",
-    lessonId: "lesson-alpha-g-z",
-    lessonTitle: "Alphabet Signs G-Z",
-    question: "What helps most with finger-spelling fluency?",
-    options: ["Closing fingers tightly", "Skipping wrist rotation", "Linking letters smoothly", "Facing away from camera"],
-    correctIndex: 2,
-  },
-  {
-    id: "lesson-num-0-5",
-    lessonId: "lesson-num-0-5",
-    lessonTitle: "Numbers 0-5",
-    question: "For number clarity, you should:",
-    options: ["Overlap fingers", "Hide thumb", "Keep fingers visible", "Use random pace"],
-    correctIndex: 2,
-  },
-];
+import { useQuizzesQuery, useCreateQuizMutation, useDeleteQuizMutation } from "../../hooks/useQuizzes";
+import { useCategoriesQuery } from "../../hooks/useCategories";
+import { useLessonsQuery } from "../../hooks/useLessons";
 
 export default function Quizzes() {
-  const [quizzes, setQuizzes] = useState(initialQuizzes);
+  const { data: fetchedQuizzes = [], isLoading, error } = useQuizzesQuery();
+  const { data: fetchedCategories = [] } = useCategoriesQuery();
+  const { data: fetchedLessons = [] } = useLessonsQuery();
+  const createQuizMutation = useCreateQuizMutation();
+  const deleteQuizMutation = useDeleteQuizMutation();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Cascading Category and Lesson Selectors
-  const [selectedCategory, setSelectedCategory] = useState(categories[0]);
-  const [selectedLessonId, setSelectedLessonId] = useState(() => {
-    const filtered = mockLessons.filter(l => l.category === categories[0]);
-    return filtered[0]?.id || "";
-  });
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedLessonId, setSelectedLessonId] = useState("");
 
   // Dynamic Array for Multi-Quiz Additions
   const [questions, setQuestions] = useState([
@@ -65,9 +32,9 @@ export default function Quizzes() {
     }
   ]);
 
-  const handleCategoryChange = (cat) => {
-    setSelectedCategory(cat);
-    const filtered = mockLessons.filter(l => l.category === cat);
+  const handleCategoryChange = (catId) => {
+    setSelectedCategory(catId);
+    const filtered = fetchedLessons.filter(l => String(l.categoryId) === String(catId));
     setSelectedLessonId(filtered[0]?.id || "");
   };
 
@@ -107,9 +74,8 @@ export default function Quizzes() {
 
   const resetForm = () => {
     setIsModalOpen(false);
-    setSelectedCategory(categories[0]);
-    const filtered = mockLessons.filter(l => l.category === categories[0]);
-    setSelectedLessonId(filtered[0]?.id || "");
+    setSelectedCategory("");
+    setSelectedLessonId("");
     setQuestions([
       {
         question: "",
@@ -119,7 +85,7 @@ export default function Quizzes() {
     ]);
   };
 
-  const handleCreateQuiz = (e) => {
+  const handleCreateQuiz = async (e) => {
     e.preventDefault();
     if (!selectedLessonId) return;
 
@@ -131,37 +97,43 @@ export default function Quizzes() {
     );
     if (!isValid) return;
 
-    const matchedLesson = mockLessons.find(l => l.id === selectedLessonId);
-    const lessonTitle = matchedLesson ? matchedLesson.title : "Custom Lesson";
-
-    const newQuizzes = questions.map((q, idx) => {
-      const trimmedOptions = q.options.map(opt => opt.trim()).filter(opt => opt !== "");
-      let cIdx = q.correctIndex;
-      if (cIdx >= trimmedOptions.length) {
-        cIdx = 0;
+    try {
+      for (const q of questions) {
+        const trimmedOptions = q.options.map(opt => opt.trim()).filter(opt => opt !== "");
+        let cIdx = q.correctIndex;
+        if (cIdx >= trimmedOptions.length) {
+          cIdx = 0;
+        }
+        
+        await createQuizMutation.mutateAsync({
+          lessonId: parseInt(selectedLessonId, 10),
+          question: q.question.trim(),
+          options: trimmedOptions,
+          correctIndex: cIdx
+        });
       }
-      return {
-        id: `quiz-${selectedLessonId}-${Date.now()}-${idx}`,
-        lessonId: selectedLessonId,
-        lessonTitle,
-        question: q.question.trim(),
-        options: trimmedOptions,
-        correctIndex: cIdx
-      };
-    });
-
-    setQuizzes([...newQuizzes, ...quizzes]);
-    resetForm();
+      resetForm();
+    } catch (err) {
+      console.error("Failed to create quizzes:", err);
+    }
   };
 
-  const handleDelete = (id) => {
-    setQuizzes(quizzes.filter(q => q.id !== id));
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this quiz?")) {
+      try {
+        await deleteQuizMutation.mutateAsync(id);
+      } catch (err) {
+        console.error("Failed to delete quiz:", err);
+      }
+    }
   };
 
-  const filteredQuizzes = quizzes.filter(
-    (q) =>
-      q.lessonTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      q.question.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredQuizzes = fetchedQuizzes.filter(
+    (q) => {
+      const lessonTitle = fetchedLessons.find(l => String(l.id) === String(q.lessonId))?.title || "Unknown Lesson";
+      return lessonTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+             q.question.toLowerCase().includes(searchQuery.toLowerCase());
+    }
   );
 
   return (
@@ -195,6 +167,19 @@ export default function Quizzes() {
           </div>
         </CardHeader>
         <CardContent className="pt-6">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+              <Loader2 className="w-10 h-10 text-primary animate-spin" />
+              <p className="text-gray-400 text-sm">Loading quizzes...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-16 space-y-3 p-6 border border-rose-500/20 bg-rose-500/5 rounded-xl">
+              <AlertTriangle className="w-10 h-10 text-rose-500" />
+              <p className="text-rose-400 text-sm font-semibold">
+                {error?.response?.data?.message || error?.message || "Failed to load quizzes."}
+              </p>
+            </div>
+          ) : (
           <div className="overflow-x-auto w-full">
             <Table>
               <TableHeader>
@@ -210,7 +195,9 @@ export default function Quizzes() {
                 {filteredQuizzes.length > 0 ? (
                   filteredQuizzes.map((quiz) => (
                     <TableRow key={quiz.id}>
-                      <TableCell className="font-semibold text-white">{quiz.lessonTitle}</TableCell>
+                      <TableCell className="font-semibold text-white">
+                        {fetchedLessons.find(l => String(l.id) === String(quiz.lessonId))?.title || "Unknown Lesson"}
+                      </TableCell>
                       <TableCell className="text-gray-300 max-w-xs truncate">{quiz.question}</TableCell>
                       <TableCell className="text-gray-400">
                         <ul className="list-disc list-inside text-xs space-y-0.5">
@@ -252,6 +239,7 @@ export default function Quizzes() {
               </TableBody>
             </Table>
           </div>
+          )}
         </CardContent>
       </Card>
 
@@ -275,9 +263,10 @@ export default function Quizzes() {
                     onChange={(e) => handleCategoryChange(e.target.value)}
                     className="flex h-10 w-full rounded-md border border-white/10 bg-[#0D121F] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
                   >
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat} className="bg-[#080B11]">
-                        {cat}
+                    <option value="" disabled className="bg-[#080B11]">Select a category...</option>
+                    {fetchedCategories.map((cat) => (
+                      <option key={cat.id} value={cat.id} className="bg-[#080B11]">
+                        {cat.name || cat.title}
                       </option>
                     ))}
                   </select>
@@ -288,11 +277,11 @@ export default function Quizzes() {
                   <select
                     value={selectedLessonId}
                     onChange={(e) => setSelectedLessonId(e.target.value)}
-                    disabled={mockLessons.filter(l => l.category === selectedCategory).length === 0}
+                    disabled={!selectedCategory || fetchedLessons.filter(l => String(l.categoryId) === String(selectedCategory)).length === 0}
                     className="flex h-10 w-full rounded-md border border-white/10 bg-[#0D121F] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {mockLessons.filter(l => l.category === selectedCategory).length > 0 ? (
-                      mockLessons.filter(l => l.category === selectedCategory).map((lesson) => (
+                    {fetchedLessons.filter(l => String(l.categoryId) === String(selectedCategory)).length > 0 ? (
+                      fetchedLessons.filter(l => String(l.categoryId) === String(selectedCategory)).map((lesson) => (
                         <option key={lesson.id} value={lesson.id} className="bg-[#080B11]">
                           {lesson.title}
                         </option>
