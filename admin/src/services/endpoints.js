@@ -37,11 +37,18 @@ export const ENDPOINTS = {
     DELETE: (id) => `/quizzes/${id}`,
   },
   TRANSLATIONS: {
-    LIST: '/history',
-    DETAIL: (id) => `/history/${id}`,
+    LIST: '/history/all',
+    USER_LIST: '/history',
     CREATE: '/history',
-    UPDATE: (id) => `/history/${id}`,
-    DELETE: (id) => `/history/${id}`,
+  },
+  ACTIVITY_LOGS: {
+    LIST: '/activity-logs',
+    CREATE: '/activity-logs',
+  },
+  SETTINGS: {
+    LIST: '/settings',
+    DETAIL: (key) => `/settings/${key}`,
+    UPDATE: (key) => `/settings/${key}`,
   },
   // Add more endpoints as needed for Badges, etc.
 };
