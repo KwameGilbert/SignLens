@@ -1,21 +1,16 @@
 import { useState } from "react";
-import { Camera, Mic, Sparkles, Filter } from "lucide-react";
+import { Camera, Mic, Sparkles, Filter, Loader2, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/Table";
 import { Input } from "../../components/ui/Input";
-
-const mockTranslations = [
-  { id: "t1", query: "Hello", mode: "Camera", confidence: 98.4, status: "Success", timestamp: "2026-06-20 09:12:04" },
-  { id: "t2", query: "Can you help me?", mode: "Voice", confidence: 95.1, status: "Success", timestamp: "2026-06-20 08:44:12" },
-  { id: "t3", query: "Wait", mode: "Camera", confidence: 71.3, status: "Low Confidence", timestamp: "2026-06-20 08:32:55" },
-  { id: "t4", query: "Family", mode: "Camera", confidence: 42.0, status: "Failed", timestamp: "2026-06-20 07:12:31" },
-];
+import { useTranslationsQuery } from "../../hooks/useTranslations";
 
 export default function TranslationLogs() {
   const [filterMode, setFilterMode] = useState("All");
+  const { data: fetchedTranslations = [], isLoading, error } = useTranslationsQuery();
 
-  const filteredLogs = mockTranslations.filter(
-    (log) => filterMode === "All" || log.mode === filterMode
+  const filteredLogs = fetchedTranslations.filter(
+    (log) => filterMode === "All" || log.mode?.toLowerCase() === filterMode.toLowerCase()
   );
 
   return (
@@ -45,6 +40,19 @@ export default function TranslationLogs() {
           </div>
         </CardHeader>
         <CardContent className="pt-6">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+              <Loader2 className="w-10 h-10 text-primary animate-spin" />
+              <p className="text-gray-400 text-sm">Loading translation logs...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-16 space-y-3 p-6 border border-rose-500/20 bg-rose-500/5 rounded-xl">
+              <AlertTriangle className="w-10 h-10 text-rose-500" />
+              <p className="text-rose-400 text-sm font-semibold">
+                {error?.response?.data?.message || error?.message || "Failed to load translation logs."}
+              </p>
+            </div>
+          ) : (
           <div className="overflow-x-auto w-full">
             <Table>
               <TableHeader>
@@ -59,11 +67,11 @@ export default function TranslationLogs() {
               <TableBody>
                 {filteredLogs.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell className="font-semibold text-white">{log.query}</TableCell>
-                    <TableCell className="text-gray-300">
+                    <TableCell className="font-semibold text-white">{log.prediction || "Unknown"}</TableCell>
+                    <TableCell className="text-gray-300 capitalize">
                       <div className="flex items-center gap-1.5">
-                        {log.mode === "Camera" ? <Camera className="h-3.5 w-3.5 text-primary" /> : <Mic className="h-3.5 w-3.5 text-violet-400" />}
-                        {log.mode}
+                        {log.mode?.toLowerCase() === "camera" ? <Camera className="h-3.5 w-3.5 text-primary" /> : <Mic className="h-3.5 w-3.5 text-violet-400" />}
+                        {log.mode || "Unknown"}
                       </div>
                     </TableCell>
                     <TableCell className="font-bold text-gray-200">
@@ -71,37 +79,40 @@ export default function TranslationLogs() {
                         <div className="w-16 bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
                           <div
                             className={`h-full rounded-full ${
-                              log.confidence >= 90
+                              (log.confidence > 1 ? log.confidence : log.confidence * 100) >= 90
                                 ? "bg-emerald-500"
-                                : log.confidence >= 70
+                                : (log.confidence > 1 ? log.confidence : log.confidence * 100) >= 70
                                 ? "bg-amber-500"
                                 : "bg-rose-500"
                             }`}
-                            style={{ width: `${log.confidence}%` }}
+                            style={{ width: `${(log.confidence > 1 ? log.confidence : log.confidence * 100)}%` }}
                           />
                         </div>
-                        <span className="text-xs">{log.confidence}%</span>
+                        <span className="text-xs">{(log.confidence > 1 ? log.confidence : log.confidence * 100).toFixed(1)}%</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                          log.status === "Success"
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${
+                          log.resolutionStatus?.toLowerCase() === "success"
                             ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                            : log.status === "Low Confidence"
+                            : log.resolutionStatus?.toLowerCase() === "low confidence"
                             ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
                             : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
                         }`}
                       >
-                        {log.status}
+                        {log.resolutionStatus || "Unknown"}
                       </span>
                     </TableCell>
-                    <TableCell className="text-gray-400 text-xs">{log.timestamp}</TableCell>
+                    <TableCell className="text-gray-400 text-xs">
+                      {log.createdAt ? new Date(log.createdAt).toLocaleString() : "N/A"}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </div>
+          )}
         </CardContent>
       </Card>
     </div>

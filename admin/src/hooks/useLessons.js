@@ -27,12 +27,7 @@ export const useCreateLessonMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (newLesson) => {
-      // Handles FormData for video uploads
-      const { data } = await api.post(ENDPOINTS.LESSONS.CREATE, newLesson, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const { data } = await api.post(ENDPOINTS.LESSONS.CREATE, newLesson);
       return data?.data || data;
     },
     onSuccess: () => {

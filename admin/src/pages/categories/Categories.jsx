@@ -41,7 +41,7 @@ export default function Categories() {
 
     try {
       await createCategoryMutation.mutateAsync({
-        title: title.trim(),
+        name: title.trim(),
         slug: slug.trim(),
         icon,
       });
@@ -169,7 +169,7 @@ export default function Categories() {
                         <TableCell className="font-semibold text-white">
                           <div className="flex items-center gap-2.5">
                             <IconRecord className="h-4 w-4 text-primary" />
-                            {cat.title}
+                            {cat.name || cat.title}
                           </div>
                         </TableCell>
                         <TableCell className="text-gray-300 text-xs">{cat.slug}</TableCell>
