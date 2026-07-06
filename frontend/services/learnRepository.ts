@@ -30,19 +30,33 @@ const categories = learningContent.categories as LearnCategory[];
 const lessons = learningContent.lessons as LearnLesson[];
 const quizzes = learningContent.quizzes as LearnQuiz[];
 
-export function getLearningCategories() {
-  return categories;
+import apiClient from "./apiClient";
+
+export async function fetchLearningCategories(): Promise<LearnCategory[]> {
+  const response = await apiClient.get('/lesson-categories');
+  const apiCategories = response.data.data;
+  
+  return apiCategories.map((cat: any) => ({
+    id: String(cat.id),
+    slug: cat.slug,
+    title: cat.name,
+    icon: cat.icon,
+    lessonCount: 0,
+    progress: 0,
+  }));
 }
 
-export function getOverallProgress() {
-  if (categories.length === 0) {
+export function getOverallProgress(categoryList: LearnCategory[] = []) {
+  if (categoryList.length === 0) {
     return 0;
   }
 
-  const total = categories.reduce((sum, category) => sum + category.progress, 0);
-  return Math.round(total / categories.length);
+  const total = categoryList.reduce((sum, category) => sum + category.progress, 0);
+  return Math.round(total / categoryList.length);
 }
 
+// NOTE: getCategoryBySlug needs to be refactored to an API call later.
+// Currently returning undefined since dummy categories are empty.
 export function getCategoryBySlug(slug: string) {
   return categories.find((category) => category.slug === slug);
 }

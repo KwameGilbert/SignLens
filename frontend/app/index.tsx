@@ -8,13 +8,13 @@ export default function SplashScreen() {
   const router = useRouter();
   const player = useVideoPlayer(require('../assets/videos/splash_video.mp4'), (videoPlayer) => {
     videoPlayer.muted = true;
-    videoPlayer.loop = true;
+    videoPlayer.loop = false;
     videoPlayer.play();
   });
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.push('/onboarding');
+      router.replace('/onboarding');
     }, 6000);
 
     return () => clearTimeout(timer);

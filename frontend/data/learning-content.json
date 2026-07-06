@@ -1,54 +1,5 @@
 {
-  "categories": [
-    {
-      "id": "cat-alphabets",
-      "slug": "alphabets",
-      "title": "Alphabets",
-      "icon": "T",
-      "lessonCount": 26,
-      "progress": 75
-    },
-    {
-      "id": "cat-numbers",
-      "slug": "numbers",
-      "title": "Numbers",
-      "icon": "#",
-      "lessonCount": 10,
-      "progress": 65
-    },
-    {
-      "id": "cat-common-phrases",
-      "slug": "common-phrases",
-      "title": "Common Phrases",
-      "icon": "💬",
-      "lessonCount": 15,
-      "progress": 15
-    },
-    {
-      "id": "cat-emotions",
-      "slug": "emotions",
-      "title": "Emotions",
-      "icon": "☺",
-      "lessonCount": 12,
-      "progress": 65
-    },
-    {
-      "id": "cat-conversation",
-      "slug": "conversation",
-      "title": "Conversation",
-      "icon": "💬",
-      "lessonCount": 20,
-      "progress": 5
-    },
-    {
-      "id": "cat-advanced-signs",
-      "slug": "advanced-signs",
-      "title": "Advanced Signs",
-      "icon": "★",
-      "lessonCount": 10,
-      "progress": 10
-    }
-  ],
+  "categories": [],
   "lessons": [
     {
       "id": "lesson-alpha-a-f",
