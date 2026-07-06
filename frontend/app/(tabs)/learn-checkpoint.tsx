@@ -1,25 +1,38 @@
-import { useMemo, useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { useMemo, useState } from "react";
+import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import QuizBlock from "../../components/learn/QuizBlock";
-import { getLessonById, getLessonNavigation, getQuizByLessonId } from "../../services/learnRepository";
+import { fetchLessonById, fetchLessonNavigation, fetchQuizByLessonId } from "../../services/learnRepository";
 
-function CheckpointContent() {
+export default function LearnCheckpointScreen() {
   const router = useRouter();
-  const [isReady, setIsReady] = useState(false);
 
-  useEffect(() => {
-    setIsReady(true);
-  }, []);
-
-  const params = useLocalSearchParams<{ lessonId?: string }>();
+  const params = useLocalSearchParams<{ lessonId?: string; categoryId?: string }>();
   const lessonId = params.lessonId ?? "";
+  const categoryId = params.categoryId ?? "";
 
-  const lesson = getLessonById(lessonId);
-  const quiz = getQuizByLessonId(lessonId);
-  const { nextLessonId } = getLessonNavigation(lessonId);
+  const { data: lesson, isLoading: isLoadingLesson } = useQuery({
+    queryKey: ["lesson", lessonId],
+    queryFn: () => fetchLessonById(lessonId),
+    enabled: !!lessonId,
+  });
+
+  const { data: quiz, isLoading: isLoadingQuiz } = useQuery({
+    queryKey: ["quiz", lessonId],
+    queryFn: () => fetchQuizByLessonId(lessonId),
+    enabled: !!lessonId,
+  });
+
+  const { data: navigation, isLoading: isLoadingNav } = useQuery({
+    queryKey: ["lessonNavigation", categoryId, lessonId],
+    queryFn: () => fetchLessonNavigation(categoryId, lessonId),
+    enabled: !!categoryId && !!lessonId,
+  });
+
+  const nextLessonId = navigation?.nextLessonId;
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -28,12 +41,15 @@ function CheckpointContent() {
     if (!quiz || selectedIndex === null) {
       return false;
     }
-
     return selectedIndex === quiz.correctIndex;
   }, [quiz, selectedIndex]);
 
-  if (!isReady) {
-    return null;
+  if (isLoadingLesson || isLoadingQuiz || isLoadingNav) {
+    return (
+      <View className="flex-1 bg-[#F2F2EA] items-center justify-center">
+        <ActivityIndicator size="large" color="#FB5607" />
+      </View>
+    );
   }
 
   if (!lesson || !quiz) {
@@ -87,19 +103,18 @@ function CheckpointContent() {
               className="rounded-xl py-4 items-center mt-4 bg-[#FB5607] shadow-md shadow-[#FB5607]/40"
               onPress={() => {
                 if (nextLessonId) {
-                  Alert.alert(
-                    "Continue to Next Lesson",
-                    `Next Lesson ID: ${nextLessonId}\nCurrent Lesson: ${lesson.id}`,
-                    [{ text: "OK" }]
-                  );
+                  router.replace({
+                    pathname: "/(tabs)/learn-lesson",
+                    params: { lessonId: nextLessonId, categoryId },
+                  });
                   return;
                 }
 
-                Alert.alert(
-                  "Back to Category",
-                  `Category: ${lesson.categorySlug}`,
-                  [{ text: "OK" }]
-                );
+                // If no next lesson, go back to category
+                router.replace({
+                  pathname: "/(tabs)/learn-category",
+                  params: { categoryId },
+                });
               }}
             >
               <Text className="text-white text-lg font-bold tracking-wide">
@@ -111,18 +126,4 @@ function CheckpointContent() {
       </View>
     </ScrollView>
   );
-}
-
-export default function LearnCheckpointScreen() {
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    setIsReady(true);
-  }, []);
-
-  if (!isReady) {
-    return <View style={{ flex: 1, backgroundColor: "#F2F2EA" }} />;
-  }
-
-  return <CheckpointContent />;
 }

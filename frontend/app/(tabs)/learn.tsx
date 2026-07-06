@@ -66,7 +66,7 @@ export default function LearnScreen() {
                 onPress={() =>
                   router.push({
                     pathname: "/(tabs)/learn-category",
-                    params: { category: category.slug },
+                    params: { categoryId: category.id, categoryTitle: category.title },
                   })
                 }
               />

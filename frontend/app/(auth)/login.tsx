@@ -14,7 +14,7 @@ import { StatusBar } from "expo-status-bar";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FormInput from "../../components/ui/FormInput";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -22,7 +22,14 @@ export default function LoginScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { loginMutation } = useAuth();
+  const { loginMutation, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/(tabs)/home");
+    }
+  }, [isAuthenticated]);
+
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
