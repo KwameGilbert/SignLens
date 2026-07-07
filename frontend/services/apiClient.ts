@@ -14,7 +14,7 @@ const BASE_URL = "https://signlens-backend-sg1c.onrender.com/api";
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 15000,
+  timeout: 240000,
   headers: {
     "Content-Type": "application/json",
   },

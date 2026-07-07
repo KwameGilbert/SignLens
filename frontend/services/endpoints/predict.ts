@@ -3,8 +3,9 @@ import apiClient from "../apiClient";
 // ── Types ──────────────────────────────────────────────────────────────
 
 export type PredictionResult = {
-  prediction_label: string;
+  prediction: string;
   confidence: number;
+  loggedId?: number;
 };
 
 // ── Endpoint functions ─────────────────────────────────────────────────
@@ -23,6 +24,24 @@ export const predictImage = (imageUri: string) => {
 
   return apiClient.post<PredictionResult>("/predict", formData, {
     headers: { "Content-Type": "multipart/form-data" },
+    timeout: 60000, // 60 seconds (allows Render backends to wake from sleep)
+  });
+};
+
+/**
+ * Send a recorded video to the prediction gateway.
+ */
+export const predictVideo = (videoUri: string) => {
+  const formData = new FormData();
+  formData.append("file", {
+    uri: videoUri,
+    name: "sign.mp4",
+    type: "video/mp4",
+  } as any);
+
+  return apiClient.post<PredictionResult>("/predict", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+    timeout: 120000, // 2 minutes for video upload & ML processing
   });
 };
 
