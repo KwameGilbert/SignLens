@@ -7,3 +7,4 @@ tensorflow
 numpy
 mysql-connector-python
 python-dotenv
+mediapipe==0.10.5

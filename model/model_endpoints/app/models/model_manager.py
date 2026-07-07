@@ -3,13 +3,13 @@ import glob
 from tensorflow.keras.models import load_model
 from threading import Lock
 
-# Define base directory of the entire model project (assuming this file is in model/signlens_model_endpoints/app/models)
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+# Define base directory of the entire model project (assuming this file is in model/model_endpoints/app/models)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 MODEL_PATHS = {
-    'image': os.path.join(PROJECT_ROOT, 'static_keypoints_optimized', 'saved_models', 'sign_language_model_static*.h5'),
-    'video': os.path.join(PROJECT_ROOT, 'video_lstm_optimized', 'saved_models', 'sign_language_model_video*.h5'),
-    'stream': os.path.join(PROJECT_ROOT, 'video_lstm_optimized', 'saved_models', 'sign_language_model_video*.h5')
+    'image': os.path.join(PROJECT_ROOT, 'saved_models', 'sign_language_model_static*.h5'),
+    'video': os.path.join(PROJECT_ROOT, 'saved_models', 'sign_language_model_video*.h5'),
+    'stream': os.path.join(PROJECT_ROOT, 'saved_models', 'sign_language_model_video*.h5')
 }
 
 # Thread-safe model loading
