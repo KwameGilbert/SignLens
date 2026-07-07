@@ -27,7 +27,9 @@ async def predict_image(
     # Prepare files and headers for forwarding to ML endpoints
     files = {"file": (file.filename, await file.read(), file.content_type)}
     headers = {"x-api-key": settings.MODEL_API_KEY}
-    params = {"type": "image"}
+    
+    file_type = "video" if file.content_type and file.content_type.startswith("video/") else "image"
+    params = {"type": file_type}
     
     async with httpx.AsyncClient() as client:
         try:

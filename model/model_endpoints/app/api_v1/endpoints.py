@@ -54,16 +54,90 @@ def image_predict(file_bytes: bytes):
     return {"prediction": label, "confidence": confidence}
 
 
+import tempfile
+import os
+
+def video_predict(file_bytes: bytes):
+    # Load model dynamically
+    model = model_manager.get_model('video')
+    
+    # Save video bytes to a temporary file for OpenCV to read
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_video:
+        temp_video.write(file_bytes)
+        temp_video_path = temp_video.name
+
+    import mediapipe as mp
+    mp_holistic = mp.solutions.holistic
+    
+    sequence = []
+    SEQUENCE_LENGTH = 30
+    
+    cap = cv2.VideoCapture(temp_video_path)
+    
+    with mp_holistic.Holistic(static_image_mode=False) as holistic:
+        while cap.isOpened() and len(sequence) < SEQUENCE_LENGTH:
+            ret, frame = cap.read()
+            if not ret:
+                break
+                
+            img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = holistic.process(img_rgb)
+            
+            pose = np.zeros(33 * 4)
+            lh = np.zeros(21 * 3)
+            rh = np.zeros(21 * 3)
+            
+            if results.pose_landmarks:
+                pose = np.array([[res.x, res.y, res.z, res.visibility] for res in results.pose_landmarks.landmark]).flatten()
+            if results.left_hand_landmarks:
+                lh = np.array([[res.x, res.y, res.z] for res in results.left_hand_landmarks.landmark]).flatten()
+            if results.right_hand_landmarks:
+                rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten()
+                
+            keypoints = np.concatenate([pose, lh, rh]) # 258 features
+            sequence.append(keypoints)
+            
+    cap.release()
+    try:
+        os.remove(temp_video_path)
+    except Exception:
+        pass
+    
+    # If the video was too short, return Unknown
+    if len(sequence) == 0:
+        return {"prediction": "Unknown", "confidence": 0.0}
+        
+    # Pad if sequence is shorter than 30 frames
+    while len(sequence) < SEQUENCE_LENGTH:
+        sequence.append(np.zeros(258))
+        
+    # Truncate if too long
+    sequence = sequence[:SEQUENCE_LENGTH]
+    
+    input_data = np.expand_dims(sequence, axis=0)
+    preds = model.predict(input_data, verbose=0)
+    pred_class = np.argmax(preds)
+    confidence = float(np.max(preds))
+    label = VIDEO_CLASSES[pred_class] if pred_class < len(VIDEO_CLASSES) else str(pred_class)
+    
+    return {"prediction": label, "confidence": confidence}
+
+
 @router.post("/predict", response_model=PredictResponse)
-def predict_image(
+def predict_media(
     type: InputType,
     file: UploadFile = File(...),
     api_key: str = Depends(verify_api_key)
 ):
-    if type != InputType.image:
-        raise HTTPException(status_code=400, detail="This endpoint only supports type=image.")
+    if type not in [InputType.image, InputType.video]:
+        raise HTTPException(status_code=400, detail="This endpoint only supports type=image or type=video.")
     file_bytes = file.file.read()
-    result = image_predict(file_bytes)
+    
+    if type == InputType.image:
+        result = image_predict(file_bytes)
+    else:
+        result = video_predict(file_bytes)
+        
     return result
 
 # WebSocket endpoint for video/stream prediction
