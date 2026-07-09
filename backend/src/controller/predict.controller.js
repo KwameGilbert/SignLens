@@ -14,6 +14,7 @@ export const predictImage = async (req, res) => {
     }
 
     console.log(`Processing static image prediction request for User ID: ${req.user.id}`);
+    console.log(`[ML Request] Sending image to ML server (MimeType: ${req.file.mimetype}, Size: ${req.file.buffer.length} bytes)`);
 
     // Call third party ML service to get prediction details
     let mlResult;
@@ -23,11 +24,14 @@ export const predictImage = async (req, res) => {
         req.file.originalname,
         req.file.mimetype
       );
+      console.log(`[ML Response] Received from ML server:`, mlResult);
     } catch (err) {
+      console.error(`[ML Error] Failed to get predictions from ML server:`, err.message);
       return sendError(res, `Failed to get predictions from ML server: ${err.message}`, 502, 'BAD_GATEWAY');
     }
 
     if (!mlResult || !mlResult.prediction || mlResult.confidence === undefined) {
+      console.error(`[ML Error] ML backend returned an empty or invalid prediction response`);
       return sendError(res, 'ML backend returned an empty or invalid prediction response', 502, 'BAD_GATEWAY');
     }
 
@@ -40,11 +44,15 @@ export const predictImage = async (req, res) => {
       resolutionStatus: mlResult.confidence >= 0.8 ? 'success' : 'low_confidence',
     });
 
-    sendSuccess(res, {
+    const responsePayload = {
       prediction: mlResult.prediction,
       confidence: mlResult.confidence,
       loggedId: savedLog.id,
-    }, 'Prediction completed successfully');
+    };
+    
+    console.log(`[User Response] Returning prediction to user:`, responsePayload);
+
+    sendSuccess(res, responsePayload, 'Prediction completed successfully');
   } catch (err) {
     sendInternalError(res, 'Internal gateway failure processing image prediction', err);
   }

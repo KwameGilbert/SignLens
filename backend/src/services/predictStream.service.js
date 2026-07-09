@@ -55,8 +55,10 @@ export const handlePredictStreamConnection = async (ws, req) => {
     mlWs.on('message', async (data) => {
       try {
         const messageString = data.toString();
+        console.log(`[ML Response] Received from ML server: ${messageString}`);
         // Relay predictions directly back to the client
         if (ws.readyState === WebSocket.OPEN) {
+          console.log(`[User Response] Relaying ML response to user: ${messageString}`);
           ws.send(messageString);
         }
 
@@ -92,6 +94,7 @@ export const handlePredictStreamConnection = async (ws, req) => {
     });
 
     ws.on('message', (message) => {
+      console.log(`[ML Request] Forwarding stream message from client to ML server (Size: ${message.length} bytes)`);
       if (mlWs.readyState === WebSocket.OPEN) {
         mlWs.send(message);
       } else {
