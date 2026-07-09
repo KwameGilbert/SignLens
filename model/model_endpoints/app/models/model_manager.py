@@ -1,6 +1,6 @@
 import os
 import glob
-from tensorflow.keras.models import load_model
+import tensorflow as tf
 from threading import Lock
 
 # Define base directory of the entire model project (assuming this file is in model/model_endpoints/app/models)
@@ -37,7 +37,7 @@ class ModelManager:
                 if model_type not in self.models:
                     model_path = self.get_latest_model_path(model_type)
                     print(f"Loading {model_type} model from: {model_path}")
-                    self.models[model_type] = load_model(model_path, compile=False)
+                    self.models[model_type] = tf.keras.models.load_model(model_path, compile=False)
         return self.models[model_type]
 
 model_manager = ModelManager()

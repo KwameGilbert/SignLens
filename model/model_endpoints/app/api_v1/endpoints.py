@@ -4,7 +4,7 @@ from .auth import verify_api_key
 from app.models.model_manager import model_manager
 import numpy as np
 import cv2
-from tensorflow.keras.preprocessing import image as keras_image
+
 
 
 router = APIRouter()
