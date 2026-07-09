@@ -9,11 +9,15 @@ export const upload = multer({
     fileSize: 10 * 1024 * 1024, // Limit file size to 10MB
   },
   fileFilter: (req, file, cb) => {
-    // Check if the uploaded file is an image
-    if (file.mimetype.startsWith('image/')) {
+    // Check if the uploaded file is an image, video, or generic stream
+    if (
+      file.mimetype.startsWith('image/') ||
+      file.mimetype.startsWith('video/') ||
+      file.mimetype === 'application/octet-stream'
+    ) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only image uploads are supported.'), false);
+      cb(new Error(`Invalid file type (${file.mimetype}). Only image and video uploads are supported.`), false);
     }
   },
 });
