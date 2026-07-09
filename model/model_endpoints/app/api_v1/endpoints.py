@@ -23,9 +23,25 @@ VIDEO_CLASSES = [chr(i) for i in range(ord('A'), ord('Z')+1)] + [str(i) for i in
 def image_predict(file_bytes: bytes):
     # Load model dynamically
     model = model_manager.get_model('image')
-    # Preprocess image
+    import base64
     np_arr = np.frombuffer(file_bytes, np.uint8)
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+
+    if img is None:
+        # Try treating it as a base64 string
+        try:
+            decoded_str = file_bytes.decode('utf-8')
+            if "base64," in decoded_str:
+                decoded_str = decoded_str.split("base64,")[1]
+            raw_bytes = base64.b64decode(decoded_str)
+            np_arr = np.frombuffer(raw_bytes, np.uint8)
+            img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        except Exception:
+            pass
+
+    if img is None:
+        raise ValueError("Failed to decode image. Ensure the payload is a valid raw image file or base64 string.")
+
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     
     import mediapipe as mp
