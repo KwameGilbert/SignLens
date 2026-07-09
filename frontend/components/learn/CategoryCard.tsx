@@ -16,7 +16,11 @@ export default function CategoryCard({ category, onPress }: CategoryCardProps) {
     >
       <View className="flex-row items-center">
         <View className="w-10 h-10 rounded-lg bg-[#FB5607] items-center justify-center mr-3">
-          <Text className="text-white text-xl font-bold">{category.icon}</Text>
+          {category.icon && category.icon.length > 2 ? (
+            <Ionicons name={category.icon as any} size={24} color="white" />
+          ) : (
+            <Text className="text-white text-xl font-bold">{category.icon}</Text>
+          )}
         </View>
 
         <View className="flex-1">

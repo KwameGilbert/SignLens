@@ -1,11 +1,12 @@
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
-import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
+import React, { useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import * as Speech from 'expo-speech';
 import { BlurView } from "expo-blur";
+import * as VideoThumbnails from 'expo-video-thumbnails';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -15,6 +16,7 @@ import Animated, {
   FadeInDown,
   FadeIn
 } from "react-native-reanimated";
+import { usePredict } from "../hooks/usePredict";
 
 const { height } = Dimensions.get("window");
 
@@ -22,6 +24,38 @@ export default function TranslationResultScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const videoUri = params.videoUri as string;
+  const { predictImageMutation } = usePredict();
+
+  useEffect(() => {
+    async function processVideo() {
+      if (!videoUri) return;
+      try {
+        console.log("[PREDICT] Extracting thumbnail from video:", videoUri);
+        // Extract a frame from the middle/beginning of the video
+        const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
+          time: 500, // 0.5s into the video
+          quality: 0.8,
+        });
+        console.log("[PREDICT] Thumbnail extracted:", uri);
+        predictImageMutation.mutate(uri);
+      } catch (e) {
+        console.error("[PREDICT ERROR] Failed to extract thumbnail:", e);
+      }
+    }
+    processVideo();
+  }, [videoUri]);
+
+  useEffect(() => {
+    if (predictImageMutation.isError) {
+      console.error("[PREDICT ERROR]", predictImageMutation.error);
+      if ((predictImageMutation.error as any).response) {
+        console.error("Response data:", (predictImageMutation.error as any).response.data);
+      }
+    }
+    if (predictImageMutation.isSuccess) {
+      console.log("[PREDICT SUCCESS]", predictImageMutation.data?.data);
+    }
+  }, [predictImageMutation.isError, predictImageMutation.isSuccess, predictImageMutation.error, predictImageMutation.data]);
 
   function VideoBackground() {
     const player = useVideoPlayer({ uri: videoUri }, (videoPlayer) => {
@@ -33,8 +67,17 @@ export default function TranslationResultScreen() {
     return <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="cover" />;
   }
 
-  // Mock translation result
-  const translatedText = "Hello, how are you?";
+  let translatedText = "Analyzing sign...";
+  if (predictImageMutation.isPending) {
+    translatedText = "Analyzing sign...";
+  } else if (predictImageMutation.isError) {
+    translatedText = "Failed to translate.";
+  } else if (predictImageMutation.isSuccess) {
+    const result = predictImageMutation.data?.data as any;
+    // Format the text so it's capitalized properly if needed, but we'll just use the label
+    // The backend uses 'prediction' instead of 'prediction_label' per documentation
+    translatedText = result?.prediction || result?.data?.prediction || "No sign detected.";
+  }
 
   const speak = () => {
     Speech.speak(translatedText);
@@ -89,15 +132,20 @@ export default function TranslationResultScreen() {
               </Text>
               
               <View className="bg-white/10 p-6 rounded-3xl border border-white/20 w-full mb-6">
-                <Text className="text-white text-3xl font-bold text-center leading-[40px]">
-                  &quot;{translatedText}&quot;
-                </Text>
+                {predictImageMutation.isPending ? (
+                  <ActivityIndicator size="large" color="#ffffff" className="my-2" />
+                ) : (
+                  <Text className="text-white text-3xl font-bold text-center leading-[40px]">
+                    &quot;{translatedText}&quot;
+                  </Text>
+                )}
               </View>
 
               <TouchableOpacity 
                 activeOpacity={0.7}
                 onPress={speak}
-                className="bg-[#FB5607] w-14 h-14 rounded-full justify-center items-center shadow-lg shadow-[#FB5607]/40"
+                disabled={predictImageMutation.isPending || predictImageMutation.isError}
+                className={`w-14 h-14 rounded-full justify-center items-center shadow-lg shadow-[#FB5607]/40 ${predictImageMutation.isPending || predictImageMutation.isError ? "bg-gray-500 opacity-50" : "bg-[#FB5607]"}`}
               >
                 <Ionicons name="volume-high" size={28} color="white" />
               </TouchableOpacity>

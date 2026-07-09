@@ -1,8 +1,28 @@
 import { View, Text } from "react-native";
 import { VideoView, useVideoPlayer } from "expo-video";
+import YoutubePlayer from "react-native-youtube-iframe";
 
-export default function AvatarLessonPlayer() {
-  const player = useVideoPlayer(require("../../assets/videos/splash_video.mp4"), (videoPlayer) => {
+type AvatarLessonPlayerProps = {
+  videoUrl?: string | null;
+};
+
+export default function AvatarLessonPlayer({ videoUrl }: AvatarLessonPlayerProps) {
+  // Determine if it's a YouTube link
+  const isYoutube = videoUrl?.includes("youtube.com") || videoUrl?.includes("youtu.be");
+  
+  // Extract YouTube ID if applicable
+  let youtubeId = "";
+  if (isYoutube && videoUrl) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = videoUrl.match(regExp);
+    youtubeId = (match && match[2].length === 11) ? match[2] : "";
+  }
+
+  // Handle local fallback or direct video link
+  const defaultVideo = require("../../assets/videos/splash_video.mp4");
+  const videoSource = (!isYoutube && videoUrl) ? videoUrl : defaultVideo;
+  
+  const player = useVideoPlayer(videoSource, (videoPlayer) => {
     videoPlayer.loop = true;
   });
 
@@ -15,12 +35,23 @@ export default function AvatarLessonPlayer() {
         </Text>
       </View>
 
-      <VideoView
-        player={player}
-        style={{ width: "100%", height: 220, borderRadius: 14 }}
-        contentFit="cover"
-        nativeControls
-      />
+      {isYoutube && youtubeId ? (
+        <View style={{ borderRadius: 14, overflow: 'hidden' }}>
+          <YoutubePlayer
+            height={220}
+            play={false}
+            videoId={youtubeId}
+            webViewStyle={{ opacity: 0.99 }} // prevents crash on some android devices
+          />
+        </View>
+      ) : (
+        <VideoView
+          player={player}
+          style={{ width: "100%", height: 220, borderRadius: 14 }}
+          contentFit="cover"
+          nativeControls
+        />
+      )}
 
       <Text className="text-gray-500 dark:text-slate-400 text-xs mt-3">
         Follow the avatar hand movements, pause where needed, and replay until the sign is clear.

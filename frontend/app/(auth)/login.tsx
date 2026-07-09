@@ -7,21 +7,58 @@ import {
   Platform,
   StyleSheet,
   useColorScheme,
+  ActivityIndicator,
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FormInput from "../../components/ui/FormInput";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function LoginScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { loginMutation, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/(tabs)/home");
+    }
+  }, [isAuthenticated]);
+
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+    if (!password) {
+      newErrors.password = "Password is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleLogin = () => {
+    if (!validate()) return;
+
+    loginMutation.mutate({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+  };
 
   return (
     <KeyboardAvoidingView 
@@ -82,6 +119,7 @@ export default function LoginScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
           autoComplete="email"
+          error={errors.email}
         />
 
         <FormInput
@@ -92,6 +130,7 @@ export default function LoginScreen() {
           secureTextEntry
           autoCapitalize="none"
           autoComplete="password"
+          error={errors.password}
         />
 
         <View className="flex-row justify-end mb-6">
@@ -105,12 +144,17 @@ export default function LoginScreen() {
         </View>
 
         <TouchableOpacity
-          onPress={() => router.replace("/(tabs)/home")}
-          className="bg-primary dark:bg-primary rounded-xl px-4 py-4 mb-4 shadow-md shadow-[#FB5607]/40"
+          onPress={handleLogin}
+          disabled={loginMutation.isPending}
+          className={`bg-primary dark:bg-primary rounded-xl px-4 py-4 mb-4 shadow-md shadow-[#FB5607]/40 ${loginMutation.isPending ? 'opacity-70' : ''}`}
         >
-          <Text className="text-white text-center text-lg font-bold">
-            Login
-          </Text>
+          {loginMutation.isPending ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text className="text-white text-center text-lg font-bold">
+              Login
+            </Text>
+          )}
         </TouchableOpacity>
 
         <View className="flex-row justify-center gap-4 mb-6">

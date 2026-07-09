@@ -1,31 +1,29 @@
 import { useState } from "react";
-import { Plus, Folder, Eye, Trash2, X, PlusCircle, MinusCircle, Video } from "lucide-react";
+import { Plus, Folder, Eye, Trash2, X, PlusCircle, MinusCircle, Video, Loader2, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/Table";
 import { Input } from "../../components/ui/Input";
-
-const initialLessons = [
-  { id: "lesson-alpha-a-f", title: "Alphabet Signs A-F", category: "Alphabets", type: "Video", uploadedAt: "2026-06-10" },
-  { id: "lesson-alpha-g-z", title: "Alphabet Signs G-Z", category: "Alphabets", type: "Video", uploadedAt: "2026-06-12" },
-  { id: "lesson-num-0-5", title: "Numbers 0-5", category: "Numbers", type: "Video", uploadedAt: "2026-06-14" },
-];
-
-const categories = ["All Lessons", "Alphabets", "Numbers", "Common Phrases", "Emotions", "Conversation", "Advanced Signs"];
+import { useLessonsQuery, useCreateLessonMutation, useDeleteLessonMutation } from "../../hooks/useLessons";
+import { useCategoriesQuery } from "../../hooks/useCategories";
 
 export default function Lessons() {
-  const [lessons, setLessons] = useState(initialLessons);
+  const { data: fetchedLessons = [], isLoading, error } = useLessonsQuery();
+  const { data: fetchedCategories = [] } = useCategoriesQuery();
+  const createLessonMutation = useCreateLessonMutation();
+  const deleteLessonMutation = useDeleteLessonMutation();
+
   const [activeCategory, setActiveCategory] = useState("All Lessons");
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Form States
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
-  const [category, setCategory] = useState("Alphabets");
+  const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [contentSteps, setContentSteps] = useState([""]);
-  const [videoFile, setVideoFile] = useState(null);
+  const [lessonUrl, setLessonUrl] = useState("");
 
   const handleTitleChange = (e) => {
     const value = e.target.value;
@@ -54,38 +52,50 @@ export default function Lessons() {
     setContentSteps(updated);
   };
 
-  const handleCreateLesson = (e) => {
+  const handleCreateLesson = async (e) => {
     e.preventDefault();
-    if (!title.trim() || !slug.trim() || !videoFile) return;
+    if (!title.trim() || !slug.trim() || !lessonUrl.trim() || !category) return;
 
-    const newLesson = {
-      id: slug,
+    const payload = {
       title: title.trim(),
-      category,
-      type: "Video",
-      uploadedAt: new Date().toISOString().split("T")[0]
+      categoryId: parseInt(category),
+      type: "video",
+      slug: slug.trim(),
+      lessonUrl: lessonUrl.trim(),
+      description: description.trim(),
+      instructions: contentSteps.map((step) => ({ text: step })),
     };
 
-    setLessons([newLesson, ...lessons]);
-    resetForm();
+    try {
+      await createLessonMutation.mutateAsync(payload);
+      resetForm();
+    } catch (err) {
+      console.error("Failed to create lesson:", err);
+    }
   };
 
   const resetForm = () => {
     setIsModalOpen(false);
     setTitle("");
     setSlug("");
-    setCategory("Alphabets");
+    setCategory("");
     setDescription("");
     setContentSteps([""]);
-    setVideoFile(null);
+    setLessonUrl("");
   };
 
-  const handleDelete = (id) => {
-    setLessons(lessons.filter((l) => l.id !== id));
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this lesson?")) {
+      try {
+        await deleteLessonMutation.mutateAsync(id);
+      } catch (err) {
+        console.error("Failed to delete lesson:", err);
+      }
+    }
   };
 
-  const filteredLessons = lessons.filter(
-    (l) => activeCategory === "All Lessons" || l.category === activeCategory
+  const filteredLessons = fetchedLessons.filter(
+    (l) => activeCategory === "All Lessons" || l.categoryId === activeCategory
   );
 
   return (
@@ -101,6 +111,19 @@ export default function Lessons() {
         </Button>
       </div>
 
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-20 space-y-4">
+          <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          <p className="text-gray-400 text-sm">Loading lessons...</p>
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-16 space-y-3 p-6 border border-rose-500/20 bg-rose-500/5 rounded-xl">
+          <AlertTriangle className="w-10 h-10 text-rose-500" />
+          <p className="text-rose-400 text-sm font-semibold">
+            {error?.response?.data?.message || error?.message || "Failed to load lessons."}
+          </p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Categories Navigation Bar */}
         <div className="md:col-span-1 space-y-4">
@@ -113,17 +136,27 @@ export default function Lessons() {
             </CardHeader>
             <CardContent className="pt-4">
               <ul className="space-y-2 text-sm">
-                {categories.map((cat) => (
+                <li
+                  onClick={() => setActiveCategory("All Lessons")}
+                  className={`cursor-pointer px-3 py-2 rounded-lg transition-all ${
+                    activeCategory === "All Lessons"
+                      ? "text-primary font-bold bg-primary/10"
+                      : "text-gray-400 hover:text-gray-200 hover:bg-white/[0.02]"
+                  }`}
+                >
+                  All Lessons
+                </li>
+                {fetchedCategories.map((cat) => (
                   <li
-                    key={cat}
-                    onClick={() => setActiveCategory(cat)}
+                    key={cat.id}
+                    onClick={() => setActiveCategory(cat.id)}
                     className={`cursor-pointer px-3 py-2 rounded-lg transition-all ${
-                      activeCategory === cat
+                      activeCategory === cat.id
                         ? "text-primary font-bold bg-primary/10"
                         : "text-gray-400 hover:text-gray-200 hover:bg-white/[0.02]"
                     }`}
                   >
-                    {cat}
+                    {cat.name || cat.title}
                   </li>
                 ))}
               </ul>
@@ -154,9 +187,13 @@ export default function Lessons() {
                     filteredLessons.map((lesson) => (
                       <TableRow key={lesson.id}>
                         <TableCell className="font-semibold text-white">{lesson.title}</TableCell>
-                        <TableCell className="text-gray-300">{lesson.category}</TableCell>
+                        <TableCell className="text-gray-300">
+                          {fetchedCategories.find((c) => c.id === lesson.categoryId)?.name || 
+                           fetchedCategories.find((c) => c.id === lesson.categoryId)?.title || 
+                           lesson.category || "Unknown"}
+                        </TableCell>
                         <TableCell className="text-gray-400">{lesson.type}</TableCell>
-                        <TableCell className="text-gray-400">{lesson.uploadedAt}</TableCell>
+                        <TableCell className="text-gray-400">{lesson.createdAt ? lesson.createdAt.split("T")[0] : "N/A"}</TableCell>
                         <TableCell className="text-right space-x-2">
                           <Link to={`/lessons/${lesson.id}`}>
                             <Button variant="ghost" size="sm" className="hover:bg-white/[0.04] text-gray-300 hover:text-white flex items-center gap-1.5 inline-flex">
@@ -188,6 +225,7 @@ export default function Lessons() {
           </Card>
         </div>
       </div>
+      )}
 
       {/* Add New Lesson Modal */}
       {isModalOpen && (
@@ -229,28 +267,30 @@ export default function Lessons() {
                   <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1.5">Category</label>
                   <select
                     value={category}
+                    required
                     onChange={(e) => setCategory(e.target.value)}
                     className="flex h-10 w-full rounded-md border border-white/10 bg-[#0D121F] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
                   >
-                    {categories.slice(1).map((cat) => (
-                      <option key={cat} value={cat} className="bg-[#080B11]">
-                        {cat}
+                    <option value="" disabled className="bg-[#080B11]">Select a category</option>
+                    {fetchedCategories.map((cat) => (
+                      <option key={cat.id} value={cat.id} className="bg-[#080B11]">
+                        {cat.name || cat.title}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1.5">Upload Lesson Video</label>
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1.5">Lesson Video URL</label>
                   <div className="relative h-10 flex items-center justify-between border border-white/10 rounded-md bg-white/[0.02] px-3 py-2 text-sm text-gray-400">
                     <input
-                      type="file"
+                      type="url"
                       required
-                      accept="video/*"
-                      onChange={(e) => setVideoFile(e.target.files[0])}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      placeholder="https://example.com/video.mp4"
+                      value={lessonUrl}
+                      onChange={(e) => setLessonUrl(e.target.value)}
+                      className="absolute inset-0 bg-transparent w-full h-full px-3 focus:outline-none focus:ring-2 focus:ring-primary rounded-md"
                     />
-                    <span className="truncate">{videoFile ? videoFile.name : "Choose MP4 video..."}</span>
-                    <Video className="h-4 w-4 text-primary shrink-0" />
+                    <Video className="h-4 w-4 text-primary shrink-0 absolute right-3 pointer-events-none" />
                   </div>
                 </div>
               </div>
@@ -303,8 +343,8 @@ export default function Lessons() {
                 <Button type="button" variant="ghost" className="border border-white/10 text-gray-300 hover:bg-white/[0.06] hover:text-white" onClick={resetForm}>
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-primary hover:bg-primary-deep text-white shadow-lg hover:shadow-primary/20">
-                  Create Lesson Checkpoint
+                <Button type="submit" disabled={createLessonMutation.isPending} className="bg-primary hover:bg-primary-deep text-white shadow-lg hover:shadow-primary/20">
+                  {createLessonMutation.isPending ? "Creating..." : "Create Lesson Checkpoint"}
                 </Button>
               </div>
             </form>

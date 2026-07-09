@@ -1,34 +1,46 @@
-import { View, Text, TouchableOpacity, ScrollView, useColorScheme, Alert } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, useColorScheme, Alert, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import GlassCard from "../../components/ui/GlassCard";
-import { getCategoryBySlug, getLessonById, getLessonNavigation } from "../../services/learnRepository";
+import { fetchLessonById, fetchLessonNavigation } from "../../services/learnRepository";
 import AvatarLessonPlayer from "../../components/learn/AvatarLessonPlayer";
 
-function LessonContent() {
+export default function LearnLessonScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const [isReady, setIsReady] = useState(false);
 
-  useEffect(() => {
-    setIsReady(true);
-  }, []);
-
-  const params = useLocalSearchParams<{ lessonId?: string }>();
+  const params = useLocalSearchParams<{ lessonId?: string; categoryId?: string; categoryTitle?: string }>();
   const lessonId = params.lessonId ?? "";
+  const categoryId = params.categoryId ?? "";
+  const categoryTitle = params.categoryTitle ?? "Category";
 
-  const lesson = getLessonById(lessonId);
-  const category = getCategoryBySlug(lesson?.categorySlug ?? "");
-  const { previousLessonId, nextLessonId } = getLessonNavigation(lesson?.id ?? "");
+  const { data: lesson, isLoading: isLoadingLesson, isError: isErrorLesson } = useQuery({
+    queryKey: ["lesson", lessonId],
+    queryFn: () => fetchLessonById(lessonId),
+    enabled: !!lessonId,
+  });
 
-  if (!isReady) {
-    return null;
+  const { data: navigation, isLoading: isLoadingNav } = useQuery({
+    queryKey: ["lessonNavigation", categoryId, lessonId],
+    queryFn: () => fetchLessonNavigation(categoryId, lessonId),
+    enabled: !!categoryId && !!lessonId,
+  });
+
+  const previousLessonId = navigation?.previousLessonId;
+  const nextLessonId = navigation?.nextLessonId;
+
+  if (isLoadingLesson || isLoadingNav) {
+    return (
+      <View className="flex-1 bg-[#F2F2EA] dark:bg-slate-950 items-center justify-center">
+        <ActivityIndicator size="large" color="#FB5607" />
+      </View>
+    );
   }
 
-  if (!lesson) {
+  if (isErrorLesson || !lesson) {
     return (
       <View className="flex-1 bg-[#F2F2EA] dark:bg-slate-950 items-center justify-center px-6">
         <StatusBar style={isDark ? "light" : "dark"} />
@@ -49,14 +61,14 @@ function LessonContent() {
           <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-full bg-white/20 items-center justify-center border border-white/30 backdrop-blur-md">
             <Ionicons name="arrow-back" size={22} color="white" />
           </TouchableOpacity>
-          <Text className="text-white text-sm font-semibold">{category?.title}</Text>
+          <Text className="text-white text-sm font-semibold">{categoryTitle}</Text>
           <View className="w-10 h-10" />
         </View>
         <Text className="text-white text-2xl font-bold">{lesson.title}</Text>
       </View>
 
       <View className="px-4 mt-3">
-        <AvatarLessonPlayer />
+        <AvatarLessonPlayer videoUrl={lesson.videoUrl} />
 
         <GlassCard contentClassName="" className="mb-2" intensityLight={60} intensityDark={28}>
           <Text className="text-slate-900 dark:text-white text-base mt-1">{lesson.description}</Text>
@@ -67,10 +79,12 @@ function LessonContent() {
           <Text className="text-[#FB5607] text-sm font-semibold mt-1">Lesson progress: {lesson.progress}%</Text>
 
           <View className="mt-1">
-            {lesson.content.map((line) => (
-              <View key={line} className="flex-row mb-1">
+            {lesson.content.map((line, index) => (
+              <View key={index} className="flex-row mb-1">
                 <Text className="text-[#FB5607] mr-2 font-bold">•</Text>
-                <Text className="text-slate-900 dark:text-white text-md flex-1 font-medium">{line}</Text>
+                <Text className="text-slate-900 dark:text-white text-md flex-1 font-medium">
+                  {typeof line === 'string' ? line : (line as any)?.text || JSON.stringify(line)}
+                </Text>
               </View>
             ))}
           </View>
@@ -81,7 +95,7 @@ function LessonContent() {
           onPress={() =>
             router.push({
               pathname: "/(tabs)/learn-checkpoint",
-              params: { lessonId: lesson.id },
+              params: { lessonId: lesson.id, categoryId },
             })
           }
         >
@@ -98,7 +112,7 @@ function LessonContent() {
               previousLessonId &&
               router.replace({
                 pathname: "/(tabs)/learn-lesson",
-                params: { lessonId: previousLessonId },
+                params: { lessonId: previousLessonId, categoryId, categoryTitle },
               })
             }
           >
@@ -110,11 +124,10 @@ function LessonContent() {
             disabled={!nextLessonId}
             onPress={() =>
               nextLessonId &&
-              Alert.alert(
-                "Next Lesson",
-                `Moving to next lesson\nLesson ID: ${nextLessonId}\nCurrent: ${lesson.id}`,
-                [{ text: "OK" }]
-              )
+              router.replace({
+                pathname: "/(tabs)/learn-lesson",
+                params: { lessonId: nextLessonId, categoryId, categoryTitle },
+              })
             }
           >
             <Text className={`font-bold ${nextLessonId ? "text-white" : "text-gray-500 dark:text-slate-500"}`}>Next</Text>
@@ -123,18 +136,4 @@ function LessonContent() {
       </View>
     </ScrollView>
   );
-}
-
-export default function LearnLessonScreen() {
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    setIsReady(true);
-  }, []);
-
-  if (!isReady) {
-    return <View style={{ flex: 1, backgroundColor: "#F2F2EA" }} />;
-  }
-
-  return <LessonContent />;
 }
