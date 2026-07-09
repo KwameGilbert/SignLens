@@ -2,8 +2,6 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-ENV TF_USE_LEGACY_KERAS=1
-
 COPY requirements.txt ./
 
 RUN apt-get update && apt-get install -y \

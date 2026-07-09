@@ -129,16 +129,20 @@ def predict_media(
     file: UploadFile = File(...),
     api_key: str = Depends(verify_api_key)
 ):
-    if type not in [InputType.image, InputType.video]:
-        raise HTTPException(status_code=400, detail="This endpoint only supports type=image or type=video.")
-    file_bytes = file.file.read()
-    
-    if type == InputType.image:
-        result = image_predict(file_bytes)
-    else:
-        result = video_predict(file_bytes)
+    try:
+        if type not in [InputType.image, InputType.video]:
+            raise HTTPException(status_code=400, detail="This endpoint only supports type=image or type=video.")
+        file_bytes = file.file.read()
         
-    return result
+        if type == InputType.image:
+            result = image_predict(file_bytes)
+        else:
+            result = video_predict(file_bytes)
+            
+        return result
+    except Exception as e:
+        import traceback
+        raise HTTPException(status_code=500, detail=str(traceback.format_exc()))
 
 # WebSocket endpoint for video/stream prediction
 @router.websocket("/predict-stream")
