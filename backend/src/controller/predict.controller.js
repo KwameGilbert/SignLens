@@ -2,28 +2,31 @@ import mlClient from '../services/mlClient.service.js';
 import HistoryModel from '../model/history.model.js';
 import { sendSuccess, sendBadRequest, sendError, sendInternalError } from '../utils/response.js';
 
-export const predictImage = async (req, res) => {
+const handlePrediction = async (req, res, isVideo) => {
   try {
     if (!req.file) {
-      return sendBadRequest(res, 'No image file uploaded');
+      return sendBadRequest(res, `No ${isVideo ? 'video' : 'image'} file uploaded`);
     }
 
-    const { type } = req.query;
-    if (type && type !== 'image') {
-      return sendBadRequest(res, 'This REST endpoint only supports type=image queries');
-    }
-
-    console.log(`Processing static image prediction request for User ID: ${req.user.id}`);
-    console.log(`[ML Request] Sending image to ML server (MimeType: ${req.file.mimetype}, Size: ${req.file.buffer.length} bytes)`);
+    console.log(`Processing static ${isVideo ? 'video' : 'image'} prediction request for User ID: ${req.user.id}`);
+    console.log(`[ML Request] Sending ${isVideo ? 'video' : 'image'} to ML server (MimeType: ${req.file.mimetype}, Size: ${req.file.buffer.length} bytes)`);
 
     // Call third party ML service to get prediction details
     let mlResult;
     try {
-      mlResult = await mlClient.predictImage(
-        req.file.buffer,
-        req.file.originalname,
-        req.file.mimetype
-      );
+      if (isVideo) {
+        mlResult = await mlClient.predictVideo(
+          req.file.buffer,
+          req.file.originalname,
+          req.file.mimetype
+        );
+      } else {
+        mlResult = await mlClient.predictImage(
+          req.file.buffer,
+          req.file.originalname,
+          req.file.mimetype
+        );
+      }
       console.log(`[ML Response] Received from ML server:`, mlResult);
     } catch (err) {
       console.error(`[ML Error] Failed to get predictions from ML server:`, err.message);
@@ -54,6 +57,42 @@ export const predictImage = async (req, res) => {
 
     sendSuccess(res, responsePayload, 'Prediction completed successfully');
   } catch (err) {
-    sendInternalError(res, 'Internal gateway failure processing image prediction', err);
+    sendInternalError(res, `Internal gateway failure processing ${isVideo ? 'video' : 'image'} prediction`, err);
   }
+};
+
+export const predictImage = async (req, res) => {
+  if (!req.file) {
+    return sendBadRequest(res, 'No file uploaded');
+  }
+
+  // Detect type (image vs video)
+  let isVideo = false;
+  const { type } = req.query;
+  if (type === 'video') {
+    isVideo = true;
+  } else if (type === 'image') {
+    isVideo = false;
+  } else if (req.file.mimetype && req.file.mimetype.startsWith('video/')) {
+    isVideo = true;
+  } else if (req.file.originalname) {
+    const filename = req.file.originalname.toLowerCase();
+    if (
+      filename.endsWith('.mp4') ||
+      filename.endsWith('.mov') ||
+      filename.endsWith('.m4v') ||
+      filename.endsWith('.avi') ||
+      filename.endsWith('.3gp') ||
+      filename.endsWith('.webm') ||
+      filename.endsWith('.mkv')
+    ) {
+      isVideo = true;
+    }
+  }
+
+  await handlePrediction(req, res, isVideo);
+};
+
+export const predictVideo = async (req, res) => {
+  await handlePrediction(req, res, true);
 };
