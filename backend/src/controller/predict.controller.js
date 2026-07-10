@@ -61,7 +61,7 @@ const handlePrediction = async (req, res, isVideo) => {
   }
 };
 
-export const predictImage = async (req, res) => {
+export const predictMedia = async (req, res) => {
   if (!req.file) {
     return sendBadRequest(res, 'No file uploaded');
   }
