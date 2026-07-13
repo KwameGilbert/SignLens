@@ -66,6 +66,10 @@ def image_predict(file_bytes: bytes):
         
     pred_class = np.argmax(preds)
     confidence = float(np.max(preds))
+    
+    if confidence < 0.6:
+        return {"prediction": "Failed to predict sign. Please ensure your hands are clearly visible and try again.", "confidence": confidence}
+        
     label = STATIC_CLASSES[pred_class] if pred_class < len(STATIC_CLASSES) else str(pred_class)
     return {"prediction": label, "confidence": confidence}
 
@@ -134,6 +138,10 @@ def video_predict(file_bytes: bytes):
     preds = model.predict(input_data, verbose=0)
     pred_class = np.argmax(preds)
     confidence = float(np.max(preds))
+    
+    if confidence < 0.6:
+        return {"prediction": "Failed to predict sign. Please ensure your hands are clearly visible and try again.", "confidence": confidence}
+        
     label = VIDEO_CLASSES[pred_class] if pred_class < len(VIDEO_CLASSES) else str(pred_class)
     
     return {"prediction": label, "confidence": confidence}
