@@ -4,6 +4,7 @@ python-multipart
 pydantic
 opencv-python-headless
 tensorflow
+keras==3.14.1
 numpy
 mysql-connector-python
 python-dotenv
