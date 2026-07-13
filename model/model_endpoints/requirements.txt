@@ -3,7 +3,7 @@ uvicorn
 python-multipart
 pydantic
 opencv-python-headless
-tensorflow==2.15.0
+tensorflow
 numpy
 mysql-connector-python
 python-dotenv
