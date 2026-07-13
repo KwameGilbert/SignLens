@@ -42,6 +42,15 @@ def main():
     
     y = to_categorical(y).astype(int)
     
+    # Augment Data
+    def augment_keypoints(data, noise_factor=0.01):
+        noise = np.random.normal(loc=0.0, scale=noise_factor, size=data.shape)
+        return data + noise
+        
+    X_aug = augment_keypoints(X)
+    X = np.concatenate((X, X_aug))
+    y = np.concatenate((y, y))
+    
     # Shuffle and split data using numpy instead of sklearn
     indices = np.arange(len(X))
     np.random.shuffle(indices)
@@ -54,9 +63,9 @@ def main():
     
     model = Sequential([
         Dense(128, activation='relu', input_shape=(258,)),
-        Dropout(0.2),
+        Dropout(0.5),
         Dense(64, activation='relu'),
-        Dropout(0.2),
+        Dropout(0.5),
         Dense(len(CLASSES), activation='softmax')
     ])
     
@@ -70,10 +79,17 @@ def main():
     os.makedirs(os.path.dirname(MODEL_SAVE_PATH), exist_ok=True)
     
     print("Training model...")
+    
+    from sklearn.utils.class_weight import compute_class_weight
+    y_integers = np.argmax(y_train, axis=1)
+    class_weights_array = compute_class_weight('balanced', classes=np.unique(y_integers), y=y_integers)
+    class_weights_dict = {i: weight for i, weight in enumerate(class_weights_array)}
+    
     history = model.fit(
         X_train, y_train,
         validation_data=(X_test, y_test),
         epochs=EPOCHS,
+        class_weight=class_weights_dict,
         callbacks=[tb_callback, early_stopping, lr_scheduler]
     )
     

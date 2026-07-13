@@ -63,11 +63,22 @@ lr_scheduler = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min
 # callbacks = [tb_callback, early_stopping, checkpoint, lr_scheduler]
 callbacks = [tb_callback, early_stopping, lr_scheduler]
 
+from sklearn.utils.class_weight import compute_class_weight
+
+# Calculate class weights
+class_weights_array = compute_class_weight(
+    class_weight='balanced',
+    classes=np.unique(train_gen.classes),
+    y=train_gen.classes
+)
+class_weights_dict = {i: weight for i, weight in enumerate(class_weights_array)}
+
 history = model.fit(
     train_gen,
-    validation_data=val_gen,  # Added validation data
+    validation_data=val_gen,
     epochs=EPOCHS,
-    callbacks=callbacks
+    callbacks=callbacks,
+    class_weight=class_weights_dict
 )
 
 # Plot training & validation accuracy and loss
