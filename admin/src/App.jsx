@@ -16,6 +16,7 @@ import Settings from './pages/settings/Settings'
 import Notifications from './pages/notifications/Notifications'
 import Profile from './pages/profile/Profile'
 import { PageLayout } from './components/layout/PageLayout'
+import { ProtectedRoute } from './components/layout/ProtectedRoute'
 
 function App() {
   return (
@@ -24,7 +25,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         
         {/* Protected Routes Wrapper */}
-        <Route element={<PageLayout />}>
+        <Route element={<ProtectedRoute />}>
+          <Route element={<PageLayout />}>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/users" element={<Users />} />
@@ -41,6 +43,7 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/profile" element={<Profile />} />
+        </Route>
         </Route>
       </Routes>
     </BrowserRouter>
