@@ -26,45 +26,47 @@ async function runVerification() {
   // 2. Verify ESM Imports Integrity
   console.log('\n2. Testing module loading and integrity...');
   try {
-    const UserModel = await import('../src/model/user.js');
+    const UserModel = await import('../src/model/user.model.js');
     assert.ok(UserModel.default.findByEmail, 'UserModel should export findByEmail');
     assert.ok(UserModel.default.findById, 'UserModel should export findById');
     assert.ok(UserModel.default.create, 'UserModel should export create');
     console.log('   ✅ UserModel loaded successfully.');
 
-    const HistoryModel = await import('../src/model/history.js');
+    const HistoryModel = await import('../src/model/history.model.js');
     assert.ok(HistoryModel.default.create, 'HistoryModel should export create');
     assert.ok(HistoryModel.default.findByUserId, 'HistoryModel should export findByUserId');
     console.log('   ✅ HistoryModel loaded successfully.');
 
-    const authController = await import('../src/controller/auth.js');
+    const authController = await import('../src/controller/auth.controller.js');
     assert.ok(authController.register, 'AuthController should export register');
     assert.ok(authController.login, 'AuthController should export login');
     console.log('   ✅ AuthController loaded successfully.');
 
-    const historyController = await import('../src/controller/history.js');
+    const historyController = await import('../src/controller/history.controller.js');
     assert.ok(historyController.getHistory, 'HistoryController should export getHistory');
     assert.ok(historyController.createHistory, 'HistoryController should export createHistory');
     console.log('   ✅ HistoryController loaded successfully.');
 
-    const predictController = await import('../src/controller/predict.js');
+    const predictController = await import('../src/controller/predict.controller.js');
     assert.ok(predictController.predictImage, 'PredictController should export predictImage');
+    assert.ok(predictController.predictVideo, 'PredictController should export predictVideo');
     console.log('   ✅ PredictController loaded successfully.');
 
-    const authMiddleware = await import('../src/middleware/auth.js');
+    const authMiddleware = await import('../src/middleware/auth.middleware.js');
     assert.ok(authMiddleware.requireAuth, 'AuthMiddleware should export requireAuth');
     assert.ok(authMiddleware.requireAdmin, 'AuthMiddleware should export requireAdmin');
     console.log('   ✅ AuthMiddleware loaded successfully.');
 
-    const mlClient = await import('../src/services/mlClient.js');
+    const mlClient = await import('../src/services/mlClient.service.js');
     assert.ok(mlClient.default.predictImage, 'MLClient should export predictImage');
+    assert.ok(mlClient.default.predictVideo, 'MLClient should export predictVideo');
     console.log('   ✅ MLClient service loaded successfully.');
 
-    const uploadService = await import('../src/services/upload.js');
+    const uploadService = await import('../src/services/upload.service.js');
     assert.ok(uploadService.default.single, 'Upload service should export multer single upload middleware');
     console.log('   ✅ Multer Upload service loaded successfully.');
 
-    const predictStreamService = await import('../src/services/predictStream.js');
+    const predictStreamService = await import('../src/services/predictStream.service.js');
     assert.ok(predictStreamService.handlePredictStreamConnection, 'predictStream service should export handlePredictStreamConnection');
     console.log('   ✅ WebSocket Relay service loaded successfully.');
 
