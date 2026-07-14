@@ -24,38 +24,32 @@ export default function TranslationResultScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const videoUri = params.videoUri as string;
-  const { predictImageMutation } = usePredict();
+  const { predictVideoMutation } = usePredict();
 
   useEffect(() => {
     async function processVideo() {
       if (!videoUri) return;
       try {
-        console.log("[PREDICT] Extracting thumbnail from video:", videoUri);
-        // Extract a frame from the middle/beginning of the video
-        const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
-          time: 500, // 0.5s into the video
-          quality: 0.8,
-        });
-        console.log("[PREDICT] Thumbnail extracted:", uri);
-        predictImageMutation.mutate(uri);
+        console.log("[PREDICT] Sending video for prediction:", videoUri);
+        predictVideoMutation.mutate(videoUri);
       } catch (e) {
-        console.error("[PREDICT ERROR] Failed to extract thumbnail:", e);
+        console.error("[PREDICT ERROR] Failed to send video:", e);
       }
     }
     processVideo();
   }, [videoUri]);
 
   useEffect(() => {
-    if (predictImageMutation.isError) {
-      console.error("[PREDICT ERROR]", predictImageMutation.error);
-      if ((predictImageMutation.error as any).response) {
-        console.error("Response data:", (predictImageMutation.error as any).response.data);
+    if (predictVideoMutation.isError) {
+      console.error("[PREDICT ERROR]", predictVideoMutation.error);
+      if ((predictVideoMutation.error as any).response) {
+        console.error("Response data:", (predictVideoMutation.error as any).response.data);
       }
     }
-    if (predictImageMutation.isSuccess) {
-      console.log("[PREDICT SUCCESS]", predictImageMutation.data?.data);
+    if (predictVideoMutation.isSuccess) {
+      console.log("[PREDICT SUCCESS]", predictVideoMutation.data?.data);
     }
-  }, [predictImageMutation.isError, predictImageMutation.isSuccess, predictImageMutation.error, predictImageMutation.data]);
+  }, [predictVideoMutation.isError, predictVideoMutation.isSuccess, predictVideoMutation.error, predictVideoMutation.data]);
 
   function VideoBackground() {
     const player = useVideoPlayer({ uri: videoUri }, (videoPlayer) => {
@@ -68,12 +62,12 @@ export default function TranslationResultScreen() {
   }
 
   let translatedText = "Analyzing sign...";
-  if (predictImageMutation.isPending) {
+  if (predictVideoMutation.isPending) {
     translatedText = "Analyzing sign...";
-  } else if (predictImageMutation.isError) {
+  } else if (predictVideoMutation.isError) {
     translatedText = "Failed to translate.";
-  } else if (predictImageMutation.isSuccess) {
-    const result = predictImageMutation.data?.data as any;
+  } else if (predictVideoMutation.isSuccess) {
+    const result = predictVideoMutation.data?.data as any;
     // Format the text so it's capitalized properly if needed, but we'll just use the label
     // The backend uses 'prediction' instead of 'prediction_label' per documentation
     translatedText = result?.prediction || result?.data?.prediction || "No sign detected.";
@@ -132,7 +126,7 @@ export default function TranslationResultScreen() {
               </Text>
               
               <View className="bg-white/10 p-6 rounded-3xl border border-white/20 w-full mb-6">
-                {predictImageMutation.isPending ? (
+                {predictVideoMutation.isPending ? (
                   <ActivityIndicator size="large" color="#ffffff" className="my-2" />
                 ) : (
                   <Text className="text-white text-3xl font-bold text-center leading-[40px]">
@@ -144,8 +138,8 @@ export default function TranslationResultScreen() {
               <TouchableOpacity 
                 activeOpacity={0.7}
                 onPress={speak}
-                disabled={predictImageMutation.isPending || predictImageMutation.isError}
-                className={`w-14 h-14 rounded-full justify-center items-center shadow-lg shadow-[#FB5607]/40 ${predictImageMutation.isPending || predictImageMutation.isError ? "bg-gray-500 opacity-50" : "bg-[#FB5607]"}`}
+                disabled={predictVideoMutation.isPending || predictVideoMutation.isError}
+                className={`w-14 h-14 rounded-full justify-center items-center shadow-lg shadow-[#FB5607]/40 ${predictVideoMutation.isPending || predictVideoMutation.isError ? "bg-gray-500 opacity-50" : "bg-[#FB5607]"}`}
               >
                 <Ionicons name="volume-high" size={28} color="white" />
               </TouchableOpacity>
