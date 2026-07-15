@@ -13,8 +13,9 @@ def get_image_model(input_shape, num_classes):
     model.add(Conv2D(128, (3,3), activation='relu'))
     model.add(BatchNormalization())
     model.add(MaxPooling2D((2,2)))
+    from tensorflow.keras.regularizers import l2
     model.add(Flatten())
-    model.add(Dense(128, activation='relu'))
+    model.add(Dense(128, activation='relu', kernel_regularizer=l2(0.01)))
     model.add(BatchNormalization())
     model.add(Dropout(0.5))
     model.add(Dense(num_classes, activation='softmax'))

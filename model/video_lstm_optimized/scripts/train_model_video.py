@@ -56,7 +56,18 @@ def main():
     val_split = int(len(X) * (train_size + val_size))
     X_train, X_val, X_test = X[:train_split], X[train_split:val_split], X[val_split:]
     y_train, y_val, y_test = y[:train_split], y[train_split:val_split], y[val_split:]
+    
+    # Augment Training Data
+    def augment_keypoints(data, noise_factor=0.01):
+        noise = np.random.normal(loc=0.0, scale=noise_factor, size=data.shape)
+        return data + noise
+        
+    X_train_aug = augment_keypoints(X_train)
+    X_train = np.concatenate((X_train, X_train_aug))
+    y_train = np.concatenate((y_train, y_train))
+    
     print(f"Training Data: {X_train.shape}")
+    print(f"Validation Data: {X_val.shape}")
     print(f"Testing Data: {X_test.shape}")
     model = get_model(input_shape=(SEQUENCE_LENGTH, X_train.shape[2]), num_classes=actions.shape[0])
     log_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'Logs')
@@ -78,7 +89,19 @@ def main():
     checkpoint = ModelCheckpoint(model_path, monitor='val_categorical_accuracy', mode='max', save_best_only=True, verbose=1)
     lr_scheduler = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1)
     callbacks = [tb_callback, early_stopping, checkpoint, lr_scheduler]
-    history = model.fit(X_train, y_train, epochs=200, callbacks=callbacks, validation_data=(X_val, y_val))
+    
+    from sklearn.utils.class_weight import compute_class_weight
+    y_integers = np.argmax(y_train, axis=1)
+    class_weights_array = compute_class_weight('balanced', classes=np.unique(y_integers), y=y_integers)
+    class_weights_dict = {i: weight for i, weight in enumerate(class_weights_array)}
+    
+    history = model.fit(
+        X_train, y_train, 
+        epochs=200, 
+        callbacks=callbacks, 
+        validation_data=(X_val, y_val),
+        class_weight=class_weights_dict
+    )
     plot_history(history)
     print("\nEvaluating on Test Set...")
     test_loss, test_accuracy = model.evaluate(X_test, y_test, verbose=0)
