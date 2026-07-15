@@ -18,7 +18,8 @@ IMAGE_MODEL_FILENAME = "image_model.h5"
 VIDEO_MODEL_FILENAME = "video_model.h5"
 # Static model classes (A-Z + Neutral)
 STATIC_CLASSES = [chr(i) for i in range(ord('A'), ord('Z')+1)] + ['Neutral']
-VIDEO_CLASSES = [chr(i) for i in range(ord('A'), ord('Z')+1)] + [str(i) for i in range(1, 11)]
+# The actual classes the video model was trained on (matching directory order in the dataset)
+VIDEO_CLASSES = ['0', '1', '10', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'Neutral', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 
 def image_predict(file_bytes: bytes):
     # Load model dynamically
@@ -44,6 +45,7 @@ def image_predict(file_bytes: bytes):
 
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     
+    expected_features = model.input_shape[-1]
     mp_holistic = mp.solutions.holistic
     with mp_holistic.Holistic(static_image_mode=True) as holistic:
         results = holistic.process(img_rgb)
@@ -59,7 +61,14 @@ def image_predict(file_bytes: bytes):
         if results.right_hand_landmarks:
             rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten()
             
-        keypoints = np.concatenate([pose, lh, rh]) # 258 features
+        if expected_features == 1662:
+            face = np.zeros(468 * 3)
+            if results.face_landmarks:
+                face = np.array([[res.x, res.y, res.z] for res in results.face_landmarks.landmark]).flatten()
+            keypoints = np.concatenate([pose, face, lh, rh])
+        else:
+            keypoints = np.concatenate([pose, lh, rh])
+            
         x = np.expand_dims(keypoints, axis=0)
         preds = model.predict(x, verbose=0)
         
@@ -79,6 +88,7 @@ import os
 def video_predict(file_bytes: bytes):
     # Load model dynamically
     model = model_manager.get_model('video')
+    expected_features = model.input_shape[-1]
     
     # Save video bytes to a temporary file for OpenCV to read
     with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_video:
@@ -112,7 +122,13 @@ def video_predict(file_bytes: bytes):
             if results.right_hand_landmarks:
                 rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten()
                 
-            keypoints = np.concatenate([pose, lh, rh]) # 258 features
+            if expected_features == 1662:
+                face = np.zeros(468 * 3)
+                if results.face_landmarks:
+                    face = np.array([[res.x, res.y, res.z] for res in results.face_landmarks.landmark]).flatten()
+                keypoints = np.concatenate([pose, face, lh, rh])
+            else:
+                keypoints = np.concatenate([pose, lh, rh])
             sequence.append(keypoints)
             
     cap.release()
@@ -127,7 +143,7 @@ def video_predict(file_bytes: bytes):
         
     # Pad if sequence is shorter than 30 frames
     while len(sequence) < SEQUENCE_LENGTH:
-        sequence.append(np.zeros(258))
+        sequence.append(np.zeros(expected_features))
         
     # Truncate if too long
     sequence = sequence[:SEQUENCE_LENGTH]
@@ -205,9 +221,10 @@ async def predict_stream(websocket: WebSocket):
                 img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                 results = holistic.process(img_rgb)
                 
-                # Extract keypoints based on type
+                expected_features = model.input_shape[-1]
+                
+                # Extract keypoints based on expected model input dimension
                 pose = np.zeros(33 * 4)
-                face = np.zeros(468 * 3)
                 lh = np.zeros(21 * 3)
                 rh = np.zeros(21 * 3)
                 
@@ -218,12 +235,13 @@ async def predict_stream(websocket: WebSocket):
                 if results.right_hand_landmarks:
                     rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten()
                 
-                if type_ == "stream":
+                if expected_features == 1662:
+                    face = np.zeros(468 * 3)
                     if results.face_landmarks:
                         face = np.array([[res.x, res.y, res.z] for res in results.face_landmarks.landmark]).flatten()
-                    keypoints = np.concatenate([pose, face, lh, rh]) # 1662 features
+                    keypoints = np.concatenate([pose, face, lh, rh])
                 else:
-                    keypoints = np.concatenate([pose, lh, rh]) # 258 features
+                    keypoints = np.concatenate([pose, lh, rh])
                 
                 sequence.append(keypoints)
                 if len(sequence) > SEQUENCE_LENGTH:
