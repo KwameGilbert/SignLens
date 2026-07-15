@@ -1,4 +1,4 @@
-import apiClient from "../apiClient";
+import axios from "axios";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -6,13 +6,25 @@ export type PredictionResult = {
   prediction: string;
   confidence: number;
   loggedId?: number;
+  fallback?: boolean;
+  model_used?: string;
 };
+
+// Create a dedicated axios instance for direct ML server communication
+const ML_BASE_URL = process.env.EXPO_PUBLIC_ML_API_URL ?? "http://10.50.49.16:8000";
+
+const mlClient = axios.create({
+  baseURL: ML_BASE_URL,
+  timeout: 300000, // 5 minutes timeout for large video uploads/processing
+  headers: {
+    "bypass-tunnel-reminder": "true",
+  },
+});
 
 // ── Endpoint functions ─────────────────────────────────────────────────
 
 /**
- * Send a static image to the prediction gateway.
- * The backend proxies it to the ML model server and logs the result.
+ * Send a static image directly to the ML model server.
  */
 export const predictImage = (imageUri: string) => {
   const formData = new FormData();
@@ -22,21 +34,20 @@ export const predictImage = (imageUri: string) => {
     type: "image/jpeg",
   } as any);
 
-  console.log("Sending image prediction request:", {
-    endpoint: "/predict",
+  console.log("Sending image prediction request directly to ML server:", {
+    endpoint: "/api/v1/predict?type=image",
     fileUri: imageUri,
     fileName: "frame.jpg",
     fileType: "image/jpeg",
   });
 
-  return apiClient.post<PredictionResult>("/predict", formData, {
+  return mlClient.post<PredictionResult>("/api/v1/predict?type=image", formData, {
     headers: { "Content-Type": "multipart/form-data" },
-    timeout: 60000, // 60 seconds (allows Render backends to wake from sleep)
   });
 };
 
 /**
- * Send a recorded video to the prediction gateway.
+ * Send a recorded video directly to the ML model server.
  */
 export const predictVideo = (videoUri: string) => {
   const formData = new FormData();
@@ -46,33 +57,31 @@ export const predictVideo = (videoUri: string) => {
     type: "video/mp4",
   } as any);
 
-  console.log("Sending video prediction request:", {
-    endpoint: "/predict",
+  console.log("Sending video prediction request directly to ML server:", {
+    endpoint: "/api/v1/predict?type=video",
     fileUri: videoUri,
     fileName: "sign.mp4",
     fileType: "video/mp4",
   });
 
-  return apiClient.post<PredictionResult>("/predict", formData, {
+  return mlClient.post<PredictionResult>("/api/v1/predict?type=video", formData, {
     headers: { "Content-Type": "multipart/form-data" },
-    timeout: 120000, // 2 minutes for video upload & ML processing
   });
 };
 
 /**
  * Returns the WebSocket URL for real-time video frame streaming.
- * The caller should establish the WebSocket connection directly.
+ * Communicates directly with the ML model server.
  *
- * @param token - JWT access token for authentication.
+ * @param token - Authentication token (optional/dummy key for local model).
  * @param type  - The type of stream: "stream" (live camera) or "video".
  */
 export const getPredictStreamUrl = (
   token: string,
   type: "stream" | "video" = "stream"
 ): string => {
-  const baseUrl = (process.env.EXPO_PUBLIC_API_URL ?? "").replace(
-    /^http/,
-    "ws"
-  );
-  return `${baseUrl}/predict-stream?token=${token}&type=${type}`;
+  const baseUrl = ML_BASE_URL.replace(/^http/, "ws");
+  // The model endpoints WebSocket requires api_key and type parameters.
+  // Since verification is commented out in endpoints.py, a dummy key is used.
+  return `${baseUrl}/api/v1/predict-stream?api_key=dummy_key&type=${type}`;
 };

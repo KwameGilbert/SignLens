@@ -19,7 +19,7 @@ def predict_with_gemini(file_bytes: bytes, mime_type: str) -> str | None:
 
     try:
         b64_data = base64.b64encode(file_bytes).decode("utf-8")
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key={api_key}"
         
         payload = {
             "contents": [
@@ -52,7 +52,7 @@ def predict_with_gemini(file_bytes: bytes, mime_type: str) -> str | None:
             method="POST"
         )
         
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=30) as response:
             res_data = response.read().decode("utf-8")
             res_json = json.loads(res_data)
             
@@ -63,9 +63,14 @@ def predict_with_gemini(file_bytes: bytes, mime_type: str) -> str | None:
                 if parts:
                     text_result = parts[0].get("text", "").strip()
                     text_result = text_result.replace("\n", "").replace(".", "").strip()
+                    print(f"[Gemini Response] Model: gemini-3.1-flash-lite, Label: {text_result}")
                     return text_result
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode("utf-8") if e.fp else "No body"
+        print(f"[Error] Gemini API HTTP Error: {e.code} - {e.reason}\nResponse Body: {error_body}")
     except Exception as e:
-        print(f"[Error] Gemini prediction failed: {e}")
+        import traceback
+        print(f"[Error] Gemini prediction failed: {e}\n{traceback.format_exc()}")
     return None
 
 router = APIRouter()
@@ -143,7 +148,7 @@ def image_predict(file_bytes: bytes):
                 "prediction": gemini_label,
                 "confidence": confidence,
                 "fallback": True,
-                "model_used": "Gemini-1.5-Flash"
+                "model_used": "Gemini-3.1-Flash-Lite"
             }
             
     if confidence < 0.5:
@@ -178,11 +183,14 @@ def video_predict(file_bytes: bytes):
     
     cap = cv2.VideoCapture(temp_video_path)
     
+    frames = []
+    
     with mp_holistic.Holistic(static_image_mode=False) as holistic:
         while cap.isOpened() and len(sequence) < SEQUENCE_LENGTH:
             ret, frame = cap.read()
             if not ret:
                 break
+            frames.append(frame)
                 
             img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             results = holistic.process(img_rgb)
@@ -229,14 +237,25 @@ def video_predict(file_bytes: bytes):
     pred_class = np.argmax(preds)
     confidence = float(np.max(preds))
     
+    # Prepare middle frame bytes for Gemini fallback
+    middle_frame_bytes = None
+    if frames:
+        middle_idx = len(frames) // 2
+        success, encoded_img = cv2.imencode('.jpg', frames[middle_idx])
+        if success:
+            middle_frame_bytes = encoded_img.tobytes()
+            
     if confidence < 0.9:
-        gemini_label = predict_with_gemini(file_bytes, "video/mp4")
+        gemini_label = predict_with_gemini(
+            middle_frame_bytes if middle_frame_bytes else file_bytes,
+            "image/jpeg" if middle_frame_bytes else "video/mp4"
+        )
         if gemini_label:
             return {
                 "prediction": gemini_label,
                 "confidence": confidence,
                 "fallback": True,
-                "model_used": "Gemini-1.5-Flash"
+                "model_used": "Gemini-3.1-Flash-Lite"
             }
             
     if confidence < 0.5:
@@ -271,7 +290,9 @@ def predict_media(
         return result
     except Exception as e:
         import traceback
-        raise HTTPException(status_code=500, detail=str(traceback.format_exc()))
+        traceback_str = traceback.format_exc()
+        print(f"[Error] Prediction handler failed:\n{traceback_str}")
+        raise HTTPException(status_code=500, detail=traceback_str)
 
 # WebSocket endpoint for video/stream prediction
 @router.websocket("/predict-stream")
@@ -351,3 +372,10 @@ async def predict_stream(websocket: WebSocket):
                     
     except WebSocketDisconnect:
         pass
+    except Exception as e:
+        import traceback
+        print(f"[Error] Stream prediction failed:\n{traceback.format_exc()}")
+        try:
+            await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
+        except Exception:
+            pass
