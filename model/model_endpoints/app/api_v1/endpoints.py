@@ -5,7 +5,68 @@ from app.models.model_manager import model_manager
 import numpy as np
 import cv2
 import mediapipe as mp
+import base64
+import json
+import urllib.request
+import urllib.error
+import os
 
+def predict_with_gemini(file_bytes: bytes, mime_type: str) -> str | None:
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        print("[Warning] GEMINI_API_KEY environment variable is not set. Skipping Gemini fallback.")
+        return None
+
+    try:
+        b64_data = base64.b64encode(file_bytes).decode("utf-8")
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "text": (
+                                "Identify the American Sign Language (ASL) alphabet letter (A-Z), "
+                                "digit (1-10), or 'Neutral' shown in this media. "
+                                "Output ONLY the single character, digit, or the word 'Neutral'. "
+                                "Do not include any explanation, sentences, punctuation, or extra spaces."
+                            )
+                        },
+                        {
+                            "inlineData": {
+                                "mimeType": mime_type,
+                                "data": b64_data
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+        
+        req_data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=req_data,
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        
+        with urllib.request.urlopen(req, timeout=10) as response:
+            res_data = response.read().decode("utf-8")
+            res_json = json.loads(res_data)
+            
+            candidates = res_json.get("candidates", [])
+            if candidates:
+                content = candidates[0].get("content", {})
+                parts = content.get("parts", [])
+                if parts:
+                    text_result = parts[0].get("text", "").strip()
+                    text_result = text_result.replace("\n", "").replace(".", "").strip()
+                    return text_result
+    except Exception as e:
+        print(f"[Error] Gemini prediction failed: {e}")
+    return None
 
 router = APIRouter()
 
@@ -75,11 +136,26 @@ def image_predict(file_bytes: bytes):
     pred_class = np.argmax(preds)
     confidence = float(np.max(preds))
     
+    if confidence < 0.9:
+        gemini_label = predict_with_gemini(file_bytes, "image/jpeg")
+        if gemini_label:
+            return {
+                "prediction": gemini_label,
+                "confidence": confidence,
+                "fallback": True,
+                "model_used": "Gemini-1.5-Flash"
+            }
+            
     if confidence < 0.5:
-        return {"prediction": "Failed to predict sign. Please ensure your hands are clearly visible and try again.", "confidence": confidence}
+        return {
+            "prediction": "Failed to predict sign. Please ensure your hands are clearly visible and try again.",
+            "confidence": confidence,
+            "fallback": False,
+            "model_used": "Custom-CNN"
+        }
         
     label = STATIC_CLASSES[pred_class] if pred_class < len(STATIC_CLASSES) else str(pred_class)
-    return {"prediction": label, "confidence": confidence}
+    return {"prediction": label, "confidence": confidence, "fallback": False, "model_used": "Custom-CNN"}
 
 
 import tempfile
@@ -153,12 +229,27 @@ def video_predict(file_bytes: bytes):
     pred_class = np.argmax(preds)
     confidence = float(np.max(preds))
     
+    if confidence < 0.9:
+        gemini_label = predict_with_gemini(file_bytes, "video/mp4")
+        if gemini_label:
+            return {
+                "prediction": gemini_label,
+                "confidence": confidence,
+                "fallback": True,
+                "model_used": "Gemini-1.5-Flash"
+            }
+            
     if confidence < 0.5:
-        return {"prediction": "Failed to predict sign. Please ensure your hands are clearly visible and try again.", "confidence": confidence}
+        return {
+            "prediction": "Failed to predict sign. Please ensure your hands are clearly visible and try again.",
+            "confidence": confidence,
+            "fallback": False,
+            "model_used": "Custom-LSTM"
+        }
         
     label = VIDEO_CLASSES[pred_class] if pred_class < len(VIDEO_CLASSES) else str(pred_class)
     
-    return {"prediction": label, "confidence": confidence}
+    return {"prediction": label, "confidence": confidence, "fallback": False, "model_used": "Custom-LSTM"}
 
 
 @router.post("/predict", response_model=PredictResponse)
