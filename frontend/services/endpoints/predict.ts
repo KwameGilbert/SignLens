@@ -22,6 +22,13 @@ export const predictImage = (imageUri: string) => {
     type: "image/jpeg",
   } as any);
 
+  console.log("Sending image prediction request:", {
+    endpoint: "/predict",
+    fileUri: imageUri,
+    fileName: "frame.jpg",
+    fileType: "image/jpeg",
+  });
+
   return apiClient.post<PredictionResult>("/predict", formData, {
     headers: { "Content-Type": "multipart/form-data" },
     timeout: 60000, // 60 seconds (allows Render backends to wake from sleep)
@@ -38,6 +45,13 @@ export const predictVideo = (videoUri: string) => {
     name: "sign.mp4",
     type: "video/mp4",
   } as any);
+
+  console.log("Sending video prediction request:", {
+    endpoint: "/predict",
+    fileUri: videoUri,
+    fileName: "sign.mp4",
+    fileType: "video/mp4",
+  });
 
   return apiClient.post<PredictionResult>("/predict", formData, {
     headers: { "Content-Type": "multipart/form-data" },

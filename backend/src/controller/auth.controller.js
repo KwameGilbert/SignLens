@@ -97,6 +97,39 @@ export const me = (req, res) => {
   sendSuccess(res, { user: req.user }, 'User profile retrieved successfully');
 };
 
+export const profile = async (req, res) => {
+  try {
+    const user = req.user;
+    
+    // Attempt to parse user profile if it's stored as JSON string or object
+    let userProfile = {};
+    if (user.profile) {
+      try {
+        userProfile = typeof user.profile === 'string' ? JSON.parse(user.profile) : user.profile;
+      } catch(e) {
+        // ignore parse error
+      }
+    }
+
+    const roleName = user.role === 'admin' ? 'Admin' : (user.role === 'superadmin' ? 'Super Admin' : 'User');
+
+    sendSuccess(res, {
+      name: `${user.firstName} ${user.lastName}`.trim(),
+      email: user.email,
+      phone: userProfile.phone || "+233 24 123 4567",
+      role: userProfile.roleDisplay || roleName,
+      clearanceLevel: userProfile.clearanceLevel || "Level 3 Clearance",
+      preferences: {
+        emailDigest: userProfile.preferences?.emailDigest ?? true,
+        systemAlarms: userProfile.preferences?.systemAlarms ?? true,
+        autoSync: userProfile.preferences?.autoSync ?? false
+      }
+    }, 'Admin profile retrieved successfully');
+  } catch (err) {
+    sendInternalError(res, 'Failed to fetch admin profile', err);
+  }
+};
+
 export const googleLogin = async (req, res) => {
   try {
     const { idToken } = req.body;

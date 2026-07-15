@@ -9,6 +9,7 @@ import quizRoutes from './quiz.route.js';
 import badgeRoutes from './badge.route.js';
 import activityLogRoutes from './activityLog.route.js';
 import settingRoutes from './setting.route.js';
+import dashboardRoutes from './dashboard.route.js';
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use('/quizzes', quizRoutes);
 router.use('/badges', badgeRoutes);
 router.use('/activity-logs', activityLogRoutes);
 router.use('/settings', settingRoutes);
+router.use('/dashboard', dashboardRoutes);
 
 export default router;

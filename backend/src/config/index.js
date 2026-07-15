@@ -19,8 +19,8 @@ export const config = {
   port: parseInt(process.env.PORT || '8001', 10),
   secretKey: process.env.SECRET_KEY || 'default_secret_key_fallback_should_not_use_in_prod',
   jwtExpiry: process.env.JWT_EXPIRY || '30d',
-  mlModelUrl: process.env.MODEL_API_URL || 'http://127.0.0.1:8000',
-  mlModelWsUrl: process.env.MODEL_API_WS_URL || 'ws://127.0.0.1:8000',
+  mlModelUrl: process.env.MODEL_API_URL || 'http://10.20.79.6:8000',
+  mlModelWsUrl: process.env.MODEL_API_WS_URL || 'ws://10.20.79.6:8000',
   mlModelApiKey: process.env.MODEL_API_KEY || '',
   highConfidenceThreshold: parseFloat(process.env.HIGH_CONFIDENCE_THRESHOLD || '0.8'),
 };
