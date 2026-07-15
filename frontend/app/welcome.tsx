@@ -16,8 +16,7 @@ export default function WelcomeScreen() {
   };
 
   const handleContinueAsGuest = () => {
-    // Navigate to main app
-    console.log('Navigate to main app as guest');
+    router.push('/(tabs)/home');
   };
 
   return (

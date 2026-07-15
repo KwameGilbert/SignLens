@@ -1,19 +1,38 @@
 import { useMemo, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import QuizBlock from "../../components/learn/QuizBlock";
-import { getLessonById, getLessonNavigation, getQuizByLessonId } from "../../services/learnRepository";
+import { fetchLessonById, fetchLessonNavigation, fetchQuizByLessonId } from "../../services/learnRepository";
 
 export default function LearnCheckpointScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ lessonId?: string }>();
-  const lessonId = params.lessonId ?? "";
 
-  const lesson = getLessonById(lessonId);
-  const quiz = getQuizByLessonId(lessonId);
-  const { nextLessonId } = getLessonNavigation(lessonId);
+  const params = useLocalSearchParams<{ lessonId?: string; categoryId?: string }>();
+  const lessonId = params.lessonId ?? "";
+  const categoryId = params.categoryId ?? "";
+
+  const { data: lesson, isLoading: isLoadingLesson } = useQuery({
+    queryKey: ["lesson", lessonId],
+    queryFn: () => fetchLessonById(lessonId),
+    enabled: !!lessonId,
+  });
+
+  const { data: quiz, isLoading: isLoadingQuiz } = useQuery({
+    queryKey: ["quiz", lessonId],
+    queryFn: () => fetchQuizByLessonId(lessonId),
+    enabled: !!lessonId,
+  });
+
+  const { data: navigation, isLoading: isLoadingNav } = useQuery({
+    queryKey: ["lessonNavigation", categoryId, lessonId],
+    queryFn: () => fetchLessonNavigation(categoryId, lessonId),
+    enabled: !!categoryId && !!lessonId,
+  });
+
+  const nextLessonId = navigation?.nextLessonId;
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -22,9 +41,16 @@ export default function LearnCheckpointScreen() {
     if (!quiz || selectedIndex === null) {
       return false;
     }
-
     return selectedIndex === quiz.correctIndex;
   }, [quiz, selectedIndex]);
+
+  if (isLoadingLesson || isLoadingQuiz || isLoadingNav) {
+    return (
+      <View className="flex-1 bg-[#F2F2EA] items-center justify-center">
+        <ActivityIndicator size="large" color="#FB5607" />
+      </View>
+    );
+  }
 
   if (!lesson || !quiz) {
     return (
@@ -79,14 +105,15 @@ export default function LearnCheckpointScreen() {
                 if (nextLessonId) {
                   router.replace({
                     pathname: "/(tabs)/learn-lesson",
-                    params: { lessonId: nextLessonId },
+                    params: { lessonId: nextLessonId, categoryId },
                   });
                   return;
                 }
 
+                // If no next lesson, go back to category
                 router.replace({
                   pathname: "/(tabs)/learn-category",
-                  params: { category: lesson.categorySlug },
+                  params: { categoryId },
                 });
               }}
             >

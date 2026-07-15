@@ -1,0 +1,84 @@
+{
+  "/badges": {
+    "get": {
+      "tags": ["Achievements & Gamification"],
+      "summary": "List all badges",
+      "security": [{ "bearerAuth": [] }],
+      "responses": {
+        "200": { "description": "Badges list" }
+      }
+    },
+    "post": {
+      "tags": ["Achievements & Gamification"],
+      "summary": "Create a new badge (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["name", "triggerRequirement"],
+              "properties": {
+                "name": { "type": "string" },
+                "icon": { "type": "string" },
+                "description": { "type": "string" },
+                "xpReward": { "type": "integer" },
+                "triggerRequirement": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": { "description": "Badge created" }
+      }
+    }
+  },
+  "/badges/{id}": {
+    "get": {
+      "tags": ["Achievements & Gamification"],
+      "summary": "Retrieve badge details",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Badge data" }
+      }
+    },
+    "put": {
+      "tags": ["Achievements & Gamification"],
+      "summary": "Update badge details (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "icon": { "type": "string" },
+                "description": { "type": "string" },
+                "xpReward": { "type": "integer" },
+                "triggerRequirement": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": { "description": "Badge updated" }
+      }
+    },
+    "delete": {
+      "tags": ["Achievements & Gamification"],
+      "summary": "Delete badge by ID (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Badge deleted" }
+      }
+    }
+  }
+}

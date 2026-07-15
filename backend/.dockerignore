@@ -1,0 +1,25 @@
+# Exclude local dependencies and caches
+node_modules
+pnpm-lock.yaml
+pnpm-debug.log
+.pnpm-store
+.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Exclude local environment configurations containing secrets
+.env
+.env.production
+.env.local
+
+# Exclude Git configurations
+.git
+.gitignore
+
+# Exclude development tracking and custom agents files
+.agents
+task.md
+implementation_plan.md
+walkthrough.md
+scratch/

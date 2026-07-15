@@ -1,0 +1,81 @@
+{
+  "/lesson-categories": {
+    "get": {
+      "tags": ["Lesson Categories"],
+      "summary": "List all lesson categories",
+      "security": [{ "bearerAuth": [] }],
+      "responses": {
+        "200": { "description": "Categories list" }
+      }
+    },
+    "post": {
+      "tags": ["Lesson Categories"],
+      "summary": "Create a new category (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["name", "slug"],
+              "properties": {
+                "name": { "type": "string" },
+                "slug": { "type": "string" },
+                "icon": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": { "description": "Category created" }
+      }
+    }
+  },
+  "/lesson-categories/{id}": {
+    "get": {
+      "tags": ["Lesson Categories"],
+      "summary": "Retrieve category details",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Category data" },
+        "404": { "description": "Category not found" }
+      }
+    },
+    "put": {
+      "tags": ["Lesson Categories"],
+      "summary": "Update category by ID (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "slug": { "type": "string" },
+                "icon": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": { "description": "Category updated" }
+      }
+    },
+    "delete": {
+      "tags": ["Lesson Categories"],
+      "summary": "Delete category by ID (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "responses": {
+        "200": { "description": "Category deleted successfully" }
+      }
+    }
+  }
+}

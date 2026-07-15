@@ -1,0 +1,55 @@
+{
+  "/history": {
+    "get": {
+      "tags": ["Translation History"],
+      "summary": "Get translation logs for the authenticated user",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [
+        { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+        { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+      ],
+      "responses": {
+        "200": { "description": "History logs retrieved" }
+      }
+    },
+    "post": {
+      "tags": ["Translation History"],
+      "summary": "Manually log a translation query",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["prediction", "confidence"],
+              "properties": {
+                "prediction": { "type": "string" },
+                "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+                "mode": { "type": "string", "enum": ["voice", "camera", "text"], "default": "camera" },
+                "resolutionStatus": { "type": "string", "enum": ["success", "failed", "low_confidence"] }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": { "description": "History record created" }
+      }
+    }
+  },
+  "/history/all": {
+    "get": {
+      "tags": ["Translation History"],
+      "summary": "Retrieve global translation history across all users (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [
+        { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50 } },
+        { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+      ],
+      "responses": {
+        "200": { "description": "Global history retrieved" }
+      }
+    }
+  }
+}

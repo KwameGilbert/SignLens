@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #FB5607;
+  --color-primary-soft: #FDBA74;
+  --color-primary-deep: #C2410C;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #F2F2EA;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+}
+
+@utility glass-panel {
+  background-color: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@utility glow-orange {
+  box-shadow: 0 0 25px rgba(251, 86, 7, 0.2);
+}
+
+@utility glow-emerald {
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.15);
+}
+
+@utility glow-purple {
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.2);
+}
+
+@utility glow-amber {
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.15);
+}
+
+@keyframes float-blob {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(25px, -30px) scale(1.08);
+  }
+}
+
+@keyframes float-blob-reverse {
+  0%, 100% {
+    transform: translate(0, 0) scale(1.08);
+  }
+  50% {
+    transform: translate(-30px, 20px) scale(1);
+  }
+}
+
+@keyframes drawPath {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-float-blob {
+  animation: float-blob 20s infinite ease-in-out;
+}
+
+.animate-float-blob-reverse {
+  animation: float-blob-reverse 25s infinite ease-in-out;
+}
+
+.animate-draw-path {
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  animation: drawPath 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+body {
+  background-color: #080B11;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 0);
+  background-size: 24px 24px;
+  color: #E2E8F0;
+  font-family: var(--font-sans);
+}

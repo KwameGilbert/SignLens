@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, StyleSheet, useColorScheme } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, StyleSheet, useColorScheme, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Image } from 'expo-image';
@@ -6,15 +6,54 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import FormInput from '../../components/ui/FormInput';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function SignUpScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const [fullName, setFullName] = useState('');
+  const { registerMutation } = useAuth();
+
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!firstName.trim()) newErrors.firstName = "First name is required";
+    if (!lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+    if (password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSignUp = () => {
+    if (!validate()) return;
+
+    registerMutation.mutate({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+    });
+  };
 
   return (
     <KeyboardAvoidingView 
@@ -70,14 +109,30 @@ export default function SignUpScreen() {
         </Text>
 
         {/* Form inputs */}
-        <FormInput
-          label="Full Name"
-          placeholder="Enter your full name"
-          value={fullName}
-          onChangeText={setFullName}
-          autoCapitalize="words"
-          autoComplete="name"
-        />
+        <View className="flex-row gap-3">
+          <View className="flex-1">
+            <FormInput
+              label="First Name"
+              placeholder="First name"
+              value={firstName}
+              onChangeText={setFirstName}
+              autoCapitalize="words"
+              autoComplete="given-name"
+              error={errors.firstName}
+            />
+          </View>
+          <View className="flex-1">
+            <FormInput
+              label="Last Name"
+              placeholder="Last name"
+              value={lastName}
+              onChangeText={setLastName}
+              autoCapitalize="words"
+              autoComplete="family-name"
+              error={errors.lastName}
+            />
+          </View>
+        </View>
 
         <FormInput
           label="Email"
@@ -87,6 +142,7 @@ export default function SignUpScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
           autoComplete="email"
+          error={errors.email}
         />
 
         <FormInput
@@ -97,6 +153,7 @@ export default function SignUpScreen() {
           secureTextEntry
           autoCapitalize="none"
           autoComplete="password-new"
+          error={errors.password}
         />
 
         <FormInput
@@ -107,15 +164,21 @@ export default function SignUpScreen() {
           secureTextEntry
           autoCapitalize="none"
           autoComplete="password-new"
+          error={errors.confirmPassword}
         />
 
         <TouchableOpacity
-          onPress={() => router.push("/(auth)/login")}
-          className="bg-primary dark:bg-primary rounded-xl px-4 py-4 mb-4 shadow-md shadow-[#FB5607]/40"
+          onPress={handleSignUp}
+          disabled={registerMutation.isPending}
+          className={`bg-primary dark:bg-primary rounded-xl px-4 py-4 mb-4 shadow-md shadow-[#FB5607]/40 ${registerMutation.isPending ? 'opacity-70' : ''}`}
         >
-          <Text className="text-white text-center text-lg font-bold">
-            Sign Up
-          </Text>
+          {registerMutation.isPending ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text className="text-white text-center text-lg font-bold">
+              Sign Up
+            </Text>
+          )}
         </TouchableOpacity>
 
         <View className="flex-row justify-center gap-4 mb-6">
@@ -146,4 +209,3 @@ export default function SignUpScreen() {
     </KeyboardAvoidingView>
   );
 }
-

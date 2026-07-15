@@ -1,0 +1,14 @@
+{
+  "/users": {
+    "get": {
+      "tags": ["Users"],
+      "summary": "Get list of all users (Admin only)",
+      "security": [{ "bearerAuth": [] }],
+      "responses": {
+        "200": { "description": "Users list retrieved" },
+        "401": { "description": "Unauthorized" },
+        "403": { "description": "Forbidden (requires administrator clearance)" }
+      }
+    }
+  }
+}
