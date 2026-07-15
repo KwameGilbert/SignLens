@@ -6,8 +6,8 @@ from app.api_v1 import endpoints
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize DB on startup
-    init_db()
+    # Initialize DB on startup (Bypassed for offline local testing)
+    # init_db()
     yield
 
 app = FastAPI(

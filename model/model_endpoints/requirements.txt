@@ -2,10 +2,11 @@ fastapi
 uvicorn
 python-multipart
 pydantic
-opencv-python-headless
-tensorflow
-keras==3.14.1
-numpy
+opencv-python-headless==4.9.0.80
+tensorflow==2.13.0
+keras==2.13.1
+numpy<2
 mysql-connector-python
 python-dotenv
+protobuf<4
 mediapipe==0.10.5

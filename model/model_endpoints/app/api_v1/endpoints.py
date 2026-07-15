@@ -4,7 +4,7 @@ from .auth import verify_api_key
 from app.models.model_manager import model_manager
 import numpy as np
 import cv2
-
+import mediapipe as mp
 
 
 router = APIRouter()
@@ -44,7 +44,6 @@ def image_predict(file_bytes: bytes):
 
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     
-    import mediapipe as mp
     mp_holistic = mp.solutions.holistic
     with mp_holistic.Holistic(static_image_mode=True) as holistic:
         results = holistic.process(img_rgb)
@@ -86,7 +85,6 @@ def video_predict(file_bytes: bytes):
         temp_video.write(file_bytes)
         temp_video_path = temp_video.name
 
-    import mediapipe as mp
     mp_holistic = mp.solutions.holistic
     
     sequence = []
@@ -150,8 +148,8 @@ def video_predict(file_bytes: bytes):
 @router.post("/predict", response_model=PredictResponse)
 def predict_media(
     type: InputType,
-    file: UploadFile = File(...),
-    api_key: str = Depends(verify_api_key)
+    file: UploadFile = File(...)
+    # api_key: str = Depends(verify_api_key)
 ):
     try:
         if type not in [InputType.image, InputType.video]:
@@ -179,17 +177,16 @@ async def predict_stream(websocket: WebSocket):
     if not api_key or not type_:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
-    try:
-        verify_api_key(api_key)
-    except HTTPException:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        return
+    # try:
+    #     verify_api_key(api_key)
+    # except HTTPException:
+    #     await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+    #     return
     if type_ not in [InputType.video, InputType.stream]:
         await websocket.close(code=status.WS_1003_UNSUPPORTED_DATA)
         return
     try:
         model = model_manager.get_model(type_)
-        import mediapipe as mp
         mp_holistic = mp.solutions.holistic
         
         sequence = []

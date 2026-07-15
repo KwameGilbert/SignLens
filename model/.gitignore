@@ -16,3 +16,4 @@ build/
 .venv/
 *.egg-info/
 .venv310/
+.venv_docker/
