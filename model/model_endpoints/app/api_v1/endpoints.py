@@ -140,6 +140,8 @@ def image_predict(file_bytes: bytes):
         
     pred_class = np.argmax(preds)
     confidence = float(np.max(preds))
+    local_label = STATIC_CLASSES[pred_class] if pred_class < len(STATIC_CLASSES) else str(pred_class)
+    print(f"[Local Model Prediction (Image)] Class: {local_label} (Index: {pred_class}), Confidence: {confidence:.4f}")
     
     if confidence < 0.9:
         gemini_label = predict_with_gemini(file_bytes, "image/jpeg")
@@ -236,6 +238,8 @@ def video_predict(file_bytes: bytes):
     preds = model.predict(input_data, verbose=0)
     pred_class = np.argmax(preds)
     confidence = float(np.max(preds))
+    local_label = VIDEO_CLASSES[pred_class] if pred_class < len(VIDEO_CLASSES) else str(pred_class)
+    print(f"[Local Model Prediction (Video)] Class: {local_label} (Index: {pred_class}), Confidence: {confidence:.4f}")
     
     # Prepare middle frame bytes for Gemini fallback
     middle_frame_bytes = None
@@ -365,6 +369,7 @@ async def predict_stream(websocket: WebSocket):
                     pred_class = np.argmax(preds)
                     confidence = float(np.max(preds))
                     label = VIDEO_CLASSES[pred_class] if pred_class < len(VIDEO_CLASSES) else str(pred_class)
+                    print(f"[Stream Local Model Prediction] Class: {label} (Index: {pred_class}), Confidence: {confidence:.4f}")
                     result = {"prediction": label, "confidence": confidence}
                     await websocket.send_json(result)
                 else:
