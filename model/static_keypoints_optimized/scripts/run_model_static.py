@@ -59,9 +59,16 @@ def main():
             predictions = model.predict(input_data, verbose=0)
             predicted_class = np.argmax(predictions)
             confidence = np.max(predictions)
-            sign = CLASSES[predicted_class]
             
-            cv2.putText(frame, f"{sign} ({confidence:.2f})", (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+            if confidence < 0.6:
+                display_text = f"Neutral - Do the sign well ({confidence:.2f})"
+                color = (0, 0, 255) # Red
+            else:
+                sign = CLASSES[predicted_class]
+                display_text = f"{sign} ({confidence:.2f})"
+                color = (0, 255, 0) # Green
+            
+            cv2.putText(frame, display_text, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
             cv2.imshow('Static Keypoints Optimized', frame)
             
             if cv2.waitKey(10) & 0xFF == ord('q'):
