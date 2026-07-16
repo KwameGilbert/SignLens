@@ -1,5 +1,25 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import LessonModel from '../model/lesson.model.js';
 import { sendSuccess, sendCreated, sendBadRequest, sendNotFound, sendInternalError } from '../utils/response.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const saveUploadedFile = async (file, req) => {
+  const uploadsDir = path.join(__dirname, '../../uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    await fs.promises.mkdir(uploadsDir, { recursive: true });
+  }
+  const uniqueFilename = `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`;
+  const filepath = path.join(uploadsDir, uniqueFilename);
+  await fs.promises.writeFile(filepath, file.buffer);
+  
+  const protocol = req.protocol;
+  const host = req.get('host');
+  return `${protocol}://${host}/uploads/${uniqueFilename}`;
+};
 
 export const listLessons = async (req, res) => {
   try {
@@ -31,8 +51,14 @@ export const getLesson = async (req, res) => {
 
 export const createLesson = async (req, res) => {
   try {
-    const { title, categoryId, type, slug, lessonUrl, description, instructions } = req.body;
-    if (!title || !categoryId || !type || !slug) {
+    let { title, categoryId, type, slug, lessonUrl, description, instructions } = req.body;
+
+    let finalCategoryId = categoryId;
+    if (typeof categoryId === 'string') {
+      finalCategoryId = parseInt(categoryId, 10);
+    }
+
+    if (!title || !finalCategoryId || !type || !slug) {
       return sendBadRequest(res, 'Title, categoryId, type, and slug are required');
     }
 
@@ -41,14 +67,30 @@ export const createLesson = async (req, res) => {
       return sendBadRequest(res, 'Lesson with this slug already exists');
     }
 
+    let finalLessonUrl = lessonUrl;
+    const isUrlLink = typeof lessonUrl === 'string' && (lessonUrl.startsWith('http://') || lessonUrl.startsWith('https://'));
+    
+    if (!isUrlLink && req.file) {
+      finalLessonUrl = await saveUploadedFile(req.file, req);
+    }
+
+    let instructionsData = instructions;
+    if (typeof instructions === 'string') {
+      try {
+        instructionsData = JSON.parse(instructions);
+      } catch (err) {
+        // Fallback
+      }
+    }
+
     const lesson = await LessonModel.create({
       title,
-      categoryId,
+      categoryId: finalCategoryId,
       type,
       slug,
-      lessonUrl,
+      lessonUrl: finalLessonUrl,
       description,
-      instructions,
+      instructions: instructionsData,
     });
     sendCreated(res, lesson, 'Lesson created successfully');
   } catch (err) {
@@ -59,7 +101,7 @@ export const createLesson = async (req, res) => {
 export const updateLesson = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, categoryId, type, slug, lessonUrl, description, instructions } = req.body;
+    let { title, categoryId, type, slug, lessonUrl, description, instructions } = req.body;
 
     const existing = await LessonModel.findById(id);
     if (!existing) {
@@ -73,14 +115,39 @@ export const updateLesson = async (req, res) => {
       }
     }
 
+    let finalCategoryId = categoryId;
+    if (categoryId !== undefined) {
+      if (typeof categoryId === 'string') {
+        finalCategoryId = parseInt(categoryId, 10);
+      }
+    }
+
+    let finalLessonUrl = lessonUrl;
+    const isUrlLink = typeof lessonUrl === 'string' && (lessonUrl.startsWith('http://') || lessonUrl.startsWith('https://'));
+    
+    if (!isUrlLink && req.file) {
+      finalLessonUrl = await saveUploadedFile(req.file, req);
+    }
+
+    let instructionsData = instructions;
+    if (instructions !== undefined) {
+      if (typeof instructions === 'string') {
+        try {
+          instructionsData = JSON.parse(instructions);
+        } catch (err) {
+          // Fallback
+        }
+      }
+    }
+
     const updated = await LessonModel.update(id, {
       title,
-      categoryId,
+      categoryId: finalCategoryId,
       type,
       slug,
-      lessonUrl,
+      lessonUrl: finalLessonUrl,
       description,
-      instructions,
+      instructions: instructionsData,
     });
     sendSuccess(res, updated, 'Lesson updated successfully');
   } catch (err) {

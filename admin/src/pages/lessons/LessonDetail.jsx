@@ -1,122 +1,36 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useState } from "react";
-import { ArrowLeft, BookOpen, Sparkles, Award, Play, Eye, BrainCircuit, Activity, Trash2, Edit, CheckCircle, Video, Image, FileText, Check, X, PlusCircle, MinusCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, BookOpen, Sparkles, Award, Play, Eye, BrainCircuit, Activity, Trash2, Edit, CheckCircle, Video, Image, FileText, Check, X, PlusCircle, MinusCircle, Loader2, AlertTriangle } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/Table";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
-
-const mockLessonsData = {
-  "lesson-alpha-a-f": {
-    id: "lesson-alpha-a-f",
-    categorySlug: "alphabets",
-    categoryTitle: "Alphabets",
-    title: "Alphabet Signs A-F",
-    description: "Master the hand shapes for letters A through F. Focus on palm orientation and thumb positions.",
-    mediaKey: "learn",
-    progress: 80,
-    content: [
-      "Keep your palm relaxed and fingers clearly visible to the camera.",
-      "Practice each letter slowly before increasing your speed.",
-      "Maintain consistency in hand orientation relative to the screen."
-    ],
-    completions: 1240,
-    avgQuizScore: 92,
-    avgTimeSpent: "4m 12s",
-    quiz: {
-      question: "Which principle improves sign readability most?",
-      options: ["Faster movement", "Consistent hand orientation", "Lower camera angle", "Minimal pauses"],
-      correctIndex: 1
-    },
-    recentCompletions: [
-      { name: "Emma Thompson", email: "emma@example.com", score: 100, date: "2 hours ago" },
-      { name: "Alice Johnson", email: "alice@example.com", score: 100, date: "5 hours ago" },
-      { name: "James Wilson", email: "james.w@example.com", score: 80, date: "1 day ago" }
-    ]
-  },
-  "lesson-alpha-g-z": {
-    id: "lesson-alpha-g-z",
-    categorySlug: "alphabets",
-    categoryTitle: "Alphabets",
-    title: "Alphabet Signs G-Z",
-    description: "Complete the full alphabet with advanced hand placements, wrist rotations, and transitions.",
-    mediaKey: "scan",
-    progress: 70,
-    content: [
-      "Some letters require slight wrist rotation for better visual clarity.",
-      "Use mirror practice or the active scanner to self-correct shapes.",
-      "Link letters together slowly to improve finger-spelling fluency."
-    ],
-    completions: 980,
-    avgQuizScore: 88,
-    avgTimeSpent: "6m 45s",
-    quiz: {
-      question: "What helps most with finger-spelling fluency?",
-      options: ["Closing fingers tightly", "Skipping wrist rotation", "Linking letters smoothly", "Facing away from camera"],
-      correctIndex: 2
-    },
-    recentCompletions: [
-      { name: "Emma Thompson", email: "emma@example.com", score: 100, date: "4 hours ago" },
-      { name: "James Wilson", email: "james.w@example.com", score: 100, date: "6 hours ago" }
-    ]
-  },
-  "lesson-num-0-5": {
-    id: "lesson-num-0-5",
-    categorySlug: "numbers",
-    categoryTitle: "Numbers",
-    title: "Numbers 0-5",
-    description: "Learn foundational number gestures. Pay close attention to index, middle, and ring finger alignments.",
-    mediaKey: "progress",
-    progress: 75,
-    content: [
-      "Keep fingers fully extended where needed for distinction.",
-      "Avoid overlapping fingers to improve recognition readability.",
-      "Repeat number transitions with a steady rhythm."
-    ],
-    completions: 820,
-    avgQuizScore: 94,
-    avgTimeSpent: "3m 30s",
-    quiz: {
-      question: "For number clarity, you should:",
-      options: ["Overlap fingers", "Hide thumb", "Keep fingers visible", "Use random pace"],
-      correctIndex: 2
-    },
-    recentCompletions: [
-      { name: "Alice Johnson", email: "alice@example.com", score: 100, date: "Yesterday" }
-    ]
-  }
-};
+import { useLessonDetailQuery, useUpdateLessonMutation } from "../../hooks/useLessons";
+import { useCategoriesQuery } from "../../hooks/useCategories";
+import api from "../../services/api";
+import { ENDPOINTS } from "../../services/endpoints";
 
 export default function LessonDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  // Try to load lesson, fallback to default or mock info
-  const initialLesson = mockLessonsData[id] || {
-    id: id || "unknown-lesson",
-    categorySlug: "basics",
-    categoryTitle: "Basics",
-    title: id ? id.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : "Custom Lesson",
-    description: "Lesson details are being configured dynamically. Ready to upload content steps.",
-    mediaKey: "learn",
-    progress: 0,
-    content: [
-      "Ensure sign orientation is clean.",
-      "Practice each gesture in front of the camera.",
-      "Complete quizzes to solidify learning."
-    ],
-    completions: 0,
-    avgQuizScore: 0,
-    avgTimeSpent: "--",
-    quiz: {
-      question: "Which of the following describes clean signing form?",
-      options: ["Signing too fast", "Consistent wrist angles", "Keeping hands hidden"],
-      correctIndex: 1
+  // Queries
+  const { data: fetchedLesson, isLoading: isLoadingLesson, error: lessonError } = useLessonDetailQuery(id);
+  const { data: categories = [] } = useCategoriesQuery();
+
+  const { data: quizzesList = [], isLoading: isLoadingQuiz } = useQuery({
+    queryKey: ['quizzes', { lessonId: id }],
+    queryFn: async () => {
+      const { data } = await api.get(ENDPOINTS.QUIZZES.LIST, { params: { lessonId: id } });
+      return data?.data || data;
     },
-    recentCompletions: []
-  };
+    enabled: !!id,
+  });
 
-  const [lesson, setLesson] = useState(initialLesson);
+  const updateLessonMutation = useUpdateLessonMutation(id);
+
   const [activeStep, setActiveStep] = useState(0);
 
   // Edit States
@@ -129,16 +43,37 @@ export default function LessonDetail() {
   const [editQuizOptions, setEditQuizOptions] = useState([]);
   const [editQuizCorrectIndex, setEditQuizCorrectIndex] = useState(0);
   const [editVideoFile, setEditVideoFile] = useState(null);
+  const [editSourceType, setEditSourceType] = useState("url"); // "url" or "file"
+  const [editLessonUrl, setEditLessonUrl] = useState("");
 
   const handleOpenEdit = () => {
-    setEditTitle(lesson.title);
-    setEditDescription(lesson.description);
-    setEditContent([...lesson.content]);
-    setEditMediaKey(lesson.mediaKey);
-    setEditQuizQuestion(lesson.quiz.question);
-    setEditQuizOptions([...lesson.quiz.options]);
-    setEditQuizCorrectIndex(lesson.quiz.correctIndex);
+    if (!fetchedLesson) return;
+    setEditTitle(fetchedLesson.title);
+    setEditDescription(fetchedLesson.description || "");
+    setEditContent(
+      fetchedLesson.instructions
+        ? fetchedLesson.instructions.map(i => typeof i === 'string' ? i : i.text)
+        : []
+    );
+    setEditMediaKey(fetchedLesson.type || "learn");
+    
+    // Quiz mapping
+    const quizObj = quizzesList?.[0];
+    setEditQuizQuestion(quizObj ? quizObj.question : "");
+    setEditQuizOptions(
+      quizObj && quizObj.options && quizObj.options.length > 0
+        ? quizObj.options.map(o => o.name)
+        : ["", "", "", ""]
+    );
+    setEditQuizCorrectIndex(
+      quizObj && quizObj.options
+        ? Math.max(0, quizObj.options.findIndex(o => o.isCorrect))
+        : 0
+    );
+    
+    setEditLessonUrl(fetchedLesson.lessonUrl || "");
     setEditVideoFile(null);
+    setEditSourceType("url");
     setIsEditModalOpen(true);
   };
 
@@ -163,22 +98,116 @@ export default function LessonDetail() {
     setEditQuizOptions(updated);
   };
 
-  const handleSaveLesson = (e) => {
+  const handleSaveLesson = async (e) => {
     e.preventDefault();
-    setLesson({
-      ...lesson,
-      title: editTitle.trim(),
-      description: editDescription.trim(),
-      content: editContent.filter(step => step.trim() !== ""),
-      mediaKey: editMediaKey,
-      quiz: {
-        question: editQuizQuestion.trim(),
-        options: editQuizOptions,
-        correctIndex: editQuizCorrectIndex
+    if (!fetchedLesson) return;
+
+    // 1. Build FormData for lesson update
+    const formData = new FormData();
+    formData.append("title", editTitle.trim());
+    formData.append("description", editDescription.trim());
+    formData.append("type", editMediaKey);
+    formData.append("categoryId", String(fetchedLesson.categoryId));
+    formData.append("slug", fetchedLesson.slug);
+    formData.append(
+      "instructions",
+      JSON.stringify(editContent.filter(step => step.trim() !== "").map(step => ({ text: step })))
+    );
+
+    if (editSourceType === "file") {
+      if (editVideoFile) {
+        formData.append("video", editVideoFile);
       }
-    });
-    setIsEditModalOpen(false);
+    } else {
+      formData.append("lessonUrl", editLessonUrl.trim());
+    }
+
+    try {
+      await updateLessonMutation.mutateAsync(formData);
+
+      // 2. Build and save quiz updates
+      const quizObj = quizzesList?.[0];
+      const quizOptionsPayload = editQuizOptions
+        .filter(opt => opt.trim() !== "")
+        .map((opt, index) => ({
+          name: opt.trim(),
+          isCorrect: index === editQuizCorrectIndex,
+          orderIndex: index
+        }));
+
+      if (quizObj) {
+        // Update existing quiz
+        await api.put(ENDPOINTS.QUIZZES.UPDATE(quizObj.id), {
+          lessonId: parseInt(id, 10),
+          categoryId: fetchedLesson.categoryId,
+          question: editQuizQuestion.trim(),
+          options: quizOptionsPayload
+        });
+      } else if (editQuizQuestion.trim() !== "") {
+        // Create new quiz
+        await api.post(ENDPOINTS.QUIZZES.CREATE, {
+          lessonId: parseInt(id, 10),
+          categoryId: fetchedLesson.categoryId,
+          question: editQuizQuestion.trim(),
+          options: quizOptionsPayload
+        });
+      }
+
+      // Invalidate queries to refresh view
+      queryClient.invalidateQueries({ queryKey: ['lesson-detail', id] });
+      queryClient.invalidateQueries({ queryKey: ['quizzes', { lessonId: id }] });
+      setIsEditModalOpen(false);
+    } catch (err) {
+      console.error("Failed to save changes:", err);
+    }
   };
+
+  const lesson = fetchedLesson ? {
+    id: fetchedLesson.id,
+    categoryTitle: categories.find(c => c.id === fetchedLesson.categoryId)?.name || "Basics",
+    title: fetchedLesson.title,
+    description: fetchedLesson.description || "",
+    mediaKey: fetchedLesson.type || "learn",
+    lessonUrl: fetchedLesson.lessonUrl || "",
+    content: fetchedLesson.instructions 
+      ? fetchedLesson.instructions.map(i => typeof i === 'string' ? i : i.text) 
+      : [],
+    quiz: quizzesList?.[0] ? {
+      question: quizzesList[0].question,
+      options: quizzesList[0].options ? quizzesList[0].options.map(o => o.name) : [],
+      correctIndex: quizzesList[0].options ? Math.max(0, quizzesList[0].options.findIndex(o => o.isCorrect)) : 0
+    } : {
+      question: "No practice quiz created yet.",
+      options: [],
+      correctIndex: 0
+    },
+    recentCompletions: []
+  } : null;
+
+  if (isLoadingLesson || isLoadingQuiz) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 space-y-4">
+        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        <p className="text-gray-400 text-sm">Loading lesson details...</p>
+      </div>
+    );
+  }
+
+  if (lessonError || !fetchedLesson || !lesson) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 space-y-3 p-6 border border-rose-500/20 bg-rose-500/5 rounded-xl">
+        <AlertTriangle className="w-10 h-10 text-rose-500" />
+        <p className="text-rose-400 text-sm font-semibold">
+          {lessonError?.response?.data?.message || lessonError?.message || "Failed to load lesson details."}
+        </p>
+        <Link to="/lessons">
+          <Button variant="ghost" className="border border-white/10 text-white">
+            Go Back
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   const getMediaIcon = (key) => {
     switch (key) {
@@ -490,17 +519,57 @@ export default function LessonDetail() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1.5">Upload Lesson Video (Optional)</label>
-                  <div className="relative h-10 flex items-center justify-between border border-white/10 rounded-md bg-white/[0.02] px-3 py-2 text-sm text-gray-400">
-                    <input
-                      type="file"
-                      accept="video/*"
-                      onChange={(e) => setEditVideoFile(e.target.files[0])}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                    />
-                    <span className="truncate">{editVideoFile ? editVideoFile.name : "Keep existing video..."}</span>
-                    <Video className="h-4 w-4 text-primary shrink-0" />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Lesson Video Source</label>
+                    <div className="flex bg-white/[0.04] p-0.5 rounded-lg border border-white/[0.08]">
+                      <button
+                        type="button"
+                        onClick={() => setEditSourceType("url")}
+                        className={`text-[10px] px-2 py-0.5 rounded-md font-bold cursor-pointer transition-all ${
+                          editSourceType === "url"
+                            ? "bg-primary text-white"
+                            : "text-gray-400 hover:text-gray-200"
+                        }`}
+                      >
+                        URL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditSourceType("file")}
+                        className={`text-[10px] px-2 py-0.5 rounded-md font-bold cursor-pointer transition-all ${
+                          editSourceType === "file"
+                            ? "bg-primary text-white"
+                            : "text-gray-400 hover:text-gray-200"
+                        }`}
+                      >
+                        Upload File
+                      </button>
+                    </div>
                   </div>
+
+                  {editSourceType === "url" ? (
+                    <div className="relative h-10 flex items-center justify-between border border-white/10 rounded-md bg-white/[0.02] px-3 py-2 text-sm text-gray-400">
+                      <input
+                        type="url"
+                        placeholder="https://example.com/video.mp4"
+                        value={editLessonUrl}
+                        onChange={(e) => setEditLessonUrl(e.target.value)}
+                        className="absolute inset-0 bg-transparent w-full h-full px-3 focus:outline-none focus:ring-2 focus:ring-primary rounded-md"
+                      />
+                      <Video className="h-4 w-4 text-primary shrink-0 absolute right-3 pointer-events-none" />
+                    </div>
+                  ) : (
+                    <div className="relative h-10 flex items-center justify-between border border-white/10 rounded-md bg-[#0D121F] px-3 py-2 text-sm text-gray-400">
+                      <input
+                        type="file"
+                        accept="video/*"
+                        onChange={(e) => setEditVideoFile(e.target.files[0])}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                      <span className="truncate text-white">{editVideoFile ? editVideoFile.name : "Select video file..."}</span>
+                      <Video className="h-4 w-4 text-primary shrink-0" />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1.5">Media Mode Key</label>

@@ -24,6 +24,14 @@ class LessonModel extends BaseModel {
     return super.create(data);
   }
 
+  // Override update to support JSON serialization for instructions
+  async update(id, data) {
+    if (data && data.instructions && typeof data.instructions !== 'string') {
+      data.instructions = JSON.stringify(data.instructions);
+    }
+    return super.update(id, data);
+  }
+
   async findByCategoryId(categoryId) {
     return this.find({ categoryId });
   }

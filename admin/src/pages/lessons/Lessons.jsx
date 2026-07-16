@@ -24,6 +24,8 @@ export default function Lessons() {
   const [description, setDescription] = useState("");
   const [contentSteps, setContentSteps] = useState([""]);
   const [lessonUrl, setLessonUrl] = useState("");
+  const [sourceType, setSourceType] = useState("url"); // "url" or "file"
+  const [videoFile, setVideoFile] = useState(null);
 
   const handleTitleChange = (e) => {
     const value = e.target.value;
@@ -54,24 +56,34 @@ export default function Lessons() {
 
   const handleCreateLesson = async (e) => {
     e.preventDefault();
-    if (!title.trim() || !slug.trim() || !lessonUrl.trim() || !category) return;
+    if (!title.trim() || !slug.trim() || !category) return;
+    if (sourceType === "url" && !lessonUrl.trim()) return;
+    if (sourceType === "file" && !videoFile) return;
 
-    const payload = {
-      title: title.trim(),
-      categoryId: parseInt(category),
-      type: "video",
-      slug: slug.trim(),
-      lessonUrl: lessonUrl.trim(),
-      description: description.trim(),
-      instructions: contentSteps.map((step) => ({ text: step })),
-    };
+    const formData = new FormData();
+    formData.append("title", title.trim());
+    formData.append("categoryId", category);
+    formData.append("type", "video");
+    formData.append("slug", slug.trim());
+    formData.append("description", description.trim());
+    formData.append("instructions", JSON.stringify(contentSteps.map((step) => ({ text: step }))));
+
+    if (sourceType === "file") {
+      formData.append("video", videoFile);
+    } else {
+      formData.append("lessonUrl", lessonUrl.trim());
+    }
 
     try {
-      await createLessonMutation.mutateAsync(payload);
-      resetForm();
+      await createCreateLesson(formData);
     } catch (err) {
       console.error("Failed to create lesson:", err);
     }
+  };
+
+  const createCreateLesson = async (payload) => {
+    await createLessonMutation.mutateAsync(payload);
+    resetForm();
   };
 
   const resetForm = () => {
@@ -82,6 +94,8 @@ export default function Lessons() {
     setDescription("");
     setContentSteps([""]);
     setLessonUrl("");
+    setSourceType("url");
+    setVideoFile(null);
   };
 
   const handleDelete = async (id) => {
@@ -280,18 +294,59 @@ export default function Lessons() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1.5">Lesson Video URL</label>
-                  <div className="relative h-10 flex items-center justify-between border border-white/10 rounded-md bg-white/[0.02] px-3 py-2 text-sm text-gray-400">
-                    <input
-                      type="url"
-                      required
-                      placeholder="https://example.com/video.mp4"
-                      value={lessonUrl}
-                      onChange={(e) => setLessonUrl(e.target.value)}
-                      className="absolute inset-0 bg-transparent w-full h-full px-3 focus:outline-none focus:ring-2 focus:ring-primary rounded-md"
-                    />
-                    <Video className="h-4 w-4 text-primary shrink-0 absolute right-3 pointer-events-none" />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Lesson Video Source</label>
+                    <div className="flex bg-white/[0.04] p-0.5 rounded-lg border border-white/[0.08]">
+                      <button
+                        type="button"
+                        onClick={() => setSourceType("url")}
+                        className={`text-[10px] px-2 py-0.5 rounded-md font-bold cursor-pointer transition-all ${
+                          sourceType === "url"
+                            ? "bg-primary text-white"
+                            : "text-gray-400 hover:text-gray-200"
+                        }`}
+                      >
+                        URL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSourceType("file")}
+                        className={`text-[10px] px-2 py-0.5 rounded-md font-bold cursor-pointer transition-all ${
+                          sourceType === "file"
+                            ? "bg-primary text-white"
+                            : "text-gray-400 hover:text-gray-200"
+                        }`}
+                      >
+                        Upload File
+                      </button>
+                    </div>
                   </div>
+
+                  {sourceType === "url" ? (
+                    <div className="relative h-10 flex items-center justify-between border border-white/10 rounded-md bg-white/[0.02] px-3 py-2 text-sm text-gray-400">
+                      <input
+                        type="url"
+                        required={sourceType === "url"}
+                        placeholder="https://example.com/video.mp4"
+                        value={lessonUrl}
+                        onChange={(e) => setLessonUrl(e.target.value)}
+                        className="absolute inset-0 bg-transparent w-full h-full px-3 focus:outline-none focus:ring-2 focus:ring-primary rounded-md"
+                      />
+                      <Video className="h-4 w-4 text-primary shrink-0 absolute right-3 pointer-events-none" />
+                    </div>
+                  ) : (
+                    <div className="relative h-10 flex items-center justify-between border border-white/10 rounded-md bg-[#0D121F] px-3 py-2 text-sm text-gray-400">
+                      <input
+                        type="file"
+                        required={sourceType === "file"}
+                        accept="video/*"
+                        onChange={(e) => setVideoFile(e.target.files[0])}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                      <span className="truncate text-white">{videoFile ? videoFile.name : "Select video file..."}</span>
+                      <Video className="h-4 w-4 text-primary shrink-0" />
+                    </div>
+                  )}
                 </div>
               </div>
 

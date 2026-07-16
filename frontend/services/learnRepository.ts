@@ -76,7 +76,7 @@ export async function fetchLessonsByCategory(categoryId: string): Promise<LearnL
     mediaKey: lesson.type || "learn",
     progress: 0,
     content: parseInstructions(lesson.instructions),
-    videoUrl: lesson.videoUrl || lesson.video_url || null,
+    videoUrl: lesson.lessonUrl || lesson.videoUrl || lesson.video_url || null,
   }));
 }
 
@@ -93,7 +93,7 @@ export async function fetchLessonById(lessonId: string): Promise<LearnLesson> {
     mediaKey: lesson.type || "learn",
     progress: 0,
     content: parseInstructions(lesson.instructions),
-    videoUrl: lesson.videoUrl || lesson.video_url || null,
+    videoUrl: lesson.lessonUrl || lesson.videoUrl || lesson.video_url || null,
   };
 }
 

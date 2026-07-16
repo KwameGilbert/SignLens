@@ -3,6 +3,8 @@ import cors from 'cors';
 import http from 'http';
 import { WebSocketServer } from 'ws';
 import url from 'url';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import config from './config/index.js';
 import apiRouter from './routes/index.route.js';
 import { handlePredictStreamConnection } from './services/predictStream.service.js';
@@ -10,11 +12,15 @@ import { sendNotFound } from './utils/response.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerDocument from './config/swagger.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Swagger UI API Documentation
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

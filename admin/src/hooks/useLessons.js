@@ -27,7 +27,10 @@ export const useCreateLessonMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (newLesson) => {
-      const { data } = await api.post(ENDPOINTS.LESSONS.CREATE, newLesson);
+      const headers = newLesson instanceof FormData
+        ? { 'Content-Type': 'multipart/form-data' }
+        : { 'Content-Type': 'application/json' };
+      const { data } = await api.post(ENDPOINTS.LESSONS.CREATE, newLesson, { headers });
       return data?.data || data;
     },
     onSuccess: () => {
@@ -40,7 +43,10 @@ export const useUpdateLessonMutation = (id) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (updates) => {
-      const { data } = await api.patch(ENDPOINTS.LESSONS.UPDATE(id), updates);
+      const headers = updates instanceof FormData
+        ? { 'Content-Type': 'multipart/form-data' }
+        : { 'Content-Type': 'application/json' };
+      const { data } = await api.put(ENDPOINTS.LESSONS.UPDATE(id), updates, { headers });
       return data?.data || data;
     },
     onSuccess: () => {
