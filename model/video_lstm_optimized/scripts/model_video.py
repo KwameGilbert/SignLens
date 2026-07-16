@@ -6,18 +6,20 @@ def get_model(input_shape, num_classes):
     """
     Builds and compiles the LSTM model for video-based dataset.
     """
+    from tensorflow.keras.regularizers import l2
     model = Sequential()
     model.add(LSTM(64, return_sequences=True, activation='tanh', input_shape=input_shape))
     model.add(BatchNormalization())
-    model.add(Dropout(0.2))
+    model.add(Dropout(0.5))
     model.add(LSTM(128, return_sequences=True, activation='tanh'))
     model.add(BatchNormalization())
-    model.add(Dropout(0.2))
+    model.add(Dropout(0.5))
     model.add(LSTM(64, return_sequences=False, activation='tanh'))
     model.add(BatchNormalization())
-    model.add(Dropout(0.2))
-    model.add(Dense(64, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(64, activation='relu', kernel_regularizer=l2(0.01)))
     model.add(BatchNormalization())
+    model.add(Dropout(0.5))
     model.add(Dense(32, activation='relu'))
     model.add(BatchNormalization())
     model.add(Dense(num_classes, activation='softmax'))

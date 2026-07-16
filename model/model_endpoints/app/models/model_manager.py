@@ -1,15 +1,15 @@
 import os
 import glob
-from tensorflow.keras.models import load_model
+import tensorflow as tf
 from threading import Lock
 
-# Define base directory of the entire model project (assuming this file is in model/signlens_model_endpoints/app/models)
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+# Define base directory of the entire model project (assuming this file is in model/model_endpoints/app/models)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 MODEL_PATHS = {
-    'image': os.path.join(PROJECT_ROOT, 'image_cnn', 'saved_models', 'sign_language_model_image*.h5'),
-    'video': os.path.join(PROJECT_ROOT, 'video_lstm_optimized', 'saved_models', 'sign_language_model_video*.h5'),
-    'stream': os.path.join(PROJECT_ROOT, 'video_lstm_full', 'saved_models', 'sign_language_model_video*.h5')
+    'image': os.path.join(PROJECT_ROOT, 'saved_models', 'sign_language_model_static*.h5'),
+    'video': os.path.join(PROJECT_ROOT, 'saved_models', 'sign_language_model_video*.h5'),
+    'stream': os.path.join(PROJECT_ROOT, 'saved_models', 'sign_language_model_video*.h5')
 }
 
 # Thread-safe model loading
@@ -37,7 +37,7 @@ class ModelManager:
                 if model_type not in self.models:
                     model_path = self.get_latest_model_path(model_type)
                     print(f"Loading {model_type} model from: {model_path}")
-                    self.models[model_type] = load_model(model_path, compile=False)
+                    self.models[model_type] = tf.keras.models.load_model(model_path, compile=False)
         return self.models[model_type]
 
 model_manager = ModelManager()

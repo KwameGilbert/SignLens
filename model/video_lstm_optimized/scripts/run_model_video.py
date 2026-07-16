@@ -4,9 +4,19 @@ import cv2
 import mediapipe as mp
 from tensorflow.keras.models import load_model
 
+import glob
+
 SEQUENCE_LENGTH = 30
 DATASET_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'dataset', 'video_raw')
-MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'saved_models', 'sign_language_model_video_2.h5')
+
+def get_latest_model():
+    model_dir = os.path.join(os.path.dirname(__file__), '..', 'saved_models')
+    models = glob.glob(os.path.join(model_dir, '*.h5'))
+    if not models:
+        raise FileNotFoundError(f"No models found in {model_dir}")
+    return max(models, key=os.path.getmtime)
+
+MODEL_PATH = get_latest_model()
 
 mp_holistic = mp.solutions.holistic
 
@@ -59,8 +69,16 @@ def main():
                 predictions = model.predict(input_data, verbose=0)
                 predicted_class = np.argmax(predictions)
                 confidence = np.max(predictions)
-                sign = actions[predicted_class]
-                cv2.putText(frame, f"{sign} ({confidence:.2f})", (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
+                
+                if confidence < 0.6:
+                    display_text = f"Neutral - Do the sign well ({confidence:.2f})"
+                    color = (0, 0, 255) # Red
+                else:
+                    sign = actions[predicted_class]
+                    display_text = f"{sign} ({confidence:.2f})"
+                    color = (0, 255, 0) # Green
+                
+                cv2.putText(frame, display_text, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
             cv2.imshow('SignLens Video Model', frame)
             if cv2.waitKey(10) & 0xFF == ord('q'):
                 break

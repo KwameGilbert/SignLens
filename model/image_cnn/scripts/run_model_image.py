@@ -38,9 +38,17 @@ while cap.isOpened():
     pred_class = np.argmax(preds)
     confidence = np.max(preds)
     label = classes[pred_class]
+    # Check confidence threshold
+    if confidence < 0.6:
+        display_text = f"Neutral - Do the sign well ({confidence:.2f})"
+        color = (0, 0, 255) # Red
+    else:
+        display_text = f"{label} ({confidence:.2f})"
+        color = (0, 255, 0) # Green
+        
     # Print detected sign and confidence in terminal
-    print(f"Detected sign: {label} (confidence: {confidence:.2f})")
-    cv2.putText(frame, f"{label} ({confidence:.2f})", (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
+    print(f"Detected sign: {display_text}")
+    cv2.putText(frame, display_text, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
     cv2.imshow('SignLens Image Model', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break

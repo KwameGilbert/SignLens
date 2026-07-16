@@ -12,3 +12,5 @@ class PredictRequest(BaseModel):
 class PredictResponse(BaseModel):
     prediction: str
     confidence: float
+    fallback: bool = False
+    model_used: str = "custom"
