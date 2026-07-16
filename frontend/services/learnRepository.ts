@@ -73,7 +73,7 @@ export async function fetchLessonsByCategory(categoryId: string): Promise<LearnL
   const response = await apiClient.get(`/lessons?categoryId=${categoryId}`);
   const apiLessons = response.data.data || [];
   
-  return apiLessons.map((lesson: any) => ({
+  const mapped: LearnLesson[] = apiLessons.map((lesson: any) => ({
     id: String(lesson.id),
     categorySlug: lesson.slug, // Just matching the type, though we use categoryId now
     categoryId: String(lesson.categoryId),
@@ -84,6 +84,11 @@ export async function fetchLessonsByCategory(categoryId: string): Promise<LearnL
     content: parseInstructions(lesson.instructions),
     videoUrl: lesson.lessonUrl || lesson.videoUrl || lesson.video_url || null,
   }));
+
+  // Sort alphabetically by title (A → B → C) using natural language sort
+  mapped.sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' }));
+
+  return mapped;
 }
 
 export async function fetchLessonById(lessonId: string): Promise<LearnLesson> {

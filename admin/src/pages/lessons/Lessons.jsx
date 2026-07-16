@@ -122,9 +122,9 @@ export default function Lessons() {
     setLessonToDelete(null);
   };
 
-  const filteredLessons = fetchedLessons.filter(
-    (l) => activeCategory === "All Lessons" || l.categoryId === activeCategory
-  );
+  const filteredLessons = fetchedLessons
+    .filter((l) => activeCategory === "All Lessons" || l.categoryId === activeCategory)
+    .sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" }));
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 relative">

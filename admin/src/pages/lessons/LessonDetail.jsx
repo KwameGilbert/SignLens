@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import {
   ArrowLeft, Sparkles, Award, Play, BrainCircuit, Activity,
-  Trash2, Edit, CheckCircle, Video, FileText, Check, X,
+  Trash2, UploadCloud, CheckCircle, Video, FileText, Check, X,
   PlusCircle, MinusCircle, Loader2, AlertTriangle, Link2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/Card";
@@ -32,6 +32,7 @@ export default function LessonDetail() {
   const [editDescription, setEditDescription] = useState("");
   const [editContent, setEditContent] = useState([]);
   const [editVideoUrl, setEditVideoUrl] = useState("");
+  const [editVideoFile, setEditVideoFile] = useState(null);
   const [editCategoryId, setEditCategoryId] = useState("");
 
   const handleOpenEdit = () => {
@@ -42,6 +43,7 @@ export default function LessonDetail() {
       : [];
     setEditContent(steps.length > 0 ? steps : [""]);
     setEditVideoUrl(lesson.lessonUrl || lesson.videoUrl || "");
+    setEditVideoFile(null);
     setEditCategoryId(String(lesson.categoryId || ""));
     setIsEditModalOpen(true);
   };
@@ -62,15 +64,30 @@ export default function LessonDetail() {
   const handleSaveLesson = async (e) => {
     e.preventDefault();
     try {
-      await updateLessonMutation.mutateAsync({
-        title: editTitle.trim(),
-        description: editDescription.trim(),
-        categoryId: editCategoryId,
-        lessonUrl: editVideoUrl.trim() || undefined,
-        instructions: editContent
-          .filter((s) => s.trim() !== "")
-          .map((s) => ({ text: s })),
-      });
+      const instructions = editContent
+        .filter((s) => s.trim() !== "")
+        .map((s) => ({ text: s }));
+
+      let payload;
+      if (editVideoFile) {
+        // Use FormData so the backend processes the file through Cloudinary
+        payload = new FormData();
+        payload.append("title", editTitle.trim());
+        payload.append("description", editDescription.trim());
+        payload.append("categoryId", editCategoryId);
+        payload.append("instructions", JSON.stringify(instructions));
+        payload.append("video", editVideoFile);
+      } else {
+        payload = {
+          title: editTitle.trim(),
+          description: editDescription.trim(),
+          categoryId: editCategoryId,
+          lessonUrl: editVideoUrl.trim() || undefined,
+          instructions,
+        };
+      }
+
+      await updateLessonMutation.mutateAsync(payload);
       setIsEditModalOpen(false);
     } catch (err) {
       console.error("Failed to update lesson:", err);
@@ -184,7 +201,7 @@ export default function LessonDetail() {
             </div>
             <div className="flex gap-3 shrink-0">
               <Button variant="ghost" onClick={handleOpenEdit} className="bg-transparent border border-primary/20 text-orange-400 hover:bg-primary/10 hover:border-primary/40 flex items-center gap-1.5">
-                <Edit className="h-4 w-4" /> Edit Lesson
+                <UploadCloud className="h-4 w-4" /> Upload
               </Button>
               <Button onClick={() => setIsDeleteModalOpen(true)} className="flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300">
                 <Trash2 className="h-4 w-4" /> Delete
@@ -319,7 +336,7 @@ export default function LessonDetail() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
           <div className="w-full max-w-2xl bg-[#0D121F] border border-white/[0.08] rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200 my-8">
             <div className="flex items-center justify-between p-6 border-b border-white/[0.04]">
-              <h3 className="text-lg font-bold text-white">Edit Lesson Details</h3>
+              <h3 className="text-lg font-bold text-white">Upload Lesson Details</h3>
               <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-white transition-all">
                 <X className="h-5 w-5" />
               </button>
@@ -356,18 +373,54 @@ export default function LessonDetail() {
                 />
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1.5">Video URL</label>
+              {/* Video Section */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Lesson Video</label>
+
+                {/* File Upload */}
+                <div className="relative h-11 flex items-center justify-between border border-dashed border-white/20 hover:border-primary/50 rounded-md bg-white/[0.02] px-3 cursor-pointer transition-colors group">
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setEditVideoFile(file);
+                      if (file) setEditVideoUrl(""); // clear URL when file chosen
+                    }}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                  <span className={`text-sm truncate ${editVideoFile ? "text-white" : "text-gray-500"}`}>
+                    {editVideoFile ? editVideoFile.name : "Click to upload a video file…"}
+                  </span>
+                  <UploadCloud className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" />
+                </div>
+
+                {/* Divider */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-px bg-white/[0.06]" />
+                  <span className="text-[10px] text-gray-600 font-semibold uppercase tracking-wider">or paste a URL</span>
+                  <div className="flex-1 h-px bg-white/[0.06]" />
+                </div>
+
+                {/* URL Input */}
                 <div className="relative">
                   <Input
                     type="url"
                     placeholder="https://example.com/video.mp4"
                     value={editVideoUrl}
-                    onChange={(e) => setEditVideoUrl(e.target.value)}
-                    className="pr-9"
+                    onChange={(e) => {
+                      setEditVideoUrl(e.target.value);
+                      if (e.target.value) setEditVideoFile(null); // clear file when URL typed
+                    }}
+                    disabled={!!editVideoFile}
+                    className="pr-9 disabled:opacity-40"
                   />
                   <Link2 className="h-4 w-4 text-primary shrink-0 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
+
+                {editVideoFile && (
+                  <p className="text-[10px] text-amber-400">⚠ File upload selected — URL field is disabled. Remove the file to use a URL instead.</p>
+                )}
               </div>
 
               {/* Instruction Steps */}
