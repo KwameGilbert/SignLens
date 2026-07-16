@@ -35,18 +35,24 @@ const quizzes = learningContent.quizzes as LearnQuiz[];
 import apiClient from "./apiClient";
 
 export async function fetchLearningCategories(): Promise<LearnCategory[]> {
-  const response = await apiClient.get('/lesson-categories');
-  const apiCategories = response.data.data;
-  
+  const [categoriesResponse, lessonsResponse] = await Promise.all([
+    apiClient.get('/lesson-categories'),
+    apiClient.get('/lessons'),
+  ]);
+
+  const apiCategories = categoriesResponse.data.data;
+  const apiLessons: any[] = lessonsResponse.data.data || [];
+
   return apiCategories.map((cat: any) => ({
     id: String(cat.id),
     slug: cat.slug,
     title: cat.name,
     icon: cat.icon,
-    lessonCount: 0,
+    lessonCount: apiLessons.filter((l: any) => String(l.categoryId) === String(cat.id)).length,
     progress: 0,
   }));
 }
+
 
 export function getOverallProgress(categoryList: LearnCategory[] = []) {
   if (categoryList.length === 0) {
