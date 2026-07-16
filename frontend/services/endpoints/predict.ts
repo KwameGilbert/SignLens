@@ -1,4 +1,5 @@
 import apiClient from "../apiClient";
+import axios from "axios";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -23,13 +24,13 @@ export const predictImage = (imageUri: string) => {
   } as any);
 
   console.log("Sending image prediction request:", {
-    endpoint: "/predict",
+    endpoint: "http://172.20.10.14:8000/api/v1/predict?type=image",
     fileUri: imageUri,
     fileName: "frame.jpg",
     fileType: "image/jpeg",
   });
 
-  return apiClient.post<PredictionResult>("/predict", formData, {
+  return axios.post<PredictionResult>("http://172.20.10.14:8000/api/v1/predict?type=image", formData, {
     headers: { "Content-Type": "multipart/form-data" },
     timeout: 60000, // 60 seconds (allows Render backends to wake from sleep)
   });
@@ -47,13 +48,13 @@ export const predictVideo = (videoUri: string) => {
   } as any);
 
   console.log("Sending video prediction request:", {
-    endpoint: "/predict",
+    endpoint: "http://172.20.10.14:8000/api/v1/predict?type=video",
     fileUri: videoUri,
     fileName: "sign.mp4",
     fileType: "video/mp4",
   });
 
-  return apiClient.post<PredictionResult>("/predict", formData, {
+  return axios.post<PredictionResult>("http://172.20.10.14:8000/api/v1/predict?type=video", formData, {
     headers: { "Content-Type": "multipart/form-data" },
     timeout: 120000, // 2 minutes for video upload & ML processing
   });

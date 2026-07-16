@@ -19,6 +19,9 @@ app.use(express.urlencoded({ extended: true }));
 // Swagger UI API Documentation
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+// Serve static uploaded files
+app.use('/uploads', express.static('uploads'));
+
 // Route mapping
 app.use('/api', apiRouter);
 

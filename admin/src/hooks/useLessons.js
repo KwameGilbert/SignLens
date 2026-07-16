@@ -27,7 +27,8 @@ export const useCreateLessonMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (newLesson) => {
-      const { data } = await api.post(ENDPOINTS.LESSONS.CREATE, newLesson);
+      const config = newLesson instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
+      const { data } = await api.post(ENDPOINTS.LESSONS.CREATE, newLesson, config);
       return data?.data || data;
     },
     onSuccess: () => {

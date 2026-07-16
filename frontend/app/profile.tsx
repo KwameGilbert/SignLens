@@ -18,6 +18,8 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeInUp, FadeInDown } from "react-native-reanimated";
+import { useQuery } from "@tanstack/react-query";
+import { getMe } from "../services/endpoints/auth";
 
 const { width } = Dimensions.get("window");
 
@@ -28,6 +30,16 @@ export default function ProfileScreen() {
 
   const [isPrivate, setIsPrivate] = useState(false);
   const [biometrics, setBiometrics] = useState(true);
+
+  const { data: response } = useQuery({
+    queryKey: ["authMe"],
+    queryFn: getMe,
+  });
+  // The backend seems to return `{ user: { ... } }` directly in the response body
+  const responseData = response?.data as any;
+  const user = responseData?.user || responseData?.data?.user || responseData?.data;
+  const fullName = user ? `${user.firstName} ${user.lastName}` : "Loading...";
+  const email = user?.email || "";
 
   const handleLogout = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
@@ -97,10 +109,10 @@ export default function ProfileScreen() {
           </View>
 
           <Text className="text-white text-2xl font-extrabold tracking-wide mb-1">
-            Afriyie Anthony
+            {fullName}
           </Text>
           <Text className="text-white/80 text-sm font-medium mb-2">
-            afriyie@signlens.io
+            {email}
           </Text>
         </View>
       </Animated.View>
@@ -121,7 +133,7 @@ export default function ProfileScreen() {
               <View className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-950/40 items-center justify-center mb-2">
                 <MaterialCommunityIcons name="fire" size={24} color="#FB5607" />
               </View>
-              <Text className="text-2xl font-extrabold text-slate-900 dark:text-white">12</Text>
+              <Text className="text-2xl font-extrabold text-slate-900 dark:text-white">0</Text>
               <Text className="text-xs text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Day Streak</Text>
             </View>
 
@@ -129,7 +141,7 @@ export default function ProfileScreen() {
               <View className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-950/40 items-center justify-center mb-2">
                 <Ionicons name="hand-left" size={22} color="#3B82F6" />
               </View>
-              <Text className="text-2xl font-extrabold text-slate-900 dark:text-white">156</Text>
+              <Text className="text-2xl font-extrabold text-slate-900 dark:text-white">0</Text>
               <Text className="text-xs text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Signs Learnt</Text>
             </View>
 
@@ -137,7 +149,7 @@ export default function ProfileScreen() {
               <View className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-950/40 items-center justify-center mb-2">
                 <Ionicons name="trophy" size={20} color="#10B981" />
               </View>
-              <Text className="text-2xl font-extrabold text-slate-900 dark:text-white">82%</Text>
+              <Text className="text-2xl font-extrabold text-slate-900 dark:text-white">0%</Text>
               <Text className="text-xs text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Completion</Text>
             </View>
           </View>
@@ -155,38 +167,12 @@ export default function ProfileScreen() {
                 router.push("/badges");
               }}
             >
-              <Text className="text-[#FB5607] text-xs font-bold uppercase tracking-wider">View All (6)</Text>
+              <Text className="text-[#FB5607] text-xs font-bold uppercase tracking-wider">View All (0)</Text>
             </TouchableOpacity>
           </View>
 
-          <View className="bg-white dark:bg-slate-900 px-4 py-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm shadow-black/5 flex-row justify-around">
-            <View className="items-center">
-              <View className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 items-center justify-center mb-2 shadow-sm">
-                <Ionicons name="ribbon" size={30} color="#F59E0B" />
-              </View>
-              <Text className="text-xs font-bold text-slate-800 dark:text-slate-200">First Sign</Text>
-            </View>
-
-            <View className="items-center">
-              <View className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 items-center justify-center mb-2 shadow-sm">
-                <MaterialCommunityIcons name="fire" size={32} color="#FB5607" />
-              </View>
-              <Text className="text-xs font-bold text-slate-800 dark:text-slate-200">7 Days</Text>
-            </View>
-
-            <View className="items-center">
-              <View className="w-14 h-14 rounded-2xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 items-center justify-center mb-2 shadow-sm">
-                <Ionicons name="flash" size={30} color="#8B5CF6" />
-              </View>
-              <Text className="text-xs font-bold text-slate-800 dark:text-slate-200">Lightning</Text>
-            </View>
-
-            <View className="items-center opacity-40">
-              <View className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 items-center justify-center mb-2 shadow-sm">
-                <Ionicons name="lock-closed" size={24} color="#94A3B8" />
-              </View>
-              <Text className="text-xs font-bold text-slate-400">Master</Text>
-            </View>
+          <View className="bg-white dark:bg-slate-900 px-4 py-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm shadow-black/5 items-center justify-center">
+            <Text className="text-slate-400 dark:text-slate-500 font-medium text-sm">No badges earned yet.</Text>
           </View>
         </Animated.View>
 
@@ -210,7 +196,7 @@ export default function ProfileScreen() {
               <View className="justify-center items-end min-w-[52px]">
                 <Switch
                   value={isPrivate}
-                  onValueChange={(val) => {
+                  onValueChange={(val: boolean) => {
                     Haptics.selectionAsync();
                     setIsPrivate(val);
                   }}
@@ -233,7 +219,7 @@ export default function ProfileScreen() {
               <View className="justify-center items-end min-w-[52px]">
                 <Switch
                   value={biometrics}
-                  onValueChange={(val) => {
+                  onValueChange={(val: boolean) => {
                     Haptics.selectionAsync();
                     setBiometrics(val);
                   }}

@@ -31,7 +31,14 @@ export const getLesson = async (req, res) => {
 
 export const createLesson = async (req, res) => {
   try {
-    const { title, categoryId, type, slug, lessonUrl, description, instructions } = req.body;
+    const { title, categoryId, type, slug, description, instructions } = req.body;
+    let lessonUrl = req.body.lessonUrl;
+
+    if (req.file) {
+      const baseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
+      lessonUrl = `${baseUrl}/uploads/${req.file.filename}`;
+    }
+
     if (!title || !categoryId || !type || !slug) {
       return sendBadRequest(res, 'Title, categoryId, type, and slug are required');
     }
@@ -59,7 +66,13 @@ export const createLesson = async (req, res) => {
 export const updateLesson = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, categoryId, type, slug, lessonUrl, description, instructions } = req.body;
+    const { title, categoryId, type, slug, description, instructions } = req.body;
+    let lessonUrl = req.body.lessonUrl;
+
+    if (req.file) {
+      const baseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
+      lessonUrl = `${baseUrl}/uploads/${req.file.filename}`;
+    }
 
     const existing = await LessonModel.findById(id);
     if (!existing) {
@@ -78,7 +91,7 @@ export const updateLesson = async (req, res) => {
       categoryId,
       type,
       slug,
-      lessonUrl,
+      lessonUrl: lessonUrl || existing.lessonUrl,
       description,
       instructions,
     });

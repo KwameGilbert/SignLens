@@ -16,6 +16,8 @@ export default function Lessons() {
 
   const [activeCategory, setActiveCategory] = useState("All Lessons");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [lessonToDelete, setLessonToDelete] = useState(null);
   
   // Form States
   const [title, setTitle] = useState("");
@@ -23,7 +25,7 @@ export default function Lessons() {
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [contentSteps, setContentSteps] = useState([""]);
-  const [lessonUrl, setLessonUrl] = useState("");
+  const [videoFile, setVideoFile] = useState(null);
 
   const handleTitleChange = (e) => {
     const value = e.target.value;
@@ -54,20 +56,19 @@ export default function Lessons() {
 
   const handleCreateLesson = async (e) => {
     e.preventDefault();
-    if (!title.trim() || !slug.trim() || !lessonUrl.trim() || !category) return;
+    if (!title.trim() || !slug.trim() || !videoFile || !category) return;
 
-    const payload = {
-      title: title.trim(),
-      categoryId: parseInt(category),
-      type: "video",
-      slug: slug.trim(),
-      lessonUrl: lessonUrl.trim(),
-      description: description.trim(),
-      instructions: contentSteps.map((step) => ({ text: step })),
-    };
+    const formData = new FormData();
+    formData.append("title", title.trim());
+    formData.append("categoryId", category);
+    formData.append("type", "video");
+    formData.append("slug", slug.trim());
+    formData.append("description", description.trim());
+    formData.append("instructions", JSON.stringify(contentSteps.map((step) => ({ text: step }))));
+    formData.append("videoFile", videoFile);
 
     try {
-      await createLessonMutation.mutateAsync(payload);
+      await createLessonMutation.mutateAsync(formData);
       resetForm();
     } catch (err) {
       console.error("Failed to create lesson:", err);
@@ -81,17 +82,29 @@ export default function Lessons() {
     setCategory("");
     setDescription("");
     setContentSteps([""]);
-    setLessonUrl("");
+    setVideoFile(null);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this lesson?")) {
+  const handleDeleteClick = (id) => {
+    setLessonToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (lessonToDelete) {
       try {
-        await deleteLessonMutation.mutateAsync(id);
+        await deleteLessonMutation.mutateAsync(lessonToDelete);
+        setIsDeleteModalOpen(false);
+        setLessonToDelete(null);
       } catch (err) {
         console.error("Failed to delete lesson:", err);
       }
     }
+  };
+
+  const cancelDelete = () => {
+    setIsDeleteModalOpen(false);
+    setLessonToDelete(null);
   };
 
   const filteredLessons = fetchedLessons.filter(
@@ -205,7 +218,7 @@ export default function Lessons() {
                             variant="ghost"
                             size="sm"
                             className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
-                            onClick={() => handleDelete(lesson.id)}
+                            onClick={() => handleDeleteClick(lesson.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -280,16 +293,16 @@ export default function Lessons() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1.5">Lesson Video URL</label>
-                  <div className="relative h-10 flex items-center justify-between border border-white/10 rounded-md bg-white/[0.02] px-3 py-2 text-sm text-gray-400">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1.5">Lesson Video</label>
+                  <div className="relative h-10 flex items-center justify-between border border-white/10 rounded-md bg-white/[0.02] px-3 py-2 text-sm text-gray-400 overflow-hidden">
                     <input
-                      type="url"
+                      type="file"
+                      accept="video/*"
                       required
-                      placeholder="https://example.com/video.mp4"
-                      value={lessonUrl}
-                      onChange={(e) => setLessonUrl(e.target.value)}
-                      className="absolute inset-0 bg-transparent w-full h-full px-3 focus:outline-none focus:ring-2 focus:ring-primary rounded-md"
+                      onChange={(e) => setVideoFile(e.target.files[0])}
+                      className="absolute inset-0 bg-transparent w-full h-full opacity-0 cursor-pointer z-10"
                     />
+                    <span className="truncate w-full pr-6">{videoFile ? videoFile.name : "Select video file..."}</span>
                     <Video className="h-4 w-4 text-primary shrink-0 absolute right-3 pointer-events-none" />
                   </div>
                 </div>
@@ -348,6 +361,29 @@ export default function Lessons() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-[#0D121F] border border-white/[0.08] rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200 p-6 text-center">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-rose-500/10 mb-4">
+              <AlertTriangle className="h-6 w-6 text-rose-500" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">Delete Lesson?</h3>
+            <p className="text-sm text-gray-400 mb-6">
+              Are you sure you want to delete this lesson? This action cannot be undone.
+            </p>
+            <div className="flex justify-center gap-3">
+              <Button variant="ghost" className="border border-white/10 text-gray-300 hover:bg-white/[0.06] hover:text-white" onClick={cancelDelete}>
+                Cancel
+              </Button>
+              <Button onClick={confirmDelete} disabled={deleteLessonMutation.isPending} className="bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/20">
+                {deleteLessonMutation.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
           </div>
         </div>
       )}

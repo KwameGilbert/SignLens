@@ -2,6 +2,8 @@ import { View, Text, TouchableOpacity, useColorScheme, StyleSheet } from "react-
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
 import { useRouter } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
+import { getMe } from "../../services/endpoints/auth";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
@@ -11,6 +13,15 @@ export default function HomeHeader() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const blurTint = colorScheme === "dark" ? "dark" : "light";
+
+  const { data: response } = useQuery({
+    queryKey: ["authMe"],
+    queryFn: getMe,
+  });
+  // The backend seems to return `{ user: { ... } }` directly in the response body
+  const responseData = response?.data as any;
+  const user = responseData?.user || responseData?.data?.user || responseData?.data;
+  const displayName = user ? `${user.firstName} ${user.lastName}` : "Guest";
 
   return (
     <Animated.View 
@@ -42,7 +53,7 @@ export default function HomeHeader() {
             Welcome back,
           </Text>
           <Text className="text-white text-2xl font-bold">
-            Afriyie Anthony
+            {displayName}
           </Text>
         </View>
         <TouchableOpacity
