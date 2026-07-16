@@ -16,6 +16,8 @@ export default function Lessons() {
 
   const [activeCategory, setActiveCategory] = useState("All Lessons");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [lessonToDelete, setLessonToDelete] = useState(null);
   
   // Form States
   const [title, setTitle] = useState("");
@@ -98,14 +100,26 @@ export default function Lessons() {
     setVideoFile(null);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this lesson?")) {
+  const handleDeleteClick = (id) => {
+    setLessonToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (lessonToDelete) {
       try {
-        await deleteLessonMutation.mutateAsync(id);
+        await deleteLessonMutation.mutateAsync(lessonToDelete);
+        setIsDeleteModalOpen(false);
+        setLessonToDelete(null);
       } catch (err) {
         console.error("Failed to delete lesson:", err);
       }
     }
+  };
+
+  const cancelDelete = () => {
+    setIsDeleteModalOpen(false);
+    setLessonToDelete(null);
   };
 
   const filteredLessons = fetchedLessons.filter(
@@ -219,7 +233,7 @@ export default function Lessons() {
                             variant="ghost"
                             size="sm"
                             className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
-                            onClick={() => handleDelete(lesson.id)}
+                            onClick={() => handleDeleteClick(lesson.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -403,6 +417,29 @@ export default function Lessons() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-[#0D121F] border border-white/[0.08] rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200 p-6 text-center">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-rose-500/10 mb-4">
+              <AlertTriangle className="h-6 w-6 text-rose-500" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">Delete Lesson?</h3>
+            <p className="text-sm text-gray-400 mb-6">
+              Are you sure you want to delete this lesson? This action cannot be undone.
+            </p>
+            <div className="flex justify-center gap-3">
+              <Button variant="ghost" className="border border-white/10 text-gray-300 hover:bg-white/[0.06] hover:text-white" onClick={cancelDelete}>
+                Cancel
+              </Button>
+              <Button onClick={confirmDelete} disabled={deleteLessonMutation.isPending} className="bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/20">
+                {deleteLessonMutation.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
           </div>
         </div>
       )}

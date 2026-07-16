@@ -10,7 +10,7 @@ import { useAuthStore } from "../stores/authStore";
  * - Handles 401 Unauthorized responses globally by clearing the auth state,
  *   forcing the user back to the login screen.
  */
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://signlens-backend-sg1c.onrender.com/api";
+const BASE_URL = "https://signlens-backend-sg1c.onrender.com/api";
 
 const apiClient = axios.create({
   baseURL: BASE_URL,

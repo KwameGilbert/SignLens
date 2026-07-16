@@ -77,28 +77,8 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          <View className="bg-white dark:bg-slate-900 rounded-2xl px-4 py-2 shadow-sm shadow-black/5 border border-slate-200 dark:border-slate-800">
-              <AchievementItem
-                IconComponent={Ionicons}
-                icon="ribbon"
-                title="First sign"
-                subtitle="Unlocked recently"
-                iconColor="#FFC107"
-              />
-              <AchievementItem
-                IconComponent={MaterialCommunityIcons}
-                icon="fire"
-                title="7 day streak"
-                subtitle="Unlocked recently"
-                iconColor="#FB5607"
-              />
-              <AchievementItem
-                IconComponent={Ionicons}
-                icon="flash"
-                title="Quick Learner"
-                subtitle="Unlocked recently"
-                iconColor="#F97316"
-              />
+          <View className="bg-white dark:bg-slate-900 rounded-2xl px-4 py-8 shadow-sm shadow-black/5 border border-slate-200 dark:border-slate-800 items-center justify-center">
+            <Text className="text-slate-500 dark:text-slate-400 text-sm font-medium">No recent achievements yet</Text>
           </View>
         </View>
       </ScrollView>

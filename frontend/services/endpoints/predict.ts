@@ -1,3 +1,4 @@
+import apiClient from "../apiClient";
 import axios from "axios";
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -34,14 +35,14 @@ export const predictImage = (imageUri: string) => {
     type: "image/jpeg",
   } as any);
 
-  console.log("Sending image prediction request directly to ML server:", {
-    endpoint: "/api/v1/predict?type=image",
+  console.log("Sending image prediction request:", {
+    endpoint: "http://172.20.10.14:8000/api/v1/predict?type=image",
     fileUri: imageUri,
     fileName: "frame.jpg",
     fileType: "image/jpeg",
   });
 
-  return mlClient.post<PredictionResult>("/api/v1/predict?type=image", formData, {
+  return axios.post<PredictionResult>("http://172.20.10.14:8000/api/v1/predict?type=image", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 };
@@ -57,14 +58,14 @@ export const predictVideo = (videoUri: string) => {
     type: "video/mp4",
   } as any);
 
-  console.log("Sending video prediction request directly to ML server:", {
-    endpoint: "/api/v1/predict?type=video",
+  console.log("Sending video prediction request:", {
+    endpoint: "http://172.20.10.14:8000/api/v1/predict?type=video",
     fileUri: videoUri,
     fileName: "sign.mp4",
     fileType: "video/mp4",
   });
 
-  return mlClient.post<PredictionResult>("/api/v1/predict?type=video", formData, {
+  return axios.post<PredictionResult>("http://172.20.10.14:8000/api/v1/predict?type=video", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 };
