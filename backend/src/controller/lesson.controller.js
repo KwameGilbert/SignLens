@@ -1,25 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import LessonModel from '../model/lesson.model.js';
 import { sendSuccess, sendCreated, sendBadRequest, sendNotFound, sendInternalError } from '../utils/response.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const saveUploadedFile = async (file, req) => {
-  const uploadsDir = path.join(__dirname, '../../uploads');
-  if (!fs.existsSync(uploadsDir)) {
-    await fs.promises.mkdir(uploadsDir, { recursive: true });
-  }
-  const uniqueFilename = `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`;
-  const filepath = path.join(uploadsDir, uniqueFilename);
-  await fs.promises.writeFile(filepath, file.buffer);
-  
-  const protocol = req.protocol;
-  const host = req.get('host');
-  return `${protocol}://${host}/uploads/${uniqueFilename}`;
-};
+import { uploadToCloudinary } from '../services/cloudinary.service.js';
 
 export const listLessons = async (req, res) => {
   try {
@@ -71,7 +52,8 @@ export const createLesson = async (req, res) => {
     const isUrlLink = typeof lessonUrl === 'string' && (lessonUrl.startsWith('http://') || lessonUrl.startsWith('https://'));
     
     if (!isUrlLink && req.file) {
-      finalLessonUrl = await saveUploadedFile(req.file, req);
+      const uploadResult = await uploadToCloudinary(req.file.buffer);
+      finalLessonUrl = uploadResult.secure_url;
     }
 
     let instructionsData = instructions;
@@ -126,7 +108,8 @@ export const updateLesson = async (req, res) => {
     const isUrlLink = typeof lessonUrl === 'string' && (lessonUrl.startsWith('http://') || lessonUrl.startsWith('https://'));
     
     if (!isUrlLink && req.file) {
-      finalLessonUrl = await saveUploadedFile(req.file, req);
+      const uploadResult = await uploadToCloudinary(req.file.buffer);
+      finalLessonUrl = uploadResult.secure_url;
     }
 
     let instructionsData = instructions;

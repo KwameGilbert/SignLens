@@ -23,6 +23,10 @@ export const config = {
   mlModelWsUrl: process.env.MODEL_API_WS_URL || 'ws://10.20.79.6:8000',
   mlModelApiKey: process.env.MODEL_API_KEY || '',
   highConfidenceThreshold: parseFloat(process.env.HIGH_CONFIDENCE_THRESHOLD || '0.8'),
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
+  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY || '',
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || '',
+  cloudinaryFolder: process.env.CLOUDINARY_FOLDER || 'signlens',
 };
 
 export default config;
