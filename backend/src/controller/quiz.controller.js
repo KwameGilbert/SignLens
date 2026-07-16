@@ -74,7 +74,7 @@ export const createQuiz = async (req, res) => {
 export const updateQuiz = async (req, res) => {
   try {
     const { id } = req.params;
-    const { categoryId, lessonId, question } = req.body;
+    const { categoryId, lessonId, question, options } = req.body;
 
     const existing = await QuizModel.findById(id);
     if (!existing) {
@@ -82,6 +82,26 @@ export const updateQuiz = async (req, res) => {
     }
 
     const updated = await QuizModel.update(id, { categoryId, lessonId, question });
+
+    // Handle updating options if they are passed in body
+    if (options && Array.isArray(options)) {
+      // Clear existing options first
+      await QuizOptionModel.db('quizOptions').where({ quizId: id }).del();
+      
+      updated.options = [];
+      for (const opt of options) {
+        if (opt.name) {
+          const createdOpt = await QuizOptionModel.create({
+            quizId: parseInt(id, 10),
+            name: opt.name,
+            isCorrect: !!opt.isCorrect,
+            orderIndex: opt.orderIndex || 0,
+          });
+          updated.options.push(createdOpt);
+        }
+      }
+    }
+
     sendSuccess(res, updated, 'Quiz updated successfully');
   } catch (err) {
     sendInternalError(res, 'Error updating quiz', err);
