@@ -1,17 +1,15 @@
 import { CheckCircle2, AlertTriangle, HelpCircle } from "lucide-react";
 
-export function AccuracyMeter() {
-  const accuracy = 94.6;
+export function AccuracyMeter({ metrics }) {
+  const accuracy = metrics?.accuracy ?? 0;
+  const breakdown = metrics?.breakdown ?? { successful: 0, lowConfidence: 0, failed: 0 };
+  const topSigns = metrics?.topSigns ?? [];
+
   const radius = 50;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (accuracy / 100) * circumference;
 
-  const topSigns = [
-    { word: "Hello", count: 489, accuracy: 98 },
-    { word: "Thank You", count: 356, accuracy: 96 },
-    { word: "Help", count: 212, accuracy: 91 },
-    { word: "Sign Language", count: 184, accuracy: 89 },
-  ];
+  const formatCount = (n) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
 
   return (
     <div className="rounded-xl bg-white/[0.02] border border-white/[0.08] p-6 shadow-xl backdrop-blur-md flex flex-col justify-between h-full">
@@ -57,46 +55,50 @@ export function AccuracyMeter() {
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
               Successful
             </span>
-            <span className="font-semibold text-white">4.1k</span>
+            <span className="font-semibold text-white">{formatCount(breakdown.successful)}</span>
           </div>
           <div className="flex items-center text-xs justify-between">
             <span className="flex items-center gap-1.5 text-gray-400">
               <AlertTriangle className="h-4 w-4 text-amber-500" />
               Low Confidence
             </span>
-            <span className="font-semibold text-white">189</span>
+            <span className="font-semibold text-white">{formatCount(breakdown.lowConfidence)}</span>
           </div>
           <div className="flex items-center text-xs justify-between">
             <span className="flex items-center gap-1.5 text-gray-400">
               <HelpCircle className="h-4 w-4 text-rose-500" />
               Failed
             </span>
-            <span className="font-semibold text-white">32</span>
+            <span className="font-semibold text-white">{formatCount(breakdown.failed)}</span>
           </div>
         </div>
       </div>
 
       <div className="mt-4 pt-4 border-t border-white/[0.06]">
         <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Top Translated Words</h4>
-        <div className="space-y-2">
-          {topSigns.map((sign, index) => (
-            <div key={index} className="flex items-center justify-between text-xs py-1">
-              <span className="font-medium text-gray-300">{sign.word}</span>
-              <div className="flex items-center gap-3">
-                <span className="text-gray-500">{sign.count} hits</span>
-                <span
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                    sign.accuracy >= 95
-                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                      : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                  }`}
-                >
-                  {sign.accuracy}% acc
-                </span>
+        {topSigns.length === 0 ? (
+          <p className="text-xs text-gray-500 italic">No translation data yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {topSigns.map((sign, index) => (
+              <div key={index} className="flex items-center justify-between text-xs py-1">
+                <span className="font-medium text-gray-300">{sign.word}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-gray-500">{sign.count} hits</span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                      sign.accuracy >= 95
+                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                        : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                    }`}
+                  >
+                    {sign.accuracy}% acc
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

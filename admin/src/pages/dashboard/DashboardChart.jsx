@@ -1,17 +1,19 @@
 import { useState } from "react";
 
-const chartData = [
-  { label: "Mon", value: 1200, lessons: 320 },
-  { label: "Tue", value: 1350, lessons: 410 },
-  { label: "Wed", value: 1250, lessons: 380 },
-  { label: "Thu", value: 1420, lessons: 490 },
-  { label: "Fri", value: 1580, lessons: 610 },
-  { label: "Sat", value: 1300, lessons: 450 },
-  { label: "Sun", value: 1480, lessons: 530 },
+const FALLBACK_CHART_DATA = [
+  { label: "Mon", value: 0, lessons: 0 },
+  { label: "Tue", value: 0, lessons: 0 },
+  { label: "Wed", value: 0, lessons: 0 },
+  { label: "Thu", value: 0, lessons: 0 },
+  { label: "Fri", value: 0, lessons: 0 },
+  { label: "Sat", value: 0, lessons: 0 },
+  { label: "Sun", value: 0, lessons: 0 },
 ];
 
-export function DashboardChart() {
+export function DashboardChart({ chartData }) {
   const [activeIdx, setActiveIdx] = useState(null);
+
+  const data = chartData?.length ? chartData : FALLBACK_CHART_DATA;
 
   const width = 600;
   const height = 220;
@@ -23,11 +25,11 @@ export function DashboardChart() {
   const chartWidth = width - paddingLeft - paddingRight;
   const chartHeight = height - paddingTop - paddingBottom;
 
-  const maxVal = Math.max(...chartData.map((d) => d.value)) * 1.1; // 10% headroom
+  const maxVal = Math.max(...data.map((d) => d.value), 1) * 1.1; // 10% headroom
 
   // Calculate coordinates for the line chart (Active Users)
-  const points = chartData.map((d, index) => {
-    const x = paddingLeft + (index / (chartData.length - 1)) * chartWidth;
+  const points = data.map((d, index) => {
+    const x = paddingLeft + (index / (data.length - 1)) * chartWidth;
     const y = height - paddingBottom - (d.value / maxVal) * chartHeight;
     return { x, y, ...d, index };
   });
