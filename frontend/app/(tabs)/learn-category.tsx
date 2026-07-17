@@ -20,6 +20,10 @@ export default function LearnCategoryScreen() {
     queryKey: ["lessonsByCategory", categoryId],
     queryFn: () => fetchLessonsByCategory(categoryId),
     enabled: !!categoryId,
+    select: (data) =>
+      [...data].sort((a, b) =>
+        a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" })
+      ),
   });
 
   if (!categoryId) {

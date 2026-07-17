@@ -50,5 +50,8 @@ export const ENDPOINTS = {
     DETAIL: (key) => `/settings/${key}`,
     UPDATE: (key) => `/settings/${key}`,
   },
+  DASHBOARD: {
+    SUMMARY: '/dashboard/summary',
+  },
   // Add more endpoints as needed for Badges, etc.
 };
