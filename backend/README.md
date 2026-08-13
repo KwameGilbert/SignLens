@@ -1,108 +1,159 @@
-# SignLens Mobile App Backend Gateway (Express.js & PostgreSQL)
+# ⚡ SignLens Backend Gateway Subsystem
+## Node.js Express API Gateway, Database Setup & XAMPP Integration Guide
 
-This is the gateway backend service for the SignLens mobile application, built using **Node.js, Express, and PostgreSQL**. It acts as a secure intermediary between the mobile client and the heavy machine learning prediction endpoints.
-
-## 🚀 Key Responsibilities
-
-1. **User Management & Authentication**: User registration, login, and secure token issuance using JSON Web Tokens (JWT) and bcrypt hashing.
-2. **Translation History Tracking**: Saving and retrieving users' sign language practice logs and translation history.
-3. **ML Prediction Proxy**: Proxying static image upload predictions to the machine learning backend model server using `axios`.
-4. **Real-time WebSocket Relay**: Proxying WebSocket streams between the mobile app and the MediaPipe/LSTM ML model prediction server, performing JWT verification on handshake.
+Welcome to the **SignLens Backend Gateway Subsystem**. This server acts as the central API Gateway and security layer for the entire SignLens platform. It manages user authentication (JWT & bcrypt), database transactions via Knex.js ORM, translation history logging, Cloudinary media management, Learning Management System (LMS) courses, and proxies prediction payloads to the Python ML server.
 
 ---
 
-## 📂 Directory Structure
+## 📁 1. Directory Structure Overview
 
-```text
-backend/
+```
+SignLens/backend/
 ├── src/
-│   ├── config/              # Environment variables & constants
-│   ├── controller/          # Route handlers (auth, history, predict)
-│   ├── database/            # DB client & migrations/seeds
-│   │   ├── migrations/      # Table initialization scripts
-│   │   └── seed/            # Seed data scripts
-│   ├── middleware/          # Express middlewares (auth token validation)
-│   ├── model/               # SQL Query execution & database access models
-│   ├── routes/              # Routing specifications
-│   ├── services/            # Third-party services (relays, file uploads, ML requests)
-│   └── main.js              # Application entry point & server start
-├── package.json             # Package configuration & script tasks
-├── .env.example             # Configuration variables blueprint
-└── README.md                # System documentation
+│   ├── config/             # Environment & Knex database configuration
+│   ├── controller/         # Express route handlers (auth, predict, history, lesson, quiz, user)
+│   ├── database/           # Database migration & seed files
+│   │   ├── migrations/     # Knex SQL table creation schemas
+│   │   └── seed/           # Seed data for lessons, quizzes, badges
+│   ├── docs/               # Swagger OpenAPI documentation JSON specifications
+│   ├── middleware/         # Auth verification middleware (JWT validation)
+│   ├── model/              # Database models (Knex/SQL wrappers)
+│   ├── routes/             # Express API route declarations
+│   ├── services/           # ML Proxy client (mlClient.service.js) & WebSocket stream service
+│   └── main.js             # Express application entry point
+├── .env.example            # Environment variable template
+├── knexfile.js             # Knex.js database connection config
+└── package.json            # Node.js dependencies & execution scripts
 ```
 
 ---
 
-## 🛠️ Setup & Installation
+## 🛠️ 2. Step-by-Step Installation & Local Setup
 
-### 1. Prerequisite
-Ensure **Node.js (>= 18)** and **PostgreSQL** are installed and running.
+### Step 2.1: Prerequisites
+Ensure **Node.js (v18.0.0 or higher)** and a local SQL database server (**XAMPP with MySQL** or **PostgreSQL**) are installed.
 
-### 2. Install Dependencies
-```powershell
-# In the signlens/backend directory
-npm install
-```
+---
 
-### 3. Database Configuration
-Make sure your PostgreSQL database is running and create a database named `signlens_mobile`.
+### Step 2.2: Local Database Setup (Choose Option A or Option B)
 
-Copy `.env.example` to `.env`:
-```powershell
+#### Option A: Using XAMPP (MySQL / phpMyAdmin) - Recommended for Beginners
+1. Open the **XAMPP Control Panel**.
+2. Click **Start** next to **Apache** and **MySQL**.
+3. Open your web browser and navigate to: **`http://localhost/phpmyadmin`**
+4. In phpMyAdmin, click **Databases** from the top menu bar.
+5. In the **Database name** box, type `signlens_mobile`.
+6. Select `utf8mb4_general_ci` as collation and click **Create**.
+
+#### Option B: Using PostgreSQL
+1. Open **pgAdmin** or your PostgreSQL command prompt (`psql`).
+2. Run the SQL command:
+   ```sql
+   CREATE DATABASE signlens_mobile;
+   ```
+
+---
+
+### Step 2.3: Environment Configuration (`.env` File Setup)
+
+Navigate to the `backend/` directory in Command Prompt / Terminal and create your local `.env` configuration file:
+
+#### Windows (Command Prompt):
+```cmd
+cd backend
 copy .env.example .env
 ```
 
-Open `.env` and set your credentials:
-* `PGHOST`: PostgreSQL host (e.g. `localhost`)
-* `PGPORT`: PostgreSQL port (e.g. `5432`)
-* `PGDATABASE`: Set to `signlens_mobile`
-* `PGUSER`: Database username (e.g. `postgres`)
-* `PGPASSWORD`: Database password
-* `SECRET_KEY`: Long secure random string for JWT signing
-* `MODEL_API_KEY`: API Key generated by the ML Model Endpoint database (e.g., using `generate_api_key.py` in `model/model_endpoints`).
-
-### 4. Database Migrations and Seeds
-To initialize the tables:
-```powershell
-npm run db:migrate
+#### macOS / Linux / PowerShell:
+```bash
+cd backend
+cp .env.example .env
 ```
-To seed default data (like default administrator user):
-```powershell
-npm run db:seed
+
+#### Open `backend/.env` in any text editor and configure your variables:
+```env
+# Server Port
+PORT=8001
+
+# Secret Key for JWT Tokens
+SECRET_KEY=super_secret_signing_key_for_signlens_mobile_app_1234567890
+
+# Database Configuration (For PostgreSQL or MySQL)
+PGHOST=localhost
+PGPORT=5432
+PGDATABASE=signlens_mobile
+PGUSER=postgres
+PGPASSWORD=postgres
+
+# Machine Learning Subsystem Connection
+MODEL_API_URL=http://127.0.0.1:8000
+MODEL_API_WS_URL=ws://127.0.0.1:8000
+MODEL_API_KEY=signlens_internal_api_key
 ```
 
 ---
 
-## 🏃 Running the Server
+### Step 2.4: Install Dependencies & Run Database Migrations
 
-Start the development server using `nodemon` (hot reloading enabled):
-```powershell
+In your terminal (inside the `backend/` folder), execute:
+
+```bash
+# 1. Install Node.js packages
+npm install
+
+# 2. Run Database Migrations (Creates tables: users, histories, lessons, quizzes, badges)
+npm run migrate
+
+# 3. Seed Database with initial sign language lessons and categories
+npm run seed
+```
+
+---
+
+## 🚀 3. Starting the Backend Server
+
+To start the backend in development mode (with auto-reload enabled):
+
+```bash
 npm run dev
 ```
 
-For production:
-```powershell
-npm start
-```
+### Verification:
+1. Terminal will display: `Server running on port 8001`.
+2. Open your browser to: **`http://localhost:8001/api-docs`**
+3. You will see the **Swagger Interactive API Documentation** listing all available REST endpoints.
 
 ---
 
-## 🔐 API Reference
+## 🧪 4. Key Available API Routes
 
-### 1. Authentication (`/api/v1/auth`)
-* `POST /api/v1/auth/register`: Register a new user profile.
-* `POST /api/v1/auth/login`: Authenticate email + password and retrieve a JWT access token.
-* `GET /api/v1/auth/me`: Retrieve the authenticated user's profile details.
-* `GET /api/v1/users`: (Admin only) Retrieve list of all users.
+- **Auth Routes (`/api/v1/auth`):**
+  - `POST /register`: User signup with bcrypt password hashing.
+  - `POST /login`: User login returning stateless JWT token.
+  - `POST /google`: Google OAuth ID Token verification.
+- **Prediction Proxy (`/api/v1/predict`):**
+  - `POST /predict?type=image`: Forwards static image to Python ML server (`Port 8000`).
+  - `POST /predict?type=video`: Forwards video clip to Python ML server.
+  - `WS /predict-stream`: Duplex WebSocket streaming route.
+- **LMS Routes (`/api/v1/lessons`, `/api/v1/quizzes`, `/api/v1/badges`):**
+  - `GET /lesson-categories`: Fetch sign language course categories.
+  - `GET /lessons/:id`: Fetch sign language video tutorial details.
+  - `GET /quizzes/category/:categoryId`: Interactive quiz questions.
+- **Translation History (`/api/v1/history`):**
+  - `GET /history`: Fetch user's translation log history.
 
-### 2. Predictions Gateway (`/api/v1/predict` & `/api/v1/predict-stream`)
-* **`POST /api/v1/predict` (HTTP)**: Proxies static image files to the ML model server, logs the prediction in the user's history database, and returns the prediction result.
-* **`GET /api/v1/predict-stream` (WebSocket)**: Relays real-time video frames.
-  * Connect to: `ws://127.0.0.1:8001/api/v1/predict-stream?token=<JWT_TOKEN>&type=<stream|video>`
-  * Once authenticated, stream raw video frame bytes.
-  * The server will respond with JSON predictions in real-time. High-confidence predictions will be saved to the database.
+---
 
-### 3. Translation History (`/api/v1/history`)
-* `GET /api/v1/history/`: Retrieve paginated translation logs for the authenticated user.
-* `POST /api/v1/history/`: Manually write a translation log to the database.
-* `GET /api/v1/history/all`: (Admin only) Retrieve global translation logs.
+## ❓ 5. Common Backend Issues & Troubleshooting
+
+### 🚨 Problem 1: `connect ECONNREFUSED 127.0.0.1:5432` or MySQL Connection Error
+* **Cause:** The database service (XAMPP MySQL or PostgreSQL) is not running.
+* **Solution:** Open XAMPP Control Panel and click **Start** next to MySQL. Ensure the database `signlens_mobile` exists in phpMyAdmin.
+
+### 🚨 Problem 2: `Error: Migration directory is corrupt or missing`
+* **Cause:** `knexfile.js` cannot locate the migration folder.
+* **Solution:** Ensure you execute `npm run migrate` from inside the `backend/` directory root.
+
+### 🚨 Problem 3: `Error: ML backend returned an empty or invalid prediction response`
+* **Cause:** The Python FastAPI ML server (`Port 8000`) is not running.
+* **Solution:** Start the ML server first by following the instructions in [model/README.md](file:///c:/Users/JOSHUA%20ASEMANI/Music/SignLens/SignLens/model/README.md).
